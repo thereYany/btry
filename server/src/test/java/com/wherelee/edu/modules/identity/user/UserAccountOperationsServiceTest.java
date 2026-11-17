@@ -94,6 +94,6 @@ class UserAccountOperationsServiceTest {
     }
 
     private User user(Long id, String role, String status) {
-        return new User(id, "user" + id, "hash", "用户" + id, role, status, false, 0);
+        return new User(id, 0L, "user" + id, "hash", "用户" + id, role, status, false, 0);
     }
 }

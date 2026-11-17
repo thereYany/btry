@@ -49,7 +49,6 @@
     "DataInitializer": {
       "module": "bootstrap",
       "ops": [
-        "OTHER",
         "READ",
         "WRITE"
       ],
@@ -213,7 +212,6 @@
     "PaymentOrderShadowRepository": {
       "module": "commerce",
       "ops": [
-        "OTHER",
         "READ",
         "WRITE"
       ],
@@ -246,7 +244,6 @@
     "PaymentOrderShadowRepository": {
       "module": "commerce",
       "ops": [
-        "OTHER",
         "WRITE"
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java",
@@ -266,7 +263,6 @@
     "PaymentOrderShadowRepository": {
       "module": "commerce",
       "ops": [
-        "OTHER",
         "WRITE"
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java",
@@ -285,7 +281,6 @@
     "PaymentOrderShadowRepository": {
       "module": "commerce",
       "ops": [
-        "OTHER",
         "READ"
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java",

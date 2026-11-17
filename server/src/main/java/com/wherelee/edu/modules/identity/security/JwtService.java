@@ -33,6 +33,7 @@ public class JwtService {
                 .subject(String.valueOf(user.id()))
                 .claim("username", user.username())
                 .claim("ver", user.tokenVersion())
+                .claim("tid", user.tenantId())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(ttl)))
                 .signWith(key)
@@ -46,9 +47,12 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
         Integer version = claims.get("ver", Integer.class);
-        return new TokenPayload(Long.valueOf(claims.getSubject()), version == null ? -1 : version);
+        Long tenantId = claims.get("tid", Long.class);
+        return new TokenPayload(Long.valueOf(claims.getSubject()),
+                version == null ? -1 : version,
+                tenantId == null ? 0L : tenantId);
     }
 
-    public record TokenPayload(Long userId, int tokenVersion) {
+    public record TokenPayload(Long userId, int tokenVersion, Long tenantId) {
     }
 }

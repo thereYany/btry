@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -82,16 +83,17 @@ public class PaymentRepository {
         jdbc.update(connection -> {
             PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO t_payment_attempt
-                        (order_id, attempt_no, channel, status, provider_trade_no,
+                        (tenant_id, order_id, attempt_no, channel, status, provider_trade_no,
                          provider_status, provider_amount_cents, request_digest)
-                    VALUES (?, ?, ?, 'PROCESSING', ?, 'CREATED', ?, ?)
+                    VALUES (?, ?, ?, ?, 'PROCESSING', ?, 'CREATED', ?, ?)
                     """, Statement.RETURN_GENERATED_KEYS);
-            statement.setLong(1, orderId);
-            statement.setInt(2, attemptNo);
-            statement.setString(3, channel);
-            statement.setString(4, providerTradeNo);
-            statement.setLong(5, amountCents);
-            statement.setString(6, digest);
+            statement.setLong(1, TenantContext.current());
+            statement.setLong(2, orderId);
+            statement.setInt(3, attemptNo);
+            statement.setString(4, channel);
+            statement.setString(5, providerTradeNo);
+            statement.setLong(6, amountCents);
+            statement.setString(7, digest);
             return statement;
         }, keyHolder);
         Number key = keyHolder.getKey();
@@ -202,14 +204,15 @@ public class PaymentRepository {
         jdbc.update(connection -> {
             PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO t_refund
-                        (refund_no, order_id, amount_cents, status, reason, requested_by)
-                    VALUES (?, ?, ?, 'PROCESSING', ?, ?)
+                        (tenant_id, refund_no, order_id, amount_cents, status, reason, requested_by)
+                    VALUES (?, ?, ?, ?, 'PROCESSING', ?, ?)
                     """, Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, refundNo);
-            statement.setLong(2, orderId);
-            statement.setLong(3, amountCents);
-            statement.setString(4, reason);
-            statement.setLong(5, requestedBy);
+            statement.setLong(1, TenantContext.current());
+            statement.setString(2, refundNo);
+            statement.setLong(3, orderId);
+            statement.setLong(4, amountCents);
+            statement.setString(5, reason);
+            statement.setLong(6, requestedBy);
             return statement;
         }, keyHolder);
         Number key = keyHolder.getKey();

@@ -6,6 +6,7 @@
 
     <sql id="filters">
         <where>
+            AND s.tenant_id = #{tenantId}
             <if test="keyword != null and keyword != ''">
                 AND (s.title LIKE CONCAT('%', #{keyword}, '%')
                 <if test="teacherIds != null and teacherIds.size() > 0">
@@ -58,13 +59,13 @@
                s.sale_status AS saleStatus, s.price_cents AS priceCents, s.currency,
                s.teacher_id AS teacherId, s.updated_at AS updatedAt
         FROM t_series s
-        WHERE s.id = #{id}
+        WHERE s.id = #{id} AND s.tenant_id = #{tenantId}
     </select>
 
     <select id="findChapters" resultType="com.wherelee.edu.modules.course.governance.AdminSeriesChapterVO">
         SELECT id, title, sort
         FROM t_series_chapter
-        WHERE series_id = #{seriesId}
+        WHERE series_id = #{seriesId} AND tenant_id = #{tenantId}
         ORDER BY sort, id
     </select>
 
@@ -74,7 +75,7 @@
                v.file_size_bytes AS fileSizeBytes, v.updated_at AS updatedAt
         FROM t_series_video v
         JOIN t_series_chapter c ON c.id = v.chapter_id
-        WHERE c.series_id = #{seriesId}
+        WHERE c.series_id = #{seriesId} AND c.tenant_id = #{tenantId}
         ORDER BY c.sort, c.id, v.sort, v.id
     </select>
 
@@ -82,13 +83,13 @@
         UPDATE t_series
         SET status = #{status}, published_at = NULL,
             sale_status = 'OFF_SALE', sale_updated_at = CURRENT_TIMESTAMP(3)
-        WHERE id = #{id}
+        WHERE id = #{id} AND tenant_id = #{tenantId}
     </update>
 
     <update id="updateSale">
         UPDATE t_series
         SET sale_status = #{saleStatus}, price_cents = #{priceCents},
             sale_updated_at = CURRENT_TIMESTAMP(3)
-        WHERE id = #{id}
+        WHERE id = #{id} AND tenant_id = #{tenantId}
     </update>
 </mapper>

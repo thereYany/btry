@@ -2,6 +2,7 @@ package com.wherelee.edu.modules.identity.user;
 
 public record User(
         Long id,
+        Long tenantId,
         String username,
         String passwordHash,
         String nickname,

@@ -1,6 +1,7 @@
 package com.wherelee.edu.modules.identity.security;
 
 import com.wherelee.edu.modules.identity.user.User;
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import com.wherelee.edu.modules.identity.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -70,11 +71,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 writeError(response, 428, "请先修改初始密码");
                 return;
             }
+            // 租户以 token 为准；不能信任任何请求参数里的租户字段
+            TenantContext.set(payload.tenantId());
             request.setAttribute("userId", user.id());
             request.setAttribute("role", user.role());
+            request.setAttribute("tenantId", payload.tenantId());
             chain.doFilter(request, response);
         } catch (Exception e) {
             writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "登录已失效，请重新登录");
+        } finally {
+            TenantContext.clear();
         }
     }
 

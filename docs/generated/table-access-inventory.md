@@ -31,7 +31,7 @@
 
 ### `t_series` — 2 个模块访问
 
-- **bootstrap**：`DataInitializer` (OTHER+READ+WRITE, server/src/main/java/com/wherelee/edu/bootstrap/DataInitializer.java)
+- **bootstrap**：`DataInitializer` (READ+WRITE, server/src/main/java/com/wherelee/edu/bootstrap/DataInitializer.java)
 - **course**：`AdminSeriesMapper` (READ+WRITE, server/src/main/resources/mapper/AdminSeriesMapper.xml)；`CatalogQueryService` (READ, server/src/main/java/com/wherelee/edu/modules/course/catalog/CatalogQueryService.java)；`TeacherContentRepository` (READ+WRITE, server/src/main/java/com/wherelee/edu/modules/course/teacher/TeacherContentRepository.java)
 
 ### `t_series_chapter` — 2 个模块访问

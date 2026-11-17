@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.identity.user;
 
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -16,6 +17,7 @@ public class UserRepository {
 
     private static final RowMapper<User> MAPPER = (rs, rowNum) -> new User(
             rs.getLong("id"),
+            rs.getLong("tenant_id"),
             rs.getString("username"),
             rs.getString("password_hash"),
             rs.getString("nickname"),
@@ -33,7 +35,7 @@ public class UserRepository {
 
     public Optional<User> findByUsername(String username) {
         List<User> users = jdbc.query("""
-                SELECT id, username, password_hash, nickname, role, status,
+                SELECT id, tenant_id, username, password_hash, nickname, role, status,
                        must_change_password, token_version
                 FROM t_user
                 WHERE username = ?
@@ -43,7 +45,7 @@ public class UserRepository {
 
     public Optional<User> findById(Long id) {
         List<User> users = jdbc.query("""
-                SELECT id, username, password_hash, nickname, role, status,
+                SELECT id, tenant_id, username, password_hash, nickname, role, status,
                        must_change_password, token_version
                 FROM t_user
                 WHERE id = ?
@@ -94,15 +96,16 @@ public class UserRepository {
         jdbc.update(connection -> {
             PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO t_user
-                        (username, password_hash, nickname, role, status,
+                        (tenant_id, username, password_hash, nickname, role, status,
                          must_change_password, token_version)
-                    VALUES (?, ?, ?, ?, 'ACTIVE', ?, 0)
+                    VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, 0)
                     """, Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, username);
-            statement.setString(2, passwordHash);
-            statement.setString(3, nickname);
-            statement.setString(4, role);
-            statement.setBoolean(5, mustChangePassword);
+            statement.setLong(1, TenantContext.current());
+            statement.setString(2, username);
+            statement.setString(3, passwordHash);
+            statement.setString(4, nickname);
+            statement.setString(5, role);
+            statement.setBoolean(6, mustChangePassword);
             return statement;
         }, keyHolder);
         Number key = keyHolder.getKey();

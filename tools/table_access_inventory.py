@@ -167,12 +167,22 @@ def collect(java_file: Path, statements: list[tuple[str, str]], module: str) -> 
     return found
 
 
+SQL_KEYWORD_RE = re.compile(r"\b(select|insert|update|delete|from|join|values)\b", re.IGNORECASE)
+
+
 def java_statements(text: str) -> list[tuple[str, str]]:
+    """只保留真正像 SQL 的片段。
+
+    表名常量/白名单（如 TenantSqlRewriter 里的租户表集合）不应被当作"访问了该表"，
+    否则登记表结构的代码会被误报成跨模块访问。
+    """
     out: list[tuple[str, str]] = []
     for i, block in enumerate(JAVA_TRIPLE_RE.findall(text)):
-        out.append((f"text-block-{i}", block))
+        if SQL_KEYWORD_RE.search(block):
+            out.append((f"text-block-{i}", block))
     for i, lit in enumerate(JAVA_STRING_RE.findall(text)):
-        out.append((f"string-{i}", lit))
+        if SQL_KEYWORD_RE.search(lit):
+            out.append((f"string-{i}", lit))
     return out
 
 

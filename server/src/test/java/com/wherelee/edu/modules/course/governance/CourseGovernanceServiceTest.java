@@ -33,7 +33,7 @@ class CourseGovernanceServiceTest {
 
     @Test
     void detailRejectsMissingSeries() {
-        when(mapper.findHeader(99L)).thenReturn(null);
+        when(mapper.findHeader(99L, 0L)).thenReturn(null);
 
         assertThatThrownBy(() -> service.detail(99L))
                 .isInstanceOf(BizException.class)
@@ -43,25 +43,25 @@ class CourseGovernanceServiceTest {
     @Test
     void adminCanArchiveSeries() {
         AdminSeriesHeaderVO header = header("PUBLISHED");
-        when(mapper.findHeader(1L)).thenReturn(header);
+        when(mapper.findHeader(1L, 0L)).thenReturn(header);
 
         service.updateStatus(1L, "ARCHIVED");
 
-        verify(mapper).updateStatus(1L, "ARCHIVED");
+        verify(mapper).updateStatus(1L, "ARCHIVED", 0L);
     }
 
     @Test
     void sameStatusDoesNotWriteAgain() {
-        when(mapper.findHeader(1L)).thenReturn(header("DRAFT"));
+        when(mapper.findHeader(1L, 0L)).thenReturn(header("DRAFT"));
 
         service.updateStatus(1L, "DRAFT");
 
-        verify(mapper, never()).updateStatus(1L, "DRAFT");
+        verify(mapper, never()).updateStatus(1L, "DRAFT", 0L);
     }
 
     @Test
     void adminCannotPublishTeacherContent() {
-        when(mapper.findHeader(1L)).thenReturn(header("DRAFT"));
+        when(mapper.findHeader(1L, 0L)).thenReturn(header("DRAFT"));
 
         assertThatThrownBy(() -> service.updateStatus(1L, "PUBLISHED"))
                 .isInstanceOf(BizException.class)

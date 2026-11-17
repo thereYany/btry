@@ -2,6 +2,7 @@ package com.wherelee.edu.modules.course.catalog;
 
 import com.wherelee.edu.modules.course.api.CatalogQuery;
 import com.wherelee.edu.modules.identity.api.AccountDirectory;
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -47,8 +48,9 @@ public class CatalogQueryService implements CatalogQuery {
                 WHERE s.status = 'PUBLISHED'
                   AND s.sale_status = 'ON_SALE'
                   AND s.price_cents > 0
+                  AND s.tenant_id = ?
                 ORDER BY s.sort, s.id
-                """, (rs, rowNum) -> raw(rs));
+                """, (rs, rowNum) -> raw(rs), TenantContext.current());
         return toCatalogSeries(rows);
     }
 
@@ -78,8 +80,9 @@ public class CatalogQueryService implements CatalogQuery {
                 FROM t_series s
                 WHERE s.id IN (""" + placeholders + """
                 )
+                  AND s.tenant_id = ?
                 ORDER BY s.sort, s.id
-                """, (rs, rowNum) -> raw(rs), ids.toArray());
+                """, (rs, rowNum) -> raw(rs), concat(ids, TenantContext.current()));
         return toCatalogSeries(rows);
     }
 
@@ -117,6 +120,7 @@ public class CatalogQueryService implements CatalogQuery {
                 JOIN t_series_chapter c ON c.id = v.chapter_id
                 WHERE c.series_id IN (""" + placeholders(ids.size()) + """
                 )
+                  AND c.tenant_id = ?
                 ORDER BY c.sort, c.id, v.sort, v.id
                 """, (rs, rowNum) -> new VideoRef(
                 rs.getLong("id"),
@@ -125,7 +129,7 @@ public class CatalogQueryService implements CatalogQuery {
                 rs.getString("title"),
                 rs.getInt("duration_seconds"),
                 rs.getString("media_status")
-        ), ids.toArray());
+        ), concat(ids, TenantContext.current()));
     }
 
     @Override
@@ -136,7 +140,7 @@ public class CatalogQueryService implements CatalogQuery {
                 FROM t_series_video v
                 JOIN t_series_chapter c ON c.id = v.chapter_id
                 JOIN t_series s ON s.id = c.series_id
-                WHERE v.id = ?
+                WHERE v.id = ? AND s.tenant_id = ?
                 """, (rs, rowNum) -> new VideoContext(
                 rs.getLong("id"),
                 rs.getLong("series_id"),
@@ -145,7 +149,7 @@ public class CatalogQueryService implements CatalogQuery {
                 rs.getInt("duration_seconds"),
                 rs.getString("media_status"),
                 rs.getString("series_status")
-        ), videoId).stream().findFirst();
+        ), videoId, TenantContext.current()).stream().findFirst();
     }
 
     private List<CatalogSeries> toCatalogSeries(List<RawSeries> rows) {
@@ -179,6 +183,15 @@ public class CatalogQueryService implements CatalogQuery {
             return List.of();
         }
         return ids.stream().filter(id -> id != null).distinct().toList();
+    }
+
+    private static Object[] concat(java.util.List<Long> ids, long tenantId) {
+        Object[] args = new Object[ids.size() + 1];
+        for (int i = 0; i < ids.size(); i++) {
+            args[i] = ids.get(i);
+        }
+        args[ids.size()] = tenantId;
+        return args;
     }
 
     private static String placeholders(int size) {

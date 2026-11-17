@@ -48,7 +48,7 @@ class TeacherInvitationServiceTest {
     @Test
     void createStoresOnlyTokenHashAndReturnsOneTimeLink() {
         when(userRepository.findByUsername("physics_teacher")).thenReturn(Optional.empty());
-        when(mapper.findPendingByUsername(eq("physics_teacher"), any())).thenReturn(null);
+        when(mapper.findPendingByUsername(eq("physics_teacher"), any(), eq(0L))).thenReturn(null);
         when(tokenService.generate()).thenReturn("plain-token");
         when(tokenService.hash("plain-token")).thenReturn("a".repeat(64));
         doAnswer(invocation -> {
@@ -70,7 +70,7 @@ class TeacherInvitationServiceTest {
     @Test
     void rejectsDuplicatePendingInvitation() {
         when(userRepository.findByUsername("physics_teacher")).thenReturn(Optional.empty());
-        when(mapper.findPendingByUsername(eq("physics_teacher"), any()))
+        when(mapper.findPendingByUsername(eq("physics_teacher"), any(), eq(0L)))
                 .thenReturn(pendingInvitation(LocalDateTime.now().plusHours(1)));
 
         assertThatThrownBy(() -> service.create(
@@ -83,25 +83,25 @@ class TeacherInvitationServiceTest {
     void acceptCreatesTeacherWithSelfChosenPassword() {
         TeacherInvitation invitation = pendingInvitation(LocalDateTime.now().plusHours(1));
         when(tokenService.hash("plain-token")).thenReturn("hash");
-        when(mapper.findByTokenHashForUpdate("hash")).thenReturn(invitation);
+        when(mapper.findByTokenHashForUpdate("hash", 0L)).thenReturn(invitation);
         when(userRepository.findByUsername("physics_teacher")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("Teacher1234")).thenReturn("encoded");
         when(userRepository.create("physics_teacher", "encoded", "物理老师", "TEACHER", false))
                 .thenReturn(9L);
-        when(mapper.markUsed(eq(11L), eq(9L), any())).thenReturn(1);
+        when(mapper.markUsed(eq(11L), eq(9L), any(), eq(0L))).thenReturn(1);
 
         Long userId = service.accept(new TeacherInvitationDtos.AcceptRequest(
                 "plain-token", "Teacher1234", "Teacher1234"));
 
         assertThat(userId).isEqualTo(9L);
         verify(userRepository).create("physics_teacher", "encoded", "物理老师", "TEACHER", false);
-        verify(mapper).markUsed(eq(11L), eq(9L), any());
+        verify(mapper).markUsed(eq(11L), eq(9L), any(), eq(0L));
     }
 
     @Test
     void acceptRejectsExpiredInvitation() {
         when(tokenService.hash("plain-token")).thenReturn("hash");
-        when(mapper.findByTokenHashForUpdate("hash"))
+        when(mapper.findByTokenHashForUpdate("hash", 0L))
                 .thenReturn(pendingInvitation(LocalDateTime.now().minusSeconds(1)));
 
         assertThatThrownBy(() -> service.accept(new TeacherInvitationDtos.AcceptRequest(
@@ -117,7 +117,7 @@ class TeacherInvitationServiceTest {
         TeacherInvitation invitation = pendingInvitation(LocalDateTime.now().plusHours(1));
         invitation.setStatus("USED");
         when(tokenService.hash("plain-token")).thenReturn("hash");
-        when(mapper.findByTokenHashForUpdate("hash")).thenReturn(invitation);
+        when(mapper.findByTokenHashForUpdate("hash", 0L)).thenReturn(invitation);
 
         assertThatThrownBy(() -> service.accept(new TeacherInvitationDtos.AcceptRequest(
                 "plain-token", "Teacher1234", "Teacher1234")))
@@ -137,7 +137,7 @@ class TeacherInvitationServiceTest {
     void revokeRejectsUsedInvitation() {
         TeacherInvitation invitation = pendingInvitation(LocalDateTime.now().plusHours(1));
         invitation.setStatus("USED");
-        when(mapper.findById(11L)).thenReturn(invitation);
+        when(mapper.findById(11L, 0L)).thenReturn(invitation);
 
         assertThatThrownBy(() -> service.revoke(11L))
                 .isInstanceOf(BizException.class)

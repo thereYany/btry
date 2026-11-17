@@ -62,8 +62,9 @@ class PaymentShadowIntegrationTest extends CommerceIntegrationTestSupport {
 
         String expected = PaymentShadowNo.of(orderNo);
         assertThat(jdbc.queryForList(
-                "SELECT payment_no FROM t_payment_attempt WHERE order_id = "
-                        + "(SELECT id FROM t_order WHERE order_no = ?)", String.class, orderNo))
+                "SELECT payment_no FROM t_payment_attempt "
+                        + "WHERE tenant_id = 0 AND order_id = (SELECT id FROM t_order WHERE order_no = ?)",
+                String.class, orderNo))
                 .containsOnly(expected);
         assertThat(jdbc.queryForList(
                 "SELECT payment_no FROM t_payment_event WHERE order_no = ?", String.class, orderNo))

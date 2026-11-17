@@ -51,8 +51,8 @@ class ReconciliationIntegrationTest extends CommerceIntegrationTestSupport {
         pay(orderNo);
         paymentService.acceptVerified(successNotification(orderNo));
         // 抹掉渠道侧的支付尝试：渠道账单里没有这笔，我方却已支付
-        jdbc.update("DELETE FROM t_payment_attempt WHERE order_id = "
-                + "(SELECT id FROM t_order WHERE order_no = ?)", orderNo);
+        jdbc.update("DELETE FROM t_payment_attempt WHERE tenant_id = 0 "
+                + "AND order_id = (SELECT id FROM t_order WHERE order_no = ?)", orderNo);
 
         ReconSummary summary = reconciliation.run("MOCK", LocalDate.now());
         assertThat(summary.diffCount()).isEqualTo(1);
@@ -89,14 +89,15 @@ class ReconciliationIntegrationTest extends CommerceIntegrationTestSupport {
         pay(orderNo);
         paymentService.acceptVerified(successNotification(orderNo));
         jdbc.update("UPDATE t_payment_attempt SET provider_amount_cents = provider_amount_cents + 100 "
-                + "WHERE order_id = (SELECT id FROM t_order WHERE order_no = ?)", orderNo);
+                + "WHERE tenant_id = 0 AND order_id = (SELECT id FROM t_order WHERE order_no = ?)", orderNo);
 
         ReconSummary amountSummary = reconciliation.run("MOCK", LocalDate.now());
         assertThat(amountSummary.diffByType()).containsEntry("AMOUNT", 1);
 
         // 修回金额，改状态：我方 PAID、渠道 FAILED
         jdbc.update("UPDATE t_payment_attempt SET provider_amount_cents = provider_amount_cents - 100, "
-                + "status = 'FAILED' WHERE order_id = (SELECT id FROM t_order WHERE order_no = ?)", orderNo);
+                + "status = 'FAILED' WHERE tenant_id = 0 "
+                + "AND order_id = (SELECT id FROM t_order WHERE order_no = ?)", orderNo);
         ReconSummary statusSummary = reconciliation.run("MOCK", LocalDate.now());
         assertThat(statusSummary.diffByType()).containsEntry("STATUS", 1);
     }
@@ -107,8 +108,8 @@ class ReconciliationIntegrationTest extends CommerceIntegrationTestSupport {
         String orderNo = createOrder(nextRequestId()).orderNo();
         pay(orderNo);
         paymentService.acceptVerified(successNotification(orderNo));
-        jdbc.update("DELETE FROM t_payment_attempt WHERE order_id = "
-                + "(SELECT id FROM t_order WHERE order_no = ?)", orderNo);
+        jdbc.update("DELETE FROM t_payment_attempt WHERE tenant_id = 0 "
+                + "AND order_id = (SELECT id FROM t_order WHERE order_no = ?)", orderNo);
         reconciliation.run("MOCK", LocalDate.now());
 
         assertThat(reconciliation.pageDiffs("OPEN", 1, 10).total()).isEqualTo(1);

@@ -11,6 +11,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
@@ -21,7 +22,7 @@ class PlaybackLogWriterFailureTest {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         PlaybackLogQueue queue = new PlaybackLogQueue(registry);
         PlaybackLogMapper mapper = mock(PlaybackLogMapper.class);
-        doThrow(new RuntimeException("db down")).when(mapper).insertBatch(anyList());
+        doThrow(new RuntimeException("db down")).when(mapper).insertBatch(anyList(), anyLong());
 
         RetryRegistry retryRegistry = RetryRegistry.of(
                 RetryConfig.custom().maxAttempts(1).waitDuration(Duration.ZERO).build());

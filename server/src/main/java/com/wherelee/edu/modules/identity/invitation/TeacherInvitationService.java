@@ -1,6 +1,7 @@
 package com.wherelee.edu.modules.identity.invitation;
 
 import com.wherelee.edu.modules.platform.common.BizException;
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import com.wherelee.edu.modules.identity.invitation.dto.TeacherInvitationDtos;
 import com.wherelee.edu.modules.identity.user.UserRepository;
@@ -44,7 +45,7 @@ public class TeacherInvitationService {
             throw BizException.badRequest("用户名已存在");
         }
         LocalDateTime now = LocalDateTime.now();
-        if (mapper.findPendingByUsername(username, now) != null) {
+        if (mapper.findPendingByUsername(username, now, TenantContext.current()) != null) {
             throw BizException.badRequest("该用户名已有未过期的教师邀请");
         }
 
@@ -57,6 +58,7 @@ public class TeacherInvitationService {
         invitation.setStatus("PENDING");
         invitation.setExpiresAt(expiresAt);
         invitation.setCreatedBy(adminId);
+        invitation.setTenantId(TenantContext.current());
         mapper.insert(invitation);
 
         return new TeacherInvitationDtos.CreatedResponse(
@@ -68,19 +70,19 @@ public class TeacherInvitationService {
         int safePage = Math.min(Math.max(1, page), MAX_PAGE);
         int safeSize = Math.min(Math.max(1, size), MAX_PAGE_SIZE);
         String normalizedStatus = status == null || status.isBlank() ? null : status.trim();
-        long total = mapper.count(normalizedStatus);
+        long total = mapper.count(normalizedStatus, TenantContext.current());
         if (total == 0) {
             return new PageResult<>(List.of(), 0, safePage, safeSize);
         }
         return new PageResult<>(
                 mapper.findPage(normalizedStatus, LocalDateTime.now(),
-                        (safePage - 1) * safeSize, safeSize),
+                        (safePage - 1) * safeSize, safeSize, TenantContext.current()),
                 total, safePage, safeSize);
     }
 
     @Transactional
     public void revoke(Long id) {
-        TeacherInvitation invitation = mapper.findById(id);
+        TeacherInvitation invitation = mapper.findById(id, TenantContext.current());
         if (invitation == null) {
             throw BizException.notFound("邀请不存在");
         }
@@ -88,7 +90,7 @@ public class TeacherInvitationService {
         if (!"PENDING".equals(invitation.getStatus()) || !invitation.getExpiresAt().isAfter(now)) {
             throw BizException.badRequest("邀请已失效，不能撤销");
         }
-        if (mapper.revoke(id, now) != 1) {
+        if (mapper.revoke(id, now, TenantContext.current()) != 1) {
             throw BizException.badRequest("邀请状态已变化，请刷新后重试");
         }
     }
@@ -106,7 +108,7 @@ public class TeacherInvitationService {
             throw BizException.badRequest("两次输入的密码不一致");
         }
         String tokenHash = tokenService.hash(request.token().trim());
-        TeacherInvitation invitation = mapper.findByTokenHashForUpdate(tokenHash);
+        TeacherInvitation invitation = mapper.findByTokenHashForUpdate(tokenHash, TenantContext.current());
         requireUsable(invitation);
         if (userRepository.findByUsername(invitation.getUsername()).isPresent()) {
             throw BizException.badRequest("用户名已被占用");
@@ -122,14 +124,14 @@ public class TeacherInvitationService {
         } catch (DuplicateKeyException e) {
             throw BizException.badRequest("用户名已被占用");
         }
-        if (mapper.markUsed(invitation.getId(), userId, LocalDateTime.now()) != 1) {
+        if (mapper.markUsed(invitation.getId(), userId, LocalDateTime.now(), TenantContext.current()) != 1) {
             throw BizException.badRequest("邀请已失效，请重新获取");
         }
         return userId;
     }
 
     private TeacherInvitation findByToken(String token) {
-        return mapper.findByTokenHash(tokenService.hash(token.trim()));
+        return mapper.findByTokenHash(tokenService.hash(token.trim()), TenantContext.current());
     }
 
     private void requireUsable(TeacherInvitation invitation) {

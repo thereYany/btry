@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.order;
 
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -66,20 +67,21 @@ public class OrderRepository {
         jdbc.update(connection -> {
             PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO t_order
-                        (order_no, user_id, series_id, series_title_snapshot, price_cents,
+                        (tenant_id, order_no, user_id, series_id, series_title_snapshot, price_cents,
                          currency, status, payment_no, client_request_id, active_key, expire_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?, ?)
                     """, Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, orderNo);
-            statement.setLong(2, userId);
-            statement.setLong(3, seriesId);
-            statement.setString(4, seriesTitle);
-            statement.setLong(5, priceCents);
-            statement.setString(6, currency);
-            statement.setString(7, paymentNo);
-            statement.setString(8, clientRequestId);
-            statement.setString(9, activeKey);
-            statement.setTimestamp(10, Timestamp.valueOf(expireAt));
+            statement.setLong(1, TenantContext.current());
+            statement.setString(2, orderNo);
+            statement.setLong(3, userId);
+            statement.setLong(4, seriesId);
+            statement.setString(5, seriesTitle);
+            statement.setLong(6, priceCents);
+            statement.setString(7, currency);
+            statement.setString(8, paymentNo);
+            statement.setString(9, clientRequestId);
+            statement.setString(10, activeKey);
+            statement.setTimestamp(11, Timestamp.valueOf(expireAt));
             return statement;
         }, keyHolder);
         Number key = keyHolder.getKey();

@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment.shadow;
 
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -132,9 +133,10 @@ public class PaymentOrderShadowRepository {
                        p.provider_trade_no   AS pay_trade_no
                 FROM t_order o
                 LEFT JOIN t_payment_order p ON p.payment_no = CONCAT('P', o.order_no)
+                WHERE o.tenant_id = ?
                 ORDER BY o.id DESC
                 LIMIT ?
-                """, PAIR_MAPPER, limit);
+                """, PAIR_MAPPER, TenantContext.current(), limit);
     }
 
     /** 统计未回填 payment_no 的引用行（影子覆盖度指标）。 */

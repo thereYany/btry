@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TeacherInvitation {
+
+    private Long tenantId;
     private Long id;
     private String tokenHash;
     private String username;

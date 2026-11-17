@@ -11,7 +11,7 @@ class JwtServiceTest {
     void tokenCarriesAccountTokenVersion() {
         JwtService service = new JwtService(new JwtProperties(
                 "01234567890123456789012345678901", 60));
-        User user = new User(7L, "student", "hash", "学生", "STUDENT", "ACTIVE", false, 3);
+        User user = new User(7L, 0L, "student", "hash", "学生", "STUDENT", "ACTIVE", false, 3);
 
         String token = service.createToken(user);
         JwtService.TokenPayload payload = service.parse(token);

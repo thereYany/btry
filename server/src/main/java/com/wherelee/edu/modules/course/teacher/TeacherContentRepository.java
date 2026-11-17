@@ -1,6 +1,8 @@
 package com.wherelee.edu.modules.course.teacher;
 
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
+import com.wherelee.edu.modules.platform.tenant.TenantSqlRewriter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -242,11 +244,20 @@ public class TeacherContentRepository {
     }
 
     private Long insert(String sql, Object... args) {
+        // 动态拼装的 INSERT 不走 JdbcTemplate 拦截器，这里显式补租户条件
+        TenantSqlRewriter.RewriteResult rewritten = TenantSqlRewriter.rewrite(sql);
+        Object[] withTenant = args;
+        if (rewritten.changed()) {
+            withTenant = java.util.Arrays.copyOf(args, args.length + 1);
+            withTenant[args.length] = TenantContext.current();
+        }
+        final String finalSql = rewritten.sql();
+        final Object[] finalArgs = withTenant;
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
-            PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            for (int index = 0; index < args.length; index++) {
-                statement.setObject(index + 1, args[index]);
+            PreparedStatement statement = connection.prepareStatement(finalSql, Statement.RETURN_GENERATED_KEYS);
+            for (int index = 0; index < finalArgs.length; index++) {
+                statement.setObject(index + 1, finalArgs[index]);
             }
             return statement;
         }, keyHolder);

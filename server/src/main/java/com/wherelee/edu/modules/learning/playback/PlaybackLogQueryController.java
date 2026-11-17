@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.learning.playback;
 
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,6 @@ public class PlaybackLogQueryController {
                                     @RequestParam(required = false) String eventType,
                                     @RequestParam(defaultValue = "50") int limit) {
         int safeLimit = Math.min(Math.max(limit, 1), 200);
-        return mapper.findRecentByUser(userId, eventType, safeLimit);
+        return mapper.findRecentByUser(TenantContext.current(), userId, eventType, safeLimit);
     }
 }

@@ -9,6 +9,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class PlaybackLogWriter {
                 batch.add(first);
                 queue.drainTo(batch, 99);
                 dbRetry.executeRunnable(() ->
-                        dbCircuitBreaker.executeRunnable(() -> mapper.insertBatch(batch)));
+                        dbCircuitBreaker.executeRunnable(() -> mapper.insertBatch(batch, TenantContext.current())));
                 persisted.increment(batch.size());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

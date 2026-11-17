@@ -79,7 +79,7 @@
       ],
       "module_count": 1,
       "class_count": 3,
-      "statements": 5,
+      "statements": 4,
       "multi_table_classes": [
         "PaymentOrderShadowRepository"
       ]
@@ -93,7 +93,7 @@
       ],
       "module_count": 1,
       "class_count": 3,
-      "statements": 6,
+      "statements": 5,
       "multi_table_classes": [
         "PaymentOrderShadowRepository"
       ]
@@ -107,7 +107,7 @@
       ],
       "module_count": 1,
       "class_count": 2,
-      "statements": 5,
+      "statements": 4,
       "multi_table_classes": []
     },
     "t_payment_order": {
@@ -177,7 +177,7 @@
       ],
       "module_count": 1,
       "class_count": 2,
-      "statements": 4,
+      "statements": 3,
       "multi_table_classes": []
     },
     "t_series": {
@@ -190,7 +190,7 @@
       ],
       "module_count": 1,
       "class_count": 4,
-      "statements": 8,
+      "statements": 7,
       "multi_table_classes": [
         "AdminSeriesMapper",
         "CatalogQueryService",

@@ -4,6 +4,7 @@ import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
 import com.wherelee.edu.modules.course.api.CourseGovernance;
 import com.wherelee.edu.modules.identity.api.AccountDirectory;
 import com.wherelee.edu.modules.platform.common.BizException;
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,12 +40,12 @@ public class CourseGovernanceService implements CourseGovernance {
         // 关键字匹配教师名在身份域做，课程库只按 teacherId 列表过滤
         List<Long> teacherIds = keyword == null || keyword.isBlank()
                 ? null : accountDirectory.searchIds(keyword, 200);
-        long total = mapper.count(keyword, normalizedStatus, teacherId, teacherIds);
+        long total = mapper.count(keyword, normalizedStatus, teacherId, teacherIds, TenantContext.current());
         if (total == 0) {
             return new PageResult<>(List.of(), 0, safePage, safeSize);
         }
         List<AdminSeriesVO> rows = mapper.findPage(keyword, normalizedStatus, teacherId, teacherIds,
-                (safePage - 1) * safeSize, safeSize);
+                (safePage - 1) * safeSize, safeSize, TenantContext.current());
         enrich(rows);
         List<SeriesSummary> records = rows.stream().map(this::summary).toList();
         return new PageResult<>(records, total, safePage, safeSize);
@@ -52,19 +53,19 @@ public class CourseGovernanceService implements CourseGovernance {
 
     @Override
     public SeriesDetail detail(Long seriesId) {
-        AdminSeriesHeaderVO header = mapper.findHeader(seriesId);
+        AdminSeriesHeaderVO header = mapper.findHeader(seriesId, TenantContext.current());
         if (header == null) {
             throw BizException.notFound("系列不存在");
         }
         header.setTeacherName(accountDirectory.nickname(header.getTeacherId()));
         Map<Long, List<VideoItem>> videosByChapter = new LinkedHashMap<>();
-        for (AdminSeriesVideoVO video : mapper.findVideos(seriesId)) {
+        for (AdminSeriesVideoVO video : mapper.findVideos(seriesId, TenantContext.current())) {
             videosByChapter.computeIfAbsent(video.getChapterId(), key -> new ArrayList<>())
                     .add(new VideoItem(
                             video.getId(), video.getTitle(), video.getSort(),
                             video.getMediaStatus(), video.getDurationSeconds(), video.getFileSizeBytes()));
         }
-        List<ChapterItem> chapters = mapper.findChapters(seriesId).stream()
+        List<ChapterItem> chapters = mapper.findChapters(seriesId, TenantContext.current()).stream()
                 .map(chapter -> new ChapterItem(
                         chapter.getId(), chapter.getTitle(), chapter.getSort(),
                         videosByChapter.getOrDefault(chapter.getId(), List.of())))
@@ -78,7 +79,7 @@ public class CourseGovernanceService implements CourseGovernance {
     @Override
     @Transactional
     public void updateStatus(Long seriesId, String status) {
-        AdminSeriesHeaderVO series = mapper.findHeader(seriesId);
+        AdminSeriesHeaderVO series = mapper.findHeader(seriesId, TenantContext.current());
         if (series == null) {
             throw BizException.notFound("系列不存在");
         }
@@ -88,13 +89,13 @@ public class CourseGovernanceService implements CourseGovernance {
         if (!"DRAFT".equals(status) && !"ARCHIVED".equals(status)) {
             throw BizException.badRequest("管理员只能下架或归档系列");
         }
-        mapper.updateStatus(seriesId, status);
+        mapper.updateStatus(seriesId, status, TenantContext.current());
     }
 
     @Override
     @Transactional
     public void updateSale(Long seriesId, String saleStatus, long priceCents) {
-        AdminSeriesHeaderVO series = mapper.findHeader(seriesId);
+        AdminSeriesHeaderVO series = mapper.findHeader(seriesId, TenantContext.current());
         if (series == null) {
             throw BizException.notFound("系列不存在");
         }
@@ -109,7 +110,7 @@ public class CourseGovernanceService implements CourseGovernance {
         if (priceCents > 100_000_00L) {
             throw BizException.badRequest("课程价格过高");
         }
-        mapper.updateSale(seriesId, saleStatus, priceCents);
+        mapper.updateSale(seriesId, saleStatus, priceCents, TenantContext.current());
     }
 
     /** 教师名与学员数来自身份域/权益域契约，课程库不再 join 它们。 */

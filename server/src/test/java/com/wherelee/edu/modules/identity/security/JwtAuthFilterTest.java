@@ -39,7 +39,7 @@ class JwtAuthFilterTest {
     void rejectsTokenWhenAccountVersionChanged() throws Exception {
         MockHttpServletRequest request = request("GET", "/api/admin/users");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0));
+        when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0, 0L));
         when(userRepository.findById(2L)).thenReturn(Optional.of(user("ACTIVE", false, 1)));
 
         filter.doFilter(request, response, chain);
@@ -53,7 +53,7 @@ class JwtAuthFilterTest {
     void rejectsDisabledAccount() throws Exception {
         MockHttpServletRequest request = request("GET", "/api/learning/series");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0));
+        when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0, 0L));
         when(userRepository.findById(2L)).thenReturn(Optional.of(user("DISABLED", false, 0)));
 
         filter.doFilter(request, response, chain);
@@ -67,7 +67,7 @@ class JwtAuthFilterTest {
     void blocksBusinessApisUntilInitialPasswordChanged() throws Exception {
         MockHttpServletRequest request = request("GET", "/api/learning/series");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0));
+        when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0, 0L));
         when(userRepository.findById(2L)).thenReturn(Optional.of(user("ACTIVE", true, 0)));
 
         filter.doFilter(request, response, chain);
@@ -81,7 +81,7 @@ class JwtAuthFilterTest {
     void allowsPasswordChangeWhileAccountIsMarkedForChange() throws Exception {
         MockHttpServletRequest request = request("PUT", "/api/auth/password");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0));
+        when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0, 0L));
         when(userRepository.findById(2L)).thenReturn(Optional.of(user("ACTIVE", true, 0)));
 
         filter.doFilter(request, response, chain);
@@ -122,6 +122,6 @@ class JwtAuthFilterTest {
     }
 
     private User user(String status, boolean mustChangePassword, int tokenVersion) {
-        return new User(2L, "student", "hash", "学生", "STUDENT", status, mustChangePassword, tokenVersion);
+        return new User(2L, 0L, "student", "hash", "学生", "STUDENT", status, mustChangePassword, tokenVersion);
     }
 }

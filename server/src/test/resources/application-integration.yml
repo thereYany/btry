@@ -24,6 +24,9 @@ management:
     port: 0
 
 app:
+  tenant:
+    enforce: true
+    default-tenant-id: 0
   security:
     login-protection-enabled: false
   cos:
