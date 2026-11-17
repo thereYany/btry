@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +53,7 @@ class PaymentServiceTest {
         PaymentAttemptRecord attempt = attempt();
         when(orderService.require("ORD-1")).thenReturn(order);
         when(paymentRepository.findLatestAttempt(1L)).thenReturn(Optional.of(attempt));
-        when(paymentGateway.query(order, attempt)).thenReturn(
+        when(paymentGateway.query(any(PaymentOrderView.class), eq(attempt))).thenReturn(
                 new PaymentGateway.PaymentQueryResult("NOT_FOUND", order.priceCents(),
                         attempt.providerTradeNo(), "ACQ.TRADE_NOT_EXIST"));
 

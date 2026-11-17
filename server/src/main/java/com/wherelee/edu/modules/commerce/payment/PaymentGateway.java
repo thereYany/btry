@@ -1,21 +1,22 @@
 package com.wherelee.edu.modules.commerce.payment;
 
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
-
+/**
+ * 支付渠道 SPI（策略）。
+ *
+ * <p>菜渠道适配器只接受支付域自己的 PaymentOrderView，不认识订单/课程等业务概念。</p>
+ */
 public interface PaymentGateway {
 
     String channel();
 
-    /**
-     * 由渠道生成商户侧支付单号，保证同一订单同一尝试幂等。
-     */
-    String outTradeNo(OrderRecord order, int attemptNo);
+    /** 商户侧渠道单号：同一支付单同一尝试幂等。 */
+    String outTradeNo(PaymentOrderView order, int attemptNo);
 
-    PaymentAction initiate(OrderRecord order, PaymentAttemptRecord attempt);
+    PaymentAction initiate(PaymentOrderView order, PaymentAttemptRecord attempt);
 
-    PaymentQueryResult query(OrderRecord order, PaymentAttemptRecord attempt);
+    PaymentQueryResult query(PaymentOrderView order, PaymentAttemptRecord attempt);
 
-    RefundResult refund(OrderRecord order, RefundRecord refund, boolean simulateFailure);
+    RefundResult refund(PaymentOrderView order, RefundRecord refund, boolean simulateFailure);
 
     record PaymentAction(String cashierUrl) {
     }

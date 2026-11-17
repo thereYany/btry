@@ -77,23 +77,28 @@ public class PaymentRepository {
         return value == null ? 1 : value;
     }
 
-    public Long createAttempt(Long orderId, int attemptNo, String channel,
+    public Long createAttempt(Long orderId, String paymentNo, int attemptNo, String channel,
                               String providerTradeNo, long amountCents, String digest) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO t_payment_attempt
-                        (tenant_id, order_id, attempt_no, channel, status, provider_trade_no,
+                        (tenant_id, order_id, payment_no, attempt_no, channel, status, provider_trade_no,
                          provider_status, provider_amount_cents, request_digest)
-                    VALUES (?, ?, ?, ?, 'PROCESSING', ?, 'CREATED', ?, ?)
+                    VALUES (?, ?, ?, ?, ?, 'PROCESSING', ?, 'CREATED', ?, ?)
                     """, Statement.RETURN_GENERATED_KEYS);
             statement.setLong(1, TenantContext.current());
-            statement.setLong(2, orderId);
-            statement.setInt(3, attemptNo);
-            statement.setString(4, channel);
-            statement.setString(5, providerTradeNo);
-            statement.setLong(6, amountCents);
-            statement.setString(7, digest);
+            if (orderId == null) {
+                statement.setNull(2, java.sql.Types.BIGINT);
+            } else {
+                statement.setLong(2, orderId);
+            }
+            statement.setString(3, paymentNo);
+            statement.setInt(4, attemptNo);
+            statement.setString(5, channel);
+            statement.setString(6, providerTradeNo);
+            statement.setLong(7, amountCents);
+            statement.setString(8, digest);
             return statement;
         }, keyHolder);
         Number key = keyHolder.getKey();
@@ -108,6 +113,13 @@ public class PaymentRepository {
                 SELECT * FROM t_payment_attempt WHERE order_id = ?
                 ORDER BY attempt_no DESC LIMIT 1
                 """, ATTEMPT_MAPPER, orderId).stream().findFirst();
+    }
+
+    public Optional<PaymentAttemptRecord> findLatestAttemptByPaymentNo(String paymentNo) {
+        return jdbc.query("""
+                SELECT * FROM t_payment_attempt WHERE payment_no = ?
+                ORDER BY attempt_no DESC LIMIT 1
+                """, ATTEMPT_MAPPER, paymentNo).stream().findFirst();
     }
 
     public Optional<PaymentAttemptRecord> findAttemptByProviderTradeNo(String providerTradeNo) {
@@ -150,14 +162,14 @@ public class PaymentRepository {
                 """, code, message, attemptId);
     }
 
-    public boolean insertEvent(String provider, String eventKey, Long orderId, String orderNo,
+    public boolean insertEvent(String provider, String eventKey, String paymentNo, String orderNo,
                                String eventType, long amountCents, String payloadDigest) {
         return jdbc.update("""
                 INSERT IGNORE INTO t_payment_event
-                    (provider, event_key, order_id, order_no, event_type,
+                    (tenant_id, provider, event_key, payment_no, order_no, event_type,
                      amount_cents, payload_digest, process_status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'RECEIVED')
-                """, provider, eventKey, orderId, orderNo, eventType,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'RECEIVED')
+                """, TenantContext.current(), provider, eventKey, paymentNo, orderNo, eventType,
                 amountCents, payloadDigest) > 0;
     }
 

@@ -11,8 +11,7 @@ import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wherelee.edu.modules.platform.common.BizException;
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
-import com.wherelee.edu.modules.commerce.order.OrderStatus;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
 import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
 import com.wherelee.edu.modules.commerce.payment.PaymentGateway;
 import com.wherelee.edu.modules.commerce.payment.RefundRecord;
@@ -183,16 +182,14 @@ class AlipayPaymentGatewayTest {
         verifyNoInteractions(client);
     }
 
-    private OrderRecord order() {
-        return new OrderRecord(1L, "ORD1", 1L, 1L, "物理必修一", 1L, "CNY", OrderStatus.PAYING,
-                "ALIPAY", null, "req", null, now.plusMinutes(15), null, null, null,
-                0, null, now, now);
+    private PaymentOrderView order() {
+        return new PaymentOrderView("P-ORD1", "ORD1", "btry", "COURSE_ORDER", "物理必修一", 1L, "CNY",
+                "PAYING", "ALIPAY", null, now.plusMinutes(15), null);
     }
 
-    private OrderRecord paidOrder() {
-        return new OrderRecord(1L, "ORD1", 1L, 1L, "物理必修一", 1L, "CNY", OrderStatus.PAID,
-                "ALIPAY", "2026110522001400001", "req", null, now.plusMinutes(15), now, null, null,
-                0, null, now, now);
+    private PaymentOrderView paidOrder() {
+        return new PaymentOrderView("P-ORD1", "ORD1", "btry", "COURSE_ORDER", "物理必修一", 1L, "CNY",
+                "PAID", "ALIPAY", "2026110522001400001", now.plusMinutes(15), now);
     }
 
     private PaymentAttemptRecord attempt() {

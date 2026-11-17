@@ -3,9 +3,8 @@ package com.wherelee.edu.modules.commerce.payment.alipay;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
-import com.wherelee.edu.modules.commerce.order.OrderRepository;
-import com.wherelee.edu.modules.commerce.order.OrderStatus;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderRepository;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
 import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
 import com.wherelee.edu.modules.commerce.payment.PaymentConfirmationService;
 import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
@@ -44,7 +43,7 @@ class AlipayNotifyServiceTest {
     private static final String SELLER_ID = "2088000000000000";
 
     @Mock private PaymentRepository paymentRepository;
-    @Mock private OrderRepository orderRepository;
+    @Mock private PaymentOrderRepository paymentOrderRepository;
     @Mock private PaymentService paymentService;
     @Mock private PaymentMetrics metrics;
     @Mock private AlertPublisher alertPublisher;
@@ -66,7 +65,7 @@ class AlipayNotifyServiceTest {
                 "https://whereri.site/api/payments/alipay/notify",
                 "https://whereri.site/learn/orders",
                 "UTF-8", "RSA2", "json", 5000, 15000);
-        service = new AlipayNotifyService(properties, paymentRepository, orderRepository,
+        service = new AlipayNotifyService(properties, paymentRepository, paymentOrderRepository,
                 paymentService, metrics, alertPublisher, TraceSpans.noop());
     }
 
@@ -74,7 +73,8 @@ class AlipayNotifyServiceTest {
     void validNotifyConfirmsPaymentOnce() throws Exception {
         stubOrderLookup();
         when(paymentService.acceptVerified(any())).thenReturn(
-                new PaymentConfirmationService.ConfirmationResult(true, false, "支付已确认", order(OrderStatus.PAID)));
+                new PaymentConfirmationService.ConfirmationResult(true, false, "支付已确认",
+                        "P-ORD1", "ORD1", "PAID", 1L, "ALIPAY", "2026110522001400001"));
 
         String result = service.handle(signedBody(baseParams("TRADE_SUCCESS")));
 
@@ -126,7 +126,8 @@ class AlipayNotifyServiceTest {
     void closedTradeMapsToPaymentFailed() throws Exception {
         stubOrderLookup();
         when(paymentService.acceptVerified(any())).thenReturn(
-                new PaymentConfirmationService.ConfirmationResult(true, false, "支付失败已入账", order(OrderStatus.PAY_FAILED)));
+                new PaymentConfirmationService.ConfirmationResult(true, false, "支付失败已入账",
+                        "P-ORD1", "ORD1", "FAILED", 1L, "ALIPAY", "2026110522001400001"));
 
         assertThat(service.handle(signedBody(baseParams("TRADE_CLOSED")))).isEqualTo("success");
         ArgumentCaptor<PaymentNotification> captor = ArgumentCaptor.forClass(PaymentNotification.class);
@@ -137,7 +138,7 @@ class AlipayNotifyServiceTest {
     @Test
     void intermediateStatusIsAckedWithoutPersisting() throws Exception {
         assertThat(service.handle(signedBody(baseParams("WAIT_BUYER_PAY")))).isEqualTo("success");
-        verifyNoInteractions(paymentRepository, orderRepository, paymentService);
+        verifyNoInteractions(paymentRepository, paymentOrderRepository, paymentService);
     }
 
     @Test
@@ -153,14 +154,16 @@ class AlipayNotifyServiceTest {
     void duplicateNotifyStillAcks() throws Exception {
         stubOrderLookup();
         when(paymentService.acceptVerified(any())).thenReturn(
-                new PaymentConfirmationService.ConfirmationResult(true, true, "重复支付事件已忽略", order(OrderStatus.FULFILLED)));
+                new PaymentConfirmationService.ConfirmationResult(true, true, "重复支付事件已忽略",
+                        "P-ORD1", "ORD1", "PAID", 1L, "ALIPAY", "2026110522001400001"));
 
         assertThat(service.handle(signedBody(baseParams("TRADE_SUCCESS")))).isEqualTo("success");
     }
 
     private void stubOrderLookup() {
         when(paymentRepository.findAttemptByProviderTradeNo("ORD1_1")).thenReturn(Optional.of(attempt()));
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order(OrderStatus.PAYING)));
+        when(paymentOrderRepository.findByProviderTradeNo("ALIPAY", "ORD1_1"))
+                .thenReturn(Optional.of(order("PAYING")));
     }
 
     private Map<String, String> baseParams(String tradeStatus) {
@@ -198,9 +201,8 @@ class AlipayNotifyServiceTest {
                 "CREATED", 1L, "digest", null, null, null, now, null);
     }
 
-    private OrderRecord order(OrderStatus status) {
-        return new OrderRecord(1L, "ORD1", 1L, 1L, "物理必修一", 1L, "CNY", status,
-                "ALIPAY", "2026110522001400001", "req", null, now.plusMinutes(15), null, null, null,
-                0, null, now, now);
+    private PaymentOrderView order(String status) {
+        return new PaymentOrderView("P-ORD1", "ORD1", "btry", "COURSE_ORDER", "物理必修一", 1L, "CNY",
+                status, "ALIPAY", "ORD1_1", now.plusMinutes(15), null);
     }
 }

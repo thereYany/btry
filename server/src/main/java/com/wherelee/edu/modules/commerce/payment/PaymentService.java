@@ -8,6 +8,7 @@ import com.wherelee.edu.modules.commerce.order.OrderFulfillmentService;
 import com.wherelee.edu.modules.commerce.order.OrderService;
 import com.wherelee.edu.modules.commerce.order.OrderStatus;
 import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowNo;
 import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import jakarta.annotation.PreDestroy;
@@ -124,9 +125,9 @@ public class PaymentService {
         }
 
         int attemptNo = paymentRepository.nextAttemptNo(order.id());
-        String tradeNo = paymentGateway.outTradeNo(order, attemptNo);
+        String tradeNo = paymentGateway.outTradeNo(view(order), attemptNo);
         paymentRepository.createAttempt(
-                order.id(), attemptNo, paymentGateway.channel(), tradeNo,
+                order.id(), PaymentShadowNo.of(order.orderNo()), attemptNo, paymentGateway.channel(), tradeNo,
                 order.priceCents(), digest(order.orderNo() + "|" + attemptNo + "|" + order.priceCents()));
         PaymentAttemptRecord attempt = paymentRepository.findLatestAttempt(order.id())
                 .orElseThrow(() -> new IllegalStateException("支付尝试创建后不可读取"));
@@ -240,9 +241,10 @@ public class PaymentService {
     }
 
     private PaymentConfirmationService.ConfirmationResult acceptVerifiedInternal(PaymentNotification notification) {
-        PaymentConfirmationService.ConfirmationResult result = confirmationService.confirm(notification);
-        String orderStatus = result.order() == null ? "UNKNOWN" : result.order().status().name();
+        PaymentConfirmationService.ConfirmationResult result = confirmationService.accept(notification);
+        String orderStatus = "UNKNOWN";
         if (result.success()) {
+            orderStatus = syncOrderAfterConfirmation(result);
             log.info("payment_confirm_result orderNo={} eventKey={} provider={} tradeNo={} amountCents={} success=true duplicate={} orderStatus={}",
                     notification.orderNo(), notification.eventKey(), notification.provider(),
                     notification.tradeNo(), notification.amountCents(), result.duplicate(), orderStatus);
@@ -252,12 +254,25 @@ public class PaymentService {
                     notification.tradeNo(), notification.amountCents(), result.duplicate(),
                     orderStatus, result.message());
         }
-        if (result.success() && result.order() != null
-                && (result.order().status() == OrderStatus.PAID
-                || result.order().status() == OrderStatus.FULFILLED)) {
-            fulfillmentService.fulfill(result.order().orderNo());
-        }
         return result;
+    }
+
+    /** 过渡期：支付确认后由支付域回调订单状态（P2 收尾时这段会移到订单侧消费者）。 */
+    private String syncOrderAfterConfirmation(PaymentConfirmationService.ConfirmationResult result) {
+        OrderRecord order = orderRepository.findByOrderNo(result.bizNo()).orElse(null);
+        if (order == null) {
+            return "UNKNOWN";
+        }
+        if ("PAID".equals(result.status())) {
+            if (order.status() != OrderStatus.PAID && order.status() != OrderStatus.FULFILLED) {
+                orderRepository.markPaid(order.orderNo(), result.providerTradeNo(), result.channel());
+            }
+            fulfillmentService.fulfill(order.orderNo());
+        } else if ("FAILED".equals(result.status()) && order.status() == OrderStatus.PAYING) {
+            orderRepository.markPayFailed(order.orderNo(), "支付平台返回失败");
+        }
+        OrderRecord updated = orderRepository.findByOrderNo(result.bizNo()).orElse(order);
+        return updated.status().name();
     }
 
     public void reconcile() {
@@ -296,7 +311,7 @@ public class PaymentService {
         PaymentGateway.PaymentQueryResult result = traceSpans.trace("payment.gateway.query", TraceSpans.tags(
                 "order.no", order.orderNo(),
                 "payment.channel", paymentGateway.channel()
-        ), () -> paymentGateway.query(order, attempt));
+        ), () -> paymentGateway.query(view(order), attempt));
         if ("PENDING".equals(result.status())) {
             log.debug("payment_query_result orderNo={} status={} providerTradeNo={} message={}",
                     order.orderNo(), result.status(), attempt.providerTradeNo(), result.message());
@@ -339,6 +354,14 @@ public class PaymentService {
         return reconcileOrder(orderService.require(orderNo));
     }
 
+    /** 订单事实 → 支付域视图（唯一允许的跨域数据传递点，后续会由发起命令替代）。 */
+    private PaymentOrderView view(OrderRecord order) {
+        return new PaymentOrderView(
+                PaymentShadowNo.of(order.orderNo()), order.orderNo(), "btry", "COURSE_ORDER",
+                order.seriesTitle(), order.priceCents(), order.currency(), order.status().name(),
+                order.payChannel(), order.providerTradeNo(), order.expireAt(), order.paidAt());
+    }
+
     private PaymentAttemptRecord requireProcessingAttempt(Long orderId) {
         PaymentAttemptRecord attempt = paymentRepository.findLatestAttempt(orderId)
                 .orElseThrow(() -> new BizException(HttpStatus.CONFLICT, "支付尝试不存在，请重新下单"));
@@ -352,7 +375,7 @@ public class PaymentService {
         PaymentGateway.PaymentAction action = traceSpans.trace("payment.gateway.initiate", TraceSpans.tags(
                 "order.no", order.orderNo(),
                 "payment.channel", paymentGateway.channel()
-        ), () -> paymentGateway.initiate(order, attempt));
+        ), () -> paymentGateway.initiate(view(order), attempt));
         log.info("payment_initiate orderNo={} attemptNo={} channel={} amountCents={} providerTradeNo={}",
                 order.orderNo(), attempt.attemptNo(), paymentGateway.channel(),
                 order.priceCents(), attempt.providerTradeNo());
@@ -363,8 +386,7 @@ public class PaymentService {
         if (!result.success()) {
             throw new BizException(HttpStatus.CONFLICT, result.message());
         }
-        log.info("{} orderNo={} status={}", message, notification.orderNo(),
-                result.order() == null ? "UNKNOWN" : result.order().status());
+        log.info("{} orderNo={} status={}", message, notification.orderNo(), result.status());
     }
 
     private void safelyAccept(PaymentNotification notification) {

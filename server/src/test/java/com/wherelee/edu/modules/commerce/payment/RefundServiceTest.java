@@ -59,7 +59,7 @@ class RefundServiceTest {
         when(paymentRepository.findRetryableRefunds(5, 20)).thenReturn(List.of(refund));
         when(paymentRepository.retryRefund(1L)).thenReturn(1);
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-        when(paymentGateway.refund(order, refund, false))
+        when(paymentGateway.refund(any(PaymentOrderView.class), eq(refund), eq(false)))
                 .thenReturn(new PaymentGateway.RefundResult(true, "PROVIDER-REF", null));
         when(paymentRepository.findRefundByOrder(1L)).thenReturn(Optional.of(refund));
 

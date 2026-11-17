@@ -181,7 +181,11 @@ public class RefundService {
     }
 
     private RefundRecord processRefundInternal(OrderRecord order, RefundRecord refund, boolean simulateFailure) {
-        PaymentGateway.RefundResult result = paymentGateway.refund(order, refund, simulateFailure);
+                PaymentOrderView view = new PaymentOrderView(
+                order.orderNo(), order.orderNo(), "btry", "COURSE_ORDER",
+                order.seriesTitle(), order.priceCents(), order.currency(), order.status().name(),
+                order.payChannel(), order.providerTradeNo(), order.expireAt(), order.paidAt());
+        PaymentGateway.RefundResult result = paymentGateway.refund(view, refund, simulateFailure);
         transactionTemplate.executeWithoutResult(status -> {
             OrderRecord locked = orderRepository.findByOrderNoForUpdate(order.orderNo()).orElse(order);
             if (locked.status() != OrderStatus.REFUNDED && locked.status() != OrderStatus.REFUNDING) {

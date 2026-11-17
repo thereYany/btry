@@ -1,6 +1,5 @@
 package com.wherelee.edu.modules.commerce.payment;
 
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -14,19 +13,19 @@ public class MockPaymentGateway implements PaymentGateway {
     }
 
     @Override
-    public String outTradeNo(OrderRecord order, int attemptNo) {
-        return "MOCK-" + order.orderNo() + "-" + attemptNo;
+    public String outTradeNo(PaymentOrderView order, int attemptNo) {
+        return "MOCK-" + order.bizNo() + "-" + attemptNo;
     }
 
     @Override
-    public PaymentAction initiate(OrderRecord order, PaymentAttemptRecord attempt) {
-        return new PaymentAction("/mock-pay/" + order.orderNo());
+    public PaymentAction initiate(PaymentOrderView order, PaymentAttemptRecord attempt) {
+        return new PaymentAction("/mock-pay/" + order.bizNo());
     }
 
     @Override
-    public PaymentQueryResult query(OrderRecord order, PaymentAttemptRecord attempt) {
+    public PaymentQueryResult query(PaymentOrderView order, PaymentAttemptRecord attempt) {
         if (attempt == null) {
-            return new PaymentQueryResult("PENDING", order.priceCents(), null, "尚无支付尝试");
+            return new PaymentQueryResult("PENDING", order.amountCents(), null, "尚无支付尝试");
         }
         return new PaymentQueryResult(
                 attempt.providerStatus(),
@@ -37,7 +36,7 @@ public class MockPaymentGateway implements PaymentGateway {
     }
 
     @Override
-    public RefundResult refund(OrderRecord order, RefundRecord refund, boolean simulateFailure) {
+    public RefundResult refund(PaymentOrderView order, RefundRecord refund, boolean simulateFailure) {
         if (simulateFailure) {
             return new RefundResult(false, null, "Mock 退款失败：模拟网关异常");
         }

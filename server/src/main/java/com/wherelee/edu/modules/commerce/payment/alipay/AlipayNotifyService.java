@@ -3,8 +3,8 @@ package com.wherelee.edu.modules.commerce.payment.alipay;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
-import com.wherelee.edu.modules.commerce.order.OrderRepository;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderRepository;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
 import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
 import com.wherelee.edu.modules.commerce.payment.PaymentConfirmationService;
 import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
@@ -33,7 +33,7 @@ public class AlipayNotifyService {
 
     private final AlipayProperties properties;
     private final PaymentRepository paymentRepository;
-    private final OrderRepository orderRepository;
+    private final PaymentOrderRepository paymentOrderRepository;
     private final PaymentService paymentService;
     private final PaymentMetrics metrics;
     private final AlertPublisher alertPublisher;
@@ -41,14 +41,14 @@ public class AlipayNotifyService {
 
     public AlipayNotifyService(AlipayProperties properties,
                                PaymentRepository paymentRepository,
-                               OrderRepository orderRepository,
+                               PaymentOrderRepository paymentOrderRepository,
                                PaymentService paymentService,
                                PaymentMetrics metrics,
                                AlertPublisher alertPublisher,
                                TraceSpans traceSpans) {
         this.properties = properties;
         this.paymentRepository = paymentRepository;
-        this.orderRepository = orderRepository;
+        this.paymentOrderRepository = paymentOrderRepository;
         this.paymentService = paymentService;
         this.metrics = metrics;
         this.alertPublisher = alertPublisher;
@@ -111,9 +111,10 @@ public class AlipayNotifyService {
             alert("PAYMENT_UNKNOWN_ORDER", "支付宝回调找不到支付尝试 outTradeNo=" + outTradeNo);
             return "success";
         }
-        OrderRecord order = orderRepository.findById(attempt.orderId()).orElse(null);
-        if (order == null) {
-            alert("PAYMENT_UNKNOWN_ORDER", "支付宝回调找不到订单 outTradeNo=" + outTradeNo);
+        PaymentOrderView payment = paymentOrderRepository
+                .findByProviderTradeNo(CHANNEL, outTradeNo).orElse(null);
+        if (payment == null) {
+            alert("PAYMENT_UNKNOWN_ORDER", "支付宝回调找不到支付单 outTradeNo=" + outTradeNo);
             return "success";
         }
 
@@ -121,7 +122,7 @@ public class AlipayNotifyService {
         try {
             amountCents = AlipayAmounts.toCents(params.get("total_amount"));
         } catch (Exception e) {
-            alert("PAYMENT_NOTIFY_MALFORMED", "支付宝回调金额无法解析 orderNo=" + order.orderNo()
+            alert("PAYMENT_NOTIFY_MALFORMED", "支付宝回调金额无法解析 paymentNo=" + payment.paymentNo()
                     + " totalAmount=" + params.get("total_amount"));
             return "failure";
         }
@@ -132,22 +133,22 @@ public class AlipayNotifyService {
         if (eventKey == null || eventKey.isBlank()) {
             eventKey = params.get("trade_no") + ":" + tradeStatus;
         }
-        log.info("payment_callback_verified notifyId={} outTradeNo={} tradeNo={} tradeStatus={} amountCents={} orderNo={} attemptNo={}",
+        log.info("payment_callback_verified notifyId={} outTradeNo={} tradeNo={} tradeStatus={} amountCents={} paymentNo={} attemptNo={}",
                 eventKey, outTradeNo, params.get("trade_no"), tradeStatus,
-                amountCents, order.orderNo(), attempt.attemptNo());
+                amountCents, payment.paymentNo(), attempt.attemptNo());
         PaymentNotification notification = new PaymentNotification(
-                CHANNEL, eventKey, order.orderNo(), eventType, amountCents, params.get("trade_no"), null);
+                CHANNEL, eventKey, payment.bizNo(), eventType, amountCents, params.get("trade_no"), null);
         try {
             PaymentConfirmationService.ConfirmationResult result = paymentService.acceptVerified(notification);
-            log.info("payment_callback_processed notifyId={} orderNo={} success={} duplicate={} orderStatus={}",
-                    eventKey, order.orderNo(), result.success(), result.duplicate(),
-                    result.order() == null ? "UNKNOWN" : result.order().status().name());
+            log.info("payment_callback_processed notifyId={} orderNo={} success={} duplicate={} paymentStatus={}",
+                    eventKey, payment.bizNo(), result.success(), result.duplicate(), result.status());
         } catch (Exception e) {
-            log.error("支付宝回调处理异常 orderNo={} notifyId={} outTradeNo={} tradeNo={}",
-                    order.orderNo(), eventKey, outTradeNo, params.get("trade_no"), e);
+            log.error("支付宝回调处理异常 paymentNo={} notifyId={} outTradeNo={} tradeNo={}",
+                    payment.paymentNo(), eventKey, outTradeNo, params.get("trade_no"), e);
             return "failure";
         }
-        log.info("支付宝回调已处理 orderNo={} tradeStatus={} notifyId={}", order.orderNo(), tradeStatus, eventKey);
+        log.info("支付宝回调已处理 paymentNo={} tradeStatus={} notifyId={}",
+                payment.paymentNo(), tradeStatus, eventKey);
         return "success";
     }
 
