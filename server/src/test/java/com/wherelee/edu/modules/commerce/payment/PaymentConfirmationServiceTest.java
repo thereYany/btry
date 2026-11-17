@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.wherelee.edu.modules.commerce.payment.outbox.PaymentOutboxRepository;
 import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.commerce.order.OrderRecord;
@@ -25,6 +26,7 @@ class PaymentConfirmationServiceTest {
     @Mock private PaymentRepository paymentRepository;
     @Mock private AlertPublisher alertPublisher;
     @Mock private PaymentMetrics metrics;
+    @Mock private PaymentOutboxRepository outboxRepository;
 
     private PaymentConfirmationService service;
     private final LocalDateTime now = LocalDateTime.now();
@@ -32,7 +34,7 @@ class PaymentConfirmationServiceTest {
     @BeforeEach
     void setUp() {
         service = new PaymentConfirmationService(orderRepository, paymentRepository, alertPublisher, metrics,
-                PaymentShadowPort.NOOP);
+                PaymentShadowPort.NOOP, outboxRepository);
     }
 
     @Test

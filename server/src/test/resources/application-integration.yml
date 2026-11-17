@@ -34,6 +34,9 @@ app:
     region: ap-guangzhou
     url-ttl-minutes: 30
   payment:
+    outbox:
+      initial-delay-ms: 3600000
+      interval-ms: 3600000
     provider: mock
     mock-enabled: true
     mock-secret: integration-mock-secret

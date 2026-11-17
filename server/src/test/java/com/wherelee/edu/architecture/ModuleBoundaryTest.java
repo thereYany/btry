@@ -73,7 +73,7 @@ class ModuleBoundaryTest {
                             "..modules.commerce.payment.PaymentRepository",
                             "..modules.commerce.payment.PaymentService",
                             "..modules.commerce.payment.RefundService",
-                            "..modules.commerce.payment.OrderFulfillmentService"
+                            "..modules.commerce.order.OrderFulfillmentService"
                     );
 
     @ArchTest

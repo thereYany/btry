@@ -1,5 +1,10 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wherelee.edu.modules.commerce.payment.api.PaymentEventTypes;
+import com.wherelee.edu.modules.commerce.payment.api.PaymentSettledEvent;
+import com.wherelee.edu.modules.commerce.payment.outbox.PaymentOutboxRepository;
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowNo;
 import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.commerce.order.OrderRecord;
@@ -19,17 +24,20 @@ public class PaymentConfirmationService {
     private final AlertPublisher alertPublisher;
     private final PaymentMetrics metrics;
     private final PaymentShadowPort shadowPort;
+    private final PaymentOutboxRepository outboxRepository;
 
     public PaymentConfirmationService(OrderRepository orderRepository,
                                       PaymentRepository paymentRepository,
                                       AlertPublisher alertPublisher,
                                       PaymentMetrics metrics,
-                                      PaymentShadowPort shadowPort) {
+                                      PaymentShadowPort shadowPort,
+                                      PaymentOutboxRepository outboxRepository) {
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
         this.alertPublisher = alertPublisher;
         this.metrics = metrics;
         this.shadowPort = shadowPort;
+        this.outboxRepository = outboxRepository;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -97,6 +105,17 @@ public class PaymentConfirmationService {
                 return new ConfirmationResult(false, false, "订单状态不允许支付确认", updated);
             }
             paymentRepository.markEventProcessed(event.id());
+            // 与支付状态同事务写入发件箱：事务提交则事件必达（至少一次）
+            outboxRepository.append(new PaymentSettledEvent(
+                    PaymentEventTypes.PAYMENT_SUCCEEDED,
+                    PaymentShadowNo.of(order.orderNo()),
+                    "COURSE_ORDER",
+                    order.orderNo(),
+                    order.priceCents(),
+                    order.currency(),
+                    notification.provider(),
+                    notification.tradeNo(),
+                    java.time.LocalDateTime.now()));
             metrics.paymentConfirmed();
             return new ConfirmationResult(true, false, "支付已确认", updated);
         }
@@ -106,6 +125,16 @@ public class PaymentConfirmationService {
         }
         orderRepository.markPayFailed(order.orderNo(), "支付平台返回失败");
         paymentRepository.markEventProcessed(event.id());
+        outboxRepository.append(new PaymentSettledEvent(
+                PaymentEventTypes.PAYMENT_FAILED,
+                PaymentShadowNo.of(order.orderNo()),
+                "COURSE_ORDER",
+                order.orderNo(),
+                order.priceCents(),
+                order.currency(),
+                notification.provider(),
+                notification.tradeNo(),
+                java.time.LocalDateTime.now()));
         metrics.paymentFailed();
         return new ConfirmationResult(true, false, "支付失败已入账",
                 orderRepository.findByOrderNo(order.orderNo()).orElse(order));
