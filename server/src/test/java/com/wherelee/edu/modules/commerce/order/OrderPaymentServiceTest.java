@@ -1,11 +1,7 @@
-package com.wherelee.edu.modules.commerce.payment;
+package com.wherelee.edu.modules.commerce.order;
 
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
-import com.wherelee.edu.modules.commerce.order.OrderRepository;
-import com.wherelee.edu.modules.commerce.order.OrderFulfillmentService;
-import com.wherelee.edu.modules.commerce.order.OrderService;
-import com.wherelee.edu.modules.commerce.order.OrderStatus;
+import com.wherelee.edu.modules.commerce.payment.*;
+
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,27 +20,28 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PaymentServiceTest {
+class OrderPaymentServiceTest {
 
     @Mock private OrderService orderService;
     @Mock private OrderRepository orderRepository;
     @Mock private PaymentRepository paymentRepository;
     @Mock private com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository entitlementRepository;
     @Mock private PaymentGateway paymentGateway;
+    @Mock private PaymentOrderRepository paymentOrderRepository;
     @Mock private PaymentConfirmationService confirmationService;
     @Mock private OrderFulfillmentService fulfillmentService;
     @Mock private MockSignatureService signatureService;
     @Mock private PaymentMetrics metrics;
 
-    private PaymentService service;
+    private OrderPaymentService service;
 
     @BeforeEach
     void setUp() {
-        service = new PaymentService(
+        service = new OrderPaymentService(
                 orderService, orderRepository, paymentRepository, entitlementRepository,
                 paymentGateway, confirmationService, fulfillmentService, signatureService,
                 new PaymentProperties("alipay", false, null, 15, 60, 50, 60000, 30000, 5, 30),
-                metrics, TraceSpans.noop(), PaymentShadowPort.NOOP);
+                metrics, TraceSpans.noop(), paymentOrderRepository);
     }
 
     @Test
@@ -52,7 +49,7 @@ class PaymentServiceTest {
         OrderRecord order = order();
         PaymentAttemptRecord attempt = attempt();
         when(orderService.require("ORD-1")).thenReturn(order);
-        when(paymentRepository.findLatestAttempt(1L)).thenReturn(Optional.of(attempt));
+        when(paymentRepository.findLatestAttemptByPaymentNo("PORD-1")).thenReturn(Optional.of(attempt));
         when(paymentGateway.query(any(PaymentOrderView.class), eq(attempt))).thenReturn(
                 new PaymentGateway.PaymentQueryResult("NOT_FOUND", order.priceCents(),
                         attempt.providerTradeNo(), "ACQ.TRADE_NOT_EXIST"));
@@ -70,7 +67,7 @@ class PaymentServiceTest {
                 "CREATED", 1L, "digest", "PROVIDER_FAILED", "failed", null,
                 LocalDateTime.now(), LocalDateTime.now());
         when(orderService.requireOwned(1L, "ORD-1")).thenReturn(order);
-        when(paymentRepository.findLatestAttempt(1L)).thenReturn(Optional.of(attempt));
+        when(paymentRepository.findLatestAttemptByPaymentNo("PORD-1")).thenReturn(Optional.of(attempt));
 
         assertThatThrownBy(() -> service.pay(1L, "ORD-1"))
                 .isInstanceOf(BizException.class)

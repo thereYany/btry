@@ -6,11 +6,10 @@ import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
 import com.wherelee.edu.modules.commerce.order.OrderFulfillmentService;
 import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
 import com.wherelee.edu.modules.commerce.payment.PaymentNotification;
+import com.wherelee.edu.modules.commerce.payment.PaymentNo;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
-import com.wherelee.edu.modules.commerce.payment.PaymentService;
-import com.wherelee.edu.modules.commerce.payment.RefundService;
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentOrderShadowRepository;
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentOrderShadowService;
+import com.wherelee.edu.modules.commerce.order.OrderPaymentService;
+import com.wherelee.edu.modules.commerce.order.OrderRefundService;
 import com.wherelee.edu.modules.commerce.order.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -40,14 +39,12 @@ public abstract class CommerceIntegrationTestSupport {
 
     @Autowired protected JdbcTemplate jdbc;
     @Autowired protected OrderService orderService;
-    @Autowired protected PaymentService paymentService;
-    @Autowired protected RefundService refundService;
+    @Autowired protected OrderPaymentService paymentService;
+    @Autowired protected OrderRefundService refundService;
     @Autowired protected OrderFulfillmentService fulfillmentService;
     @Autowired protected OrderRepository orderRepository;
     @Autowired protected PaymentRepository paymentRepository;
     @Autowired protected EntitlementRepository entitlementRepository;
-    @Autowired protected PaymentOrderShadowService paymentShadowService;
-    @Autowired protected PaymentOrderShadowRepository paymentShadowRepository;
 
     protected Fixture fx;
 
@@ -71,7 +68,8 @@ public abstract class CommerceIntegrationTestSupport {
 
     protected PaymentNotification successNotification(String orderNo) {
         var order = orderRepository.findByOrderNo(orderNo).orElseThrow();
-        PaymentAttemptRecord attempt = paymentRepository.findLatestAttempt(order.id()).orElseThrow();
+        PaymentAttemptRecord attempt = paymentRepository
+                .findLatestAttemptByPaymentNo(PaymentNo.of(orderNo)).orElseThrow();
         return new PaymentNotification(
                 "MOCK",
                 "IT:" + orderNo + ":PAID",

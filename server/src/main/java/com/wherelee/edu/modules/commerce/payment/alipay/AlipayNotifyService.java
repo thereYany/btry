@@ -10,7 +10,7 @@ import com.wherelee.edu.modules.commerce.payment.PaymentConfirmationService;
 import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
 import com.wherelee.edu.modules.commerce.payment.PaymentNotification;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
-import com.wherelee.edu.modules.commerce.payment.PaymentService;
+import com.wherelee.edu.modules.commerce.payment.PaymentCallbackService;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,7 +34,7 @@ public class AlipayNotifyService {
     private final AlipayProperties properties;
     private final PaymentRepository paymentRepository;
     private final PaymentOrderRepository paymentOrderRepository;
-    private final PaymentService paymentService;
+    private final PaymentCallbackService paymentCallbackService;
     private final PaymentMetrics metrics;
     private final AlertPublisher alertPublisher;
     private final TraceSpans traceSpans;
@@ -42,14 +42,14 @@ public class AlipayNotifyService {
     public AlipayNotifyService(AlipayProperties properties,
                                PaymentRepository paymentRepository,
                                PaymentOrderRepository paymentOrderRepository,
-                               PaymentService paymentService,
+                               PaymentCallbackService paymentCallbackService,
                                PaymentMetrics metrics,
                                AlertPublisher alertPublisher,
                                TraceSpans traceSpans) {
         this.properties = properties;
         this.paymentRepository = paymentRepository;
         this.paymentOrderRepository = paymentOrderRepository;
-        this.paymentService = paymentService;
+        this.paymentCallbackService = paymentCallbackService;
         this.metrics = metrics;
         this.alertPublisher = alertPublisher;
         this.traceSpans = traceSpans;
@@ -139,7 +139,7 @@ public class AlipayNotifyService {
         PaymentNotification notification = new PaymentNotification(
                 CHANNEL, eventKey, payment.bizNo(), eventType, amountCents, params.get("trade_no"), null);
         try {
-            PaymentConfirmationService.ConfirmationResult result = paymentService.acceptVerified(notification);
+            PaymentConfirmationService.ConfirmationResult result = paymentCallbackService.acceptVerified(notification);
             log.info("payment_callback_processed notifyId={} orderNo={} success={} duplicate={} paymentStatus={}",
                     eventKey, payment.bizNo(), result.success(), result.duplicate(), result.status());
         } catch (Exception e) {

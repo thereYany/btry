@@ -20,8 +20,8 @@ class PaymentConcurrencyIntegrationTest extends CommerceIntegrationTestSupport {
 
         assertThat(results).allSatisfy(result -> assertThat(result.error()).isNull());
         assertThat(results.stream().map(result -> result.value().cashierUrl()).distinct().toList()).hasSize(1);
-        assertThat(count("t_payment_attempt", "order_id = ?", orderId(order.orderNo()))).isEqualTo(1);
-        assertThat(count("t_payment_attempt", "order_id = ? AND status = 'PROCESSING'", orderId(order.orderNo())))
+        assertThat(count("t_payment_attempt", "payment_no = ?", "P" + order.orderNo())).isEqualTo(1);
+        assertThat(count("t_payment_attempt", "payment_no = ? AND status = 'PROCESSING'", "P" + order.orderNo()))
                 .isEqualTo(1);
     }
 
@@ -47,7 +47,7 @@ class PaymentConcurrencyIntegrationTest extends CommerceIntegrationTestSupport {
     void amountMismatchDoesNotFulfillOrder() {
         OrderDtos.OrderView order = createOrder(nextRequestId());
         pay(order.orderNo());
-        var attempt = paymentRepository.findLatestAttempt(orderId(order.orderNo())).orElseThrow();
+        var attempt = paymentRepository.findLatestAttemptByPaymentNo("P" + order.orderNo()).orElseThrow();
 
         var result = paymentService.acceptVerified(new com.wherelee.edu.modules.commerce.payment.PaymentNotification(
                 "MOCK",
@@ -72,7 +72,7 @@ class PaymentConcurrencyIntegrationTest extends CommerceIntegrationTestSupport {
     void failureAfterSuccessDoesNotRevertFulfilledOrder() {
         OrderDtos.OrderView order = createOrder(nextRequestId());
         completePayment(order.orderNo());
-        var attempt = paymentRepository.findLatestAttempt(orderId(order.orderNo())).orElseThrow();
+        var attempt = paymentRepository.findLatestAttemptByPaymentNo("P" + order.orderNo()).orElseThrow();
 
         var result = paymentService.acceptVerified(new com.wherelee.edu.modules.commerce.payment.PaymentNotification(
                 "MOCK",

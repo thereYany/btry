@@ -71,9 +71,21 @@ class ModuleBoundaryTest {
                     .should().dependOnClassesThat().resideInAnyPackage(
                             "..modules.commerce.order.OrderRepository",
                             "..modules.commerce.payment.PaymentRepository",
-                            "..modules.commerce.payment.PaymentService",
-                            "..modules.commerce.payment.RefundService",
+                            "..modules.commerce.order.OrderPaymentService",
+                            "..modules.commerce.order.OrderRefundService",
                             "..modules.commerce.order.OrderFulfillmentService"
+                    );
+
+    /**
+     * R5（P2 支付反转）：payment 包只能依赖自身、api 与 platform；
+     * 禁止再依赖 order/entitlement 的实现——依赖方向必须是「业务 → 支付」。
+     */
+    @ArchTest
+    static final ArchRule payment_should_not_depend_on_order_or_entitlement =
+            noClasses().that().resideInAPackage("..modules.commerce.payment..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "..modules.commerce.order..",
+                            "..modules.commerce.entitlement.."
                     );
 
     @ArchTest

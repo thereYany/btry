@@ -1,16 +1,18 @@
-package com.wherelee.edu.modules.commerce.payment;
+package com.wherelee.edu.modules.commerce.order;
 
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
+import com.wherelee.edu.modules.commerce.payment.*;
+import com.wherelee.edu.modules.commerce.payment.PaymentGateway;
+import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderRepository;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
+import com.wherelee.edu.modules.commerce.payment.PaymentProperties;
+import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
+import com.wherelee.edu.modules.commerce.payment.RefundRecord;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import lombok.extern.slf4j.Slf4j;
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
-import com.wherelee.edu.modules.commerce.order.OrderTransitionPolicy;
-import com.wherelee.edu.modules.commerce.order.OrderRepository;
-import com.wherelee.edu.modules.commerce.order.OrderService;
-import com.wherelee.edu.modules.commerce.order.OrderStatus;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.dao.DuplicateKeyException;
@@ -26,13 +28,14 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class RefundService {
+public class OrderRefundService {
 
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final OrderService orderService;
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final PaymentOrderRepository paymentOrderRepository;
     private final EntitlementRepository entitlementRepository;
     private final PaymentGateway paymentGateway;
     private final PaymentProperties properties;
@@ -40,22 +43,22 @@ public class RefundService {
     private final PaymentMetrics metrics;
     private final AlertPublisher alertPublisher;
     private final TraceSpans traceSpans;
-    private final PaymentShadowPort shadowPort;
 
-    public RefundService(OrderService orderService,
+    public OrderRefundService(OrderService orderService,
                          OrderRepository orderRepository,
                          PaymentRepository paymentRepository,
+                         PaymentOrderRepository paymentOrderRepository,
                          EntitlementRepository entitlementRepository,
                          PaymentGateway paymentGateway,
                          PaymentProperties properties,
                          PlatformTransactionManager transactionManager,
                          PaymentMetrics metrics,
                          AlertPublisher alertPublisher,
-                         TraceSpans traceSpans,
-                         PaymentShadowPort shadowPort) {
+                         TraceSpans traceSpans) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
+        this.paymentOrderRepository = paymentOrderRepository;
         this.entitlementRepository = entitlementRepository;
         this.paymentGateway = paymentGateway;
         this.properties = properties;
@@ -63,13 +66,10 @@ public class RefundService {
         this.metrics = metrics;
         this.alertPublisher = alertPublisher;
         this.traceSpans = traceSpans;
-        this.shadowPort = shadowPort;
     }
 
     public RefundRecord refund(String orderNo, Long operatorId, String reason, boolean simulateFailure) {
-        RefundRecord result = refundInternal(orderNo, operatorId, reason, simulateFailure);
-        shadowPort.recordAfterCommit(orderNo);
-        return result;
+        return refundInternal(orderNo, operatorId, reason, simulateFailure);
     }
 
     private RefundRecord refundInternal(String orderNo, Long operatorId, String reason, boolean simulateFailure) {
@@ -97,6 +97,8 @@ public class RefundService {
                 transactionTemplate.executeWithoutResult(status -> {
                     paymentRepository.createRefund(refundNo, order.id(), order.priceCents(), reason, operatorId);
                     orderRepository.markRefunding(order.orderNo());
+                    orderRepository.findPaymentNo(order.orderNo())
+                            .ifPresent(paymentOrderRepository::markRefunding);
                 });
             } catch (DuplicateKeyException e) {
                 return paymentRepository.findRefundByOrder(order.id())
@@ -195,6 +197,8 @@ public class RefundService {
                 metrics.refundSucceeded();
                 paymentRepository.markRefundSucceeded(refund.id(), result.providerRefundNo());
                 orderRepository.markRefunded(locked.orderNo());
+                orderRepository.findPaymentNo(locked.orderNo())
+                        .ifPresent(paymentOrderRepository::markRefunded);
                 entitlementRepository.revokeOrder(
                         locked.userId(), locked.seriesId(), locked.id(),
                         "订单退款：" + refund.refundNo()
@@ -203,6 +207,8 @@ public class RefundService {
                 metrics.refundFailed();
                 paymentRepository.markRefundFailed(refund.id(), result.message(), nextRetryAt(refund));
                 orderRepository.markRefundFailed(locked.orderNo(), result.message());
+                orderRepository.findPaymentNo(locked.orderNo())
+                        .ifPresent(paymentOrderRepository::markRefundFailed);
                 alertRefund(locked.orderNo(), result.message());
             }
         });

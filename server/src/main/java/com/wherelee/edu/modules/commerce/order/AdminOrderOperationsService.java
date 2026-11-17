@@ -2,12 +2,9 @@ package com.wherelee.edu.modules.commerce.order;
 
 import com.wherelee.edu.modules.commerce.api.AdminOrderOperations;
 import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
-import com.wherelee.edu.modules.commerce.order.OrderFulfillmentService;
 import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
-import com.wherelee.edu.modules.commerce.payment.PaymentService;
 import com.wherelee.edu.modules.commerce.payment.RefundRecord;
-import com.wherelee.edu.modules.commerce.payment.RefundService;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import org.springframework.http.HttpStatus;
@@ -24,16 +21,16 @@ public class AdminOrderOperationsService implements AdminOrderOperations {
     private final OrderService orderService;
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
-    private final PaymentService paymentService;
+    private final OrderPaymentService paymentService;
     private final OrderFulfillmentService fulfillmentService;
-    private final RefundService refundService;
+    private final OrderRefundService refundService;
 
     public AdminOrderOperationsService(OrderService orderService,
                                        OrderRepository orderRepository,
                                        PaymentRepository paymentRepository,
-                                       PaymentService paymentService,
+                                       OrderPaymentService paymentService,
                                        OrderFulfillmentService fulfillmentService,
-                                       RefundService refundService) {
+                                       OrderRefundService refundService) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
@@ -88,13 +85,20 @@ public class AdminOrderOperationsService implements AdminOrderOperations {
     public Snapshot snapshot(String orderNo) {
         OrderDtos.OrderDetail detail = orderService.detailForAdmin(orderNo);
         OrderRecord order = orderService.require(orderNo);
-        List<PaymentDtos.AttemptView> attempts = paymentRepository.findAttempts(order.id()).stream()
+        String paymentNo = orderRepository.findPaymentNo(order.orderNo()).orElse(null);
+        var attemptRecords = paymentNo == null
+                ? paymentRepository.findAttempts(order.id())
+                : paymentRepository.findAttemptsByPaymentNo(paymentNo);
+        List<PaymentDtos.AttemptView> attempts = attemptRecords.stream()
                 .map(attempt -> new PaymentDtos.AttemptView(
                         attempt.attemptNo(), attempt.status(), attempt.providerTradeNo(),
                         attempt.providerStatus(), attempt.mockScenario(),
                         attempt.createdAt(), attempt.finishedAt()))
                 .toList();
-        List<PaymentDtos.EventView> events = paymentRepository.findEvents(order.id()).stream()
+        var eventRecords = paymentNo == null
+                ? paymentRepository.findEvents(order.id())
+                : paymentRepository.findEventsByPaymentNo(paymentNo);
+        List<PaymentDtos.EventView> events = eventRecords.stream()
                 .map(event -> new PaymentDtos.EventView(
                         event.eventKey(), event.eventType(), event.amountCents(),
                         event.processStatus(), event.errorMessage(),

@@ -1,9 +1,9 @@
-package com.wherelee.edu.modules.commerce.payment;
+package com.wherelee.edu.modules.commerce.order;
 
+import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
 import com.wherelee.edu.modules.platform.aop.RequireRole;
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class OrderPaymentController {
 
-    private final PaymentService paymentService;
+    private final OrderPaymentService paymentService;
 
-    public OrderPaymentController(PaymentService paymentService) {
+    public OrderPaymentController(OrderPaymentService paymentService) {
         this.paymentService = paymentService;
     }
 

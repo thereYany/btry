@@ -245,6 +245,18 @@ public class OrderRepository {
         return timestamp == null ? null : timestamp.toLocalDateTime();
     }
 
+    public java.util.Optional<String> findPaymentNo(String orderNo) {
+        return jdbc.query("SELECT payment_no FROM t_order WHERE order_no = ? AND payment_no IS NOT NULL",
+                (rs, rowNum) -> rs.getString("payment_no"), orderNo).stream().findFirst();
+    }
+
+    /** 发起支付时把支付单号写回订单（订单只保留引用，不持有支付状态）。 */
+    public int setPaymentNo(String orderNo, String paymentNo) {
+        return jdbc.update(
+                "UPDATE t_order SET payment_no = COALESCE(payment_no, ?) WHERE order_no = ?",
+                paymentNo, orderNo);
+    }
+
     public int markPaying(String orderNo, String channel) {
         return jdbc.update("""
                 UPDATE t_order

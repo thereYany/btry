@@ -10,7 +10,7 @@ import com.wherelee.edu.modules.commerce.payment.PaymentConfirmationService;
 import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
 import com.wherelee.edu.modules.commerce.payment.PaymentNotification;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
-import com.wherelee.edu.modules.commerce.payment.PaymentService;
+import com.wherelee.edu.modules.commerce.payment.PaymentCallbackService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +44,7 @@ class AlipayNotifyServiceTest {
 
     @Mock private PaymentRepository paymentRepository;
     @Mock private PaymentOrderRepository paymentOrderRepository;
-    @Mock private PaymentService paymentService;
+    @Mock private PaymentCallbackService paymentService;
     @Mock private PaymentMetrics metrics;
     @Mock private AlertPublisher alertPublisher;
 

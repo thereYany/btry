@@ -4,7 +4,7 @@ import com.wherelee.edu.modules.commerce.payment.api.PaymentEventTypes;
 import com.wherelee.edu.modules.commerce.payment.api.PaymentSettledEvent;
 import com.wherelee.edu.modules.commerce.payment.outbox.PaymentOutboxDispatcher;
 import com.wherelee.edu.modules.commerce.payment.outbox.PaymentOutboxRepository;
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowNo;
+import com.wherelee.edu.modules.commerce.payment.PaymentNo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +31,12 @@ class PaymentOutboxIntegrationTest extends CommerceIntegrationTestSupport {
         String orderNo = createOrder(nextRequestId()).orderNo();
         completePayment(orderNo);
 
-        assertThat(outboxStatus(PaymentShadowNo.of(orderNo)))
+        assertThat(outboxStatus(PaymentNo.of(orderNo)))
                 .isEqualTo("PENDING");
 
         int delivered = dispatcher.dispatchOnce();
         assertThat(delivered).isGreaterThanOrEqualTo(1);
-        assertThat(outboxStatus(PaymentShadowNo.of(orderNo))).isEqualTo("SENT");
+        assertThat(outboxStatus(PaymentNo.of(orderNo))).isEqualTo("SENT");
         assertThat(orderRepository.findByOrderNo(orderNo).orElseThrow().status().name())
                 .isEqualTo("FULFILLED");
     }
@@ -54,7 +54,7 @@ class PaymentOutboxIntegrationTest extends CommerceIntegrationTestSupport {
         // 模拟 at-least-once 重复投递
         outboxRepository.append(new PaymentSettledEvent(
                 PaymentEventTypes.PAYMENT_SUCCEEDED,
-                PaymentShadowNo.of(orderNo), "COURSE_ORDER", orderNo,
+                PaymentNo.of(orderNo), "COURSE_ORDER", orderNo,
                 fx.priceCents(), "CNY", "MOCK", "MOCK-" + orderNo + "-1", LocalDateTime.now()));
         dispatcher.dispatchOnce();
 

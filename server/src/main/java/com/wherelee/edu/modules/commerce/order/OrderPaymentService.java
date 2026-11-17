@@ -1,15 +1,21 @@
-package com.wherelee.edu.modules.commerce.payment;
+package com.wherelee.edu.modules.commerce.order;
 
+import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
+import com.wherelee.edu.modules.commerce.payment.MockSignatureService;
+import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
+import com.wherelee.edu.modules.commerce.payment.PaymentConfirmationService;
+import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
+import com.wherelee.edu.modules.commerce.payment.PaymentGateway;
+import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
+import com.wherelee.edu.modules.commerce.payment.PaymentNo;
+import com.wherelee.edu.modules.commerce.payment.PaymentNotification;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderRepository;
+import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
+import com.wherelee.edu.modules.commerce.payment.PaymentProperties;
+import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
+import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
-import com.wherelee.edu.modules.commerce.order.OrderRepository;
-import com.wherelee.edu.modules.commerce.order.OrderFulfillmentService;
-import com.wherelee.edu.modules.commerce.order.OrderService;
-import com.wherelee.edu.modules.commerce.order.OrderStatus;
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowNo;
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +29,7 @@ import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -31,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
-public class PaymentService {
+public class OrderPaymentService {
 
     private static final List<String> MOCK_SCENARIOS = List.of(
             "SUCCESS",
@@ -54,14 +61,14 @@ public class PaymentService {
     private final PaymentProperties properties;
     private final PaymentMetrics metrics;
     private final TraceSpans traceSpans;
-    private final PaymentShadowPort shadowPort;
+    private final PaymentOrderRepository paymentOrderRepository;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "mock-payment-delay");
         thread.setDaemon(true);
         return thread;
     });
 
-    public PaymentService(OrderService orderService,
+    public OrderPaymentService(OrderService orderService,
                           OrderRepository orderRepository,
                           PaymentRepository paymentRepository,
                           EntitlementRepository entitlementRepository,
@@ -72,7 +79,7 @@ public class PaymentService {
                           PaymentProperties properties,
                           PaymentMetrics metrics,
                           TraceSpans traceSpans,
-                          PaymentShadowPort shadowPort) {
+                          PaymentOrderRepository paymentOrderRepository) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
@@ -84,14 +91,12 @@ public class PaymentService {
         this.properties = properties;
         this.metrics = metrics;
         this.traceSpans = traceSpans;
-        this.shadowPort = shadowPort;
+        this.paymentOrderRepository = paymentOrderRepository;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public OrderDtos.PayResponse pay(Long userId, String orderNo) {
-        OrderDtos.PayResponse response = payInternal(userId, orderNo);
-        shadowPort.recordAfterCommit(orderNo);
-        return response;
+        return payInternal(userId, orderNo);
     }
 
     private OrderDtos.PayResponse payInternal(Long userId, String orderNo) {
@@ -100,7 +105,7 @@ public class PaymentService {
             throw new BizException(HttpStatus.CONFLICT, "你已经拥有这个课程");
         }
         if (order.status() == OrderStatus.PAYING) {
-            PaymentAttemptRecord attempt = requireProcessingAttempt(order.id());
+            PaymentAttemptRecord attempt = requireProcessingAttempt(PaymentNo.of(order.orderNo()));
             PaymentGateway.PaymentAction action = initiate(order, attempt);
             return new OrderDtos.PayResponse(order.orderNo(), order.status().name(),
                     paymentGateway.channel(), action.cashierUrl());
@@ -112,11 +117,14 @@ public class PaymentService {
             orderRepository.close(order.orderNo(), false);
             throw BizException.badRequest("订单已过期，请重新下单");
         }
+        // 支付反转：发起支付时由支付单承载状态，订单只保留 payment_no 引用
+        paymentOrderRepository.insertIfAbsent(view(order), TenantContext.current(), LocalDateTime.now());
+        orderRepository.setPaymentNo(orderNo, PaymentNo.of(orderNo));
         int changed = orderRepository.markPaying(order.orderNo(), paymentGateway.channel());
         if (changed == 0) {
             OrderRecord current = orderService.require(orderNo);
             if (current.status() == OrderStatus.PAYING) {
-                PaymentAttemptRecord attempt = requireProcessingAttempt(current.id());
+                PaymentAttemptRecord attempt = requireProcessingAttempt(PaymentNo.of(current.orderNo()));
                 PaymentGateway.PaymentAction action = initiate(current, attempt);
                 return new OrderDtos.PayResponse(current.orderNo(), current.status().name(),
                         paymentGateway.channel(), action.cashierUrl());
@@ -126,11 +134,13 @@ public class PaymentService {
 
         int attemptNo = paymentRepository.nextAttemptNo(order.id());
         String tradeNo = paymentGateway.outTradeNo(view(order), attemptNo);
+        // 反转后支付尝试只关联支付单，不再持有 order_id
         paymentRepository.createAttempt(
-                order.id(), PaymentShadowNo.of(order.orderNo()), attemptNo, paymentGateway.channel(), tradeNo,
+                null, PaymentNo.of(order.orderNo()), attemptNo, paymentGateway.channel(), tradeNo,
                 order.priceCents(), digest(order.orderNo() + "|" + attemptNo + "|" + order.priceCents()));
-        PaymentAttemptRecord attempt = paymentRepository.findLatestAttempt(order.id())
+        PaymentAttemptRecord attempt = paymentRepository.findLatestAttemptByPaymentNo(PaymentNo.of(order.orderNo()))
                 .orElseThrow(() -> new IllegalStateException("支付尝试创建后不可读取"));
+        paymentOrderRepository.markPaying(PaymentNo.of(orderNo), paymentGateway.channel(), tradeNo);
         PaymentGateway.PaymentAction action = initiate(
                 orderRepository.findByOrderNo(orderNo).orElse(order), attempt);
         return new OrderDtos.PayResponse(order.orderNo(), OrderStatus.PAYING.name(),
@@ -140,7 +150,7 @@ public class PaymentService {
     public PaymentDtos.MockCashierView cashier(Long userId, String orderNo) {
         requireMockEnabled();
         OrderRecord order = orderService.requireOwned(userId, orderNo);
-        PaymentAttemptRecord attempt = paymentRepository.findLatestAttempt(order.id())
+        PaymentAttemptRecord attempt = paymentRepository.findLatestAttemptByPaymentNo(PaymentNo.of(order.orderNo()))
                 .orElseThrow(() -> BizException.badRequest("请先发起支付"));
         if (order.status() != OrderStatus.PAYING || !"PROCESSING".equals(attempt.status())) {
             throw BizException.badRequest("当前订单不在可模拟支付状态");
@@ -161,7 +171,7 @@ public class PaymentService {
         if (order.status() != OrderStatus.PAYING) {
             throw BizException.badRequest("订单当前不是支付中状态");
         }
-        PaymentAttemptRecord attempt = paymentRepository.findLatestAttempt(order.id())
+        PaymentAttemptRecord attempt = paymentRepository.findLatestAttemptByPaymentNo(PaymentNo.of(order.orderNo()))
                 .orElseThrow(() -> BizException.badRequest("支付尝试不存在"));
         if (!"PROCESSING".equals(attempt.status())) {
             throw BizException.badRequest("支付尝试已经结束");
@@ -286,7 +296,6 @@ public class PaymentService {
         }
         for (OrderRecord order : orderRepository.findExpired(properties.reconcileBatchSize())) {
             orderRepository.close(order.orderNo(), false);
-            shadowPort.recordAfterCommit(order.orderNo());
         }
         for (OrderRecord order : orderRepository.findPaidUnfulfilled(properties.reconcileBatchSize())) {
             try {
@@ -301,7 +310,7 @@ public class PaymentService {
         if (order.status() != OrderStatus.PAYING) {
             return order;
         }
-        PaymentAttemptRecord attempt = paymentRepository.findLatestAttempt(order.id()).orElse(null);
+        PaymentAttemptRecord attempt = paymentRepository.findLatestAttemptByPaymentNo(PaymentNo.of(order.orderNo())).orElse(null);
         if (attempt == null) {
             if (order.expired()) {
                 orderRepository.closeAfterProviderNotFound(order.orderNo());
@@ -357,13 +366,13 @@ public class PaymentService {
     /** 订单事实 → 支付域视图（唯一允许的跨域数据传递点，后续会由发起命令替代）。 */
     private PaymentOrderView view(OrderRecord order) {
         return new PaymentOrderView(
-                PaymentShadowNo.of(order.orderNo()), order.orderNo(), "btry", "COURSE_ORDER",
+                PaymentNo.of(order.orderNo()), order.orderNo(), "btry", "COURSE_ORDER",
                 order.seriesTitle(), order.priceCents(), order.currency(), order.status().name(),
                 order.payChannel(), order.providerTradeNo(), order.expireAt(), order.paidAt());
     }
 
-    private PaymentAttemptRecord requireProcessingAttempt(Long orderId) {
-        PaymentAttemptRecord attempt = paymentRepository.findLatestAttempt(orderId)
+    private PaymentAttemptRecord requireProcessingAttempt(String paymentNo) {
+        PaymentAttemptRecord attempt = paymentRepository.findLatestAttemptByPaymentNo(paymentNo)
                 .orElseThrow(() -> new BizException(HttpStatus.CONFLICT, "支付尝试不存在，请重新下单"));
         if (!"PROCESSING".equals(attempt.status())) {
             throw new BizException(HttpStatus.CONFLICT, "支付尝试已结束，请刷新订单状态");

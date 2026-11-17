@@ -129,6 +129,13 @@ public class PaymentRepository {
                 """, ATTEMPT_MAPPER, providerTradeNo).stream().findFirst();
     }
 
+    public List<PaymentAttemptRecord> findAttemptsByPaymentNo(String paymentNo) {
+        return jdbc.query("""
+                SELECT * FROM t_payment_attempt WHERE payment_no = ?
+                ORDER BY attempt_no, id
+                """, ATTEMPT_MAPPER, paymentNo);
+    }
+
     public List<PaymentAttemptRecord> findAttempts(Long orderId) {
         return jdbc.query("""
                 SELECT * FROM t_payment_attempt WHERE order_id = ? ORDER BY attempt_no
@@ -195,6 +202,13 @@ public class PaymentRepository {
                     error_message = ?
                 WHERE id = ?
                 """, message, eventId);
+    }
+
+    public List<PaymentEventRecord> findEventsByPaymentNo(String paymentNo) {
+        return jdbc.query("""
+                SELECT * FROM t_payment_event WHERE payment_no = ?
+                ORDER BY received_at, id
+                """, EVENT_MAPPER, paymentNo);
     }
 
     public List<PaymentEventRecord> findEvents(Long orderId) {

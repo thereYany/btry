@@ -108,6 +108,27 @@ public class PaymentOrderRepository {
                 """, paymentNo);
     }
 
+    public int markRefunding(String paymentNo) {
+        return jdbc.update("""
+                UPDATE t_payment_order SET status = 'REFUNDING', source_updated_at = CURRENT_TIMESTAMP(3)
+                WHERE payment_no = ? AND status IN ('PAID', 'REFUNDING')
+                """, paymentNo);
+    }
+
+    public int markRefunded(String paymentNo) {
+        return jdbc.update("""
+                UPDATE t_payment_order SET status = 'REFUNDED', source_updated_at = CURRENT_TIMESTAMP(3)
+                WHERE payment_no = ? AND status IN ('PAID', 'REFUNDING', 'REFUNDED')
+                """, paymentNo);
+    }
+
+    public int markRefundFailed(String paymentNo) {
+        return jdbc.update("""
+                UPDATE t_payment_order SET status = 'REFUND_FAILED', source_updated_at = CURRENT_TIMESTAMP(3)
+                WHERE payment_no = ? AND status IN ('REFUNDING', 'PAID', 'REFUND_FAILED')
+                """, paymentNo);
+    }
+
     /** 主动查单：支付中且已超过查询窗口的支付单（跨租户，由平台级 job 使用）。 */
     public List<PaymentOrderView> findPayingOlderThan(int olderThanSeconds, int limit) {
         return jdbc.query("""

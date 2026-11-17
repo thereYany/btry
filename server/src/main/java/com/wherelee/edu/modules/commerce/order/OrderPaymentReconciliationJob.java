@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.commerce.payment;
+package com.wherelee.edu.modules.commerce.order;
 
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import lombok.extern.slf4j.Slf4j;
@@ -9,13 +9,13 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class PaymentReconciliationJob {
+public class OrderPaymentReconciliationJob {
 
-    private final PaymentService paymentService;
-    private final RefundService refundService;
+    private final OrderPaymentService paymentService;
+    private final OrderRefundService refundService;
     private final TraceSpans traceSpans;
 
-    public PaymentReconciliationJob(PaymentService paymentService, RefundService refundService,
+    public OrderPaymentReconciliationJob(OrderPaymentService paymentService, OrderRefundService refundService,
                                     TraceSpans traceSpans) {
         this.paymentService = paymentService;
         this.refundService = refundService;

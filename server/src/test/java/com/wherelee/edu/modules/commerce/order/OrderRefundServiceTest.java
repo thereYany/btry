@@ -1,11 +1,8 @@
-package com.wherelee.edu.modules.commerce.payment;
+package com.wherelee.edu.modules.commerce.order;
 
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
+import com.wherelee.edu.modules.commerce.payment.*;
+
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
-import com.wherelee.edu.modules.commerce.order.OrderRecord;
-import com.wherelee.edu.modules.commerce.order.OrderRepository;
-import com.wherelee.edu.modules.commerce.order.OrderService;
-import com.wherelee.edu.modules.commerce.order.OrderStatus;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,11 +24,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class RefundServiceTest {
+class OrderRefundServiceTest {
 
     @Mock private OrderService orderService;
     @Mock private OrderRepository orderRepository;
     @Mock private PaymentRepository paymentRepository;
+    @Mock private PaymentOrderRepository paymentOrderRepository;
     @Mock private EntitlementRepository entitlementRepository;
     @Mock private PaymentGateway paymentGateway;
     @Mock private PlatformTransactionManager transactionManager;
@@ -39,16 +37,16 @@ class RefundServiceTest {
     @Mock private PaymentMetrics metrics;
     @Mock private AlertPublisher alertPublisher;
 
-    private RefundService service;
+    private OrderRefundService service;
 
     @BeforeEach
     void setUp() {
         when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
-        service = new RefundService(
-                orderService, orderRepository, paymentRepository, entitlementRepository,
+        service = new OrderRefundService(
+                orderService, orderRepository, paymentRepository, paymentOrderRepository, entitlementRepository,
                 paymentGateway,
                 new PaymentProperties("mock", true, "secret", 15, 15, 20, 15000, 10000, 5, 30),
-                transactionManager, metrics, alertPublisher, TraceSpans.noop(), PaymentShadowPort.NOOP);
+                transactionManager, metrics, alertPublisher, TraceSpans.noop());
     }
 
     @Test

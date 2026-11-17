@@ -1,5 +1,6 @@
-package com.wherelee.edu.modules.commerce.payment;
+package com.wherelee.edu.modules.commerce.order;
 
+import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
 import com.wherelee.edu.modules.platform.aop.RequireRole;
@@ -14,11 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/payments/mock")
-public class MockPaymentController {
+public class OrderMockPaymentController {
 
-    private final PaymentService paymentService;
+    private final OrderPaymentService paymentService;
 
-    public MockPaymentController(PaymentService paymentService) {
+    public OrderMockPaymentController(OrderPaymentService paymentService) {
         this.paymentService = paymentService;
     }
 

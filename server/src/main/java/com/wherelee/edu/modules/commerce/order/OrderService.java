@@ -9,8 +9,6 @@ import com.wherelee.edu.modules.commerce.payment.PaymentEventRecord;
 import com.wherelee.edu.modules.commerce.payment.PaymentProperties;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
 import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowNo;
-import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.commerce.payment.RefundRecord;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -38,22 +36,19 @@ public class OrderService {
     private final EntitlementRepository entitlementRepository;
     private final PaymentProperties paymentProperties;
     private final PaymentMetrics paymentMetrics;
-    private final PaymentShadowPort shadowPort;
 
     public OrderService(CatalogRepository catalogRepository,
                         OrderRepository orderRepository,
                         PaymentRepository paymentRepository,
                         EntitlementRepository entitlementRepository,
                         PaymentProperties paymentProperties,
-                        PaymentMetrics paymentMetrics,
-                        PaymentShadowPort shadowPort) {
+                        PaymentMetrics paymentMetrics) {
         this.catalogRepository = catalogRepository;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
         this.entitlementRepository = entitlementRepository;
         this.paymentProperties = paymentProperties;
         this.paymentMetrics = paymentMetrics;
-        this.shadowPort = shadowPort;
     }
 
     public List<CatalogItem> catalog(Long userId) {
@@ -62,9 +57,7 @@ public class OrderService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public OrderDtos.OrderView create(Long userId, OrderDtos.CreateOrderRequest request) {
-        OrderDtos.OrderView view = createInternal(userId, request);
-        shadowPort.recordAfterCommit(view.orderNo());
-        return view;
+        return createInternal(userId, request);
     }
 
     private OrderDtos.OrderView createInternal(Long userId, OrderDtos.CreateOrderRequest request) {
@@ -93,7 +86,7 @@ public class OrderService {
         LocalDateTime expireAt = LocalDateTime.now().plusMinutes(Math.max(5, paymentProperties.orderExpireMinutes()));
         try {
             orderRepository.insert(orderNo, userId, series.id(), series.title(),
-                    series.priceCents(), series.currency(), PaymentShadowNo.of(orderNo),
+                    series.priceCents(), series.currency(), null,
                     request.clientRequestId(), activeKey, expireAt);
             paymentMetrics.orderCreated();
         } catch (DuplicateKeyException e) {
@@ -133,9 +126,7 @@ public class OrderService {
 
     @Transactional
     public OrderDtos.OrderView close(Long userId, String orderNo) {
-        OrderDtos.OrderView view = closeInternal(userId, orderNo);
-        shadowPort.recordAfterCommit(orderNo);
-        return view;
+        return closeInternal(userId, orderNo);
     }
 
     private OrderDtos.OrderView closeInternal(Long userId, String orderNo) {
@@ -177,7 +168,10 @@ public class OrderService {
     private List<OrderDtos.TimelineItem> timeline(OrderRecord order) {
         List<OrderDtos.TimelineItem> items = new ArrayList<>();
         items.add(new OrderDtos.TimelineItem("CREATED", "订单已创建", order.createdAt()));
-        List<PaymentAttemptRecord> attempts = paymentRepository.findAttempts(order.id());
+        String paymentNo = orderRepository.findPaymentNo(order.orderNo()).orElse(null);
+        List<PaymentAttemptRecord> attempts = paymentNo == null
+                ? paymentRepository.findAttempts(order.id())
+                : paymentRepository.findAttemptsByPaymentNo(paymentNo);
         for (PaymentAttemptRecord attempt : attempts) {
             items.add(new OrderDtos.TimelineItem(
                     "PAY_ATTEMPT",
@@ -185,7 +179,9 @@ public class OrderService {
                     attempt.createdAt()
             ));
         }
-        List<PaymentEventRecord> events = paymentRepository.findEvents(order.id());
+        List<PaymentEventRecord> events = paymentNo == null
+                ? paymentRepository.findEvents(order.id())
+                : paymentRepository.findEventsByPaymentNo(paymentNo);
         for (PaymentEventRecord event : events) {
             items.add(new OrderDtos.TimelineItem(
                     "PAYMENT_EVENT",

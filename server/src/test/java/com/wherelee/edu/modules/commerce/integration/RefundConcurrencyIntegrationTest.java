@@ -38,7 +38,7 @@ class RefundConcurrencyIntegrationTest extends CommerceIntegrationTestSupport {
         OrderDtos.OrderView order = createOrder(nextRequestId());
         pay(order.orderNo());
         Long orderId = orderRepository.findByOrderNo(order.orderNo()).orElseThrow().id();
-        var attempt = paymentRepository.findLatestAttempt(orderId).orElseThrow();
+        var attempt = paymentRepository.findLatestAttemptByPaymentNo("P" + order.orderNo()).orElseThrow();
         jdbc.update("""
                 UPDATE t_order
                 SET status = 'PAID', paid_at = CURRENT_TIMESTAMP(3), provider_trade_no = ?
