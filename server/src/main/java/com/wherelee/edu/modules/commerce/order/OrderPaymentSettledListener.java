@@ -35,6 +35,7 @@ public class OrderPaymentSettledListener implements PaymentSettledListener {
         switch (event.eventType()) {
             case PaymentEventTypes.PAYMENT_SUCCEEDED -> onSucceeded(order, event);
             case PaymentEventTypes.PAYMENT_FAILED -> onFailed(order, event);
+            case PaymentEventTypes.PAYMENT_EXPIRED -> onExpired(order, event);
             default -> log.debug("忽略非结算类支付事件 type={} bizNo={}",
                     event.eventType(), event.bizNo());
         }
@@ -49,6 +50,19 @@ public class OrderPaymentSettledListener implements PaymentSettledListener {
         orderRepository.markPaid(order.orderNo(), event.providerTradeNo(), event.channel());
         fulfillmentService.fulfill(order.orderNo());
         log.info("支付事件驱动履约完成 bizNo={} paymentNo={}", order.orderNo(), event.paymentNo());
+    }
+
+    private void onExpired(OrderRecord order, PaymentSettledEvent event) {
+        if (order.status() == OrderStatus.CREATED) {
+            orderRepository.close(order.orderNo(), false);
+        } else if (order.status() == OrderStatus.PAYING) {
+            // 支付域已向渠道确认无此交易，才允许关闭支付中的订单
+            orderRepository.closeAfterProviderNotFound(order.orderNo());
+        } else {
+            return;
+        }
+        log.info("支付单过期，业务订单已关闭 bizNo={} paymentNo={}",
+                order.orderNo(), event.paymentNo());
     }
 
     private void onFailed(OrderRecord order, PaymentSettledEvent event) {

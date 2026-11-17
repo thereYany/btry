@@ -12,6 +12,8 @@ import com.wherelee.edu.modules.commerce.payment.PaymentNotification;
 import com.wherelee.edu.modules.commerce.payment.PaymentOrderRepository;
 import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
 import com.wherelee.edu.modules.commerce.payment.PaymentProperties;
+import com.wherelee.edu.modules.commerce.payment.PaymentQueryService;
+import com.wherelee.edu.modules.commerce.payment.outbox.PaymentOutboxDispatcher;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
 import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import com.wherelee.edu.modules.platform.common.BizException;
@@ -62,6 +64,8 @@ public class OrderPaymentService {
     private final PaymentMetrics metrics;
     private final TraceSpans traceSpans;
     private final PaymentOrderRepository paymentOrderRepository;
+    private final PaymentQueryService paymentQueryService;
+    private final PaymentOutboxDispatcher outboxDispatcher;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "mock-payment-delay");
         thread.setDaemon(true);
@@ -79,7 +83,9 @@ public class OrderPaymentService {
                           PaymentProperties properties,
                           PaymentMetrics metrics,
                           TraceSpans traceSpans,
-                          PaymentOrderRepository paymentOrderRepository) {
+                          PaymentOrderRepository paymentOrderRepository,
+                          PaymentQueryService paymentQueryService,
+                          PaymentOutboxDispatcher outboxDispatcher) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
@@ -92,6 +98,8 @@ public class OrderPaymentService {
         this.metrics = metrics;
         this.traceSpans = traceSpans;
         this.paymentOrderRepository = paymentOrderRepository;
+        this.paymentQueryService = paymentQueryService;
+        this.outboxDispatcher = outboxDispatcher;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -252,9 +260,11 @@ public class OrderPaymentService {
 
     private PaymentConfirmationService.ConfirmationResult acceptVerifiedInternal(PaymentNotification notification) {
         PaymentConfirmationService.ConfirmationResult result = confirmationService.accept(notification);
-        String orderStatus = "UNKNOWN";
+        // 事件驱动：本地同步触发一轮投递，mock/测试路径仍可立即观察到订单状态
+        outboxDispatcher.dispatchOnce();
+        String orderStatus = orderRepository.findByOrderNo(notification.orderNo())
+                .map(order -> order.status().name()).orElse("UNKNOWN");
         if (result.success()) {
-            orderStatus = syncOrderAfterConfirmation(result);
             log.info("payment_confirm_result orderNo={} eventKey={} provider={} tradeNo={} amountCents={} success=true duplicate={} orderStatus={}",
                     notification.orderNo(), notification.eventKey(), notification.provider(),
                     notification.tradeNo(), notification.amountCents(), result.duplicate(), orderStatus);
@@ -267,32 +277,15 @@ public class OrderPaymentService {
         return result;
     }
 
-    /** 过渡期：支付确认后由支付域回调订单状态（P2 收尾时这段会移到订单侧消费者）。 */
-    private String syncOrderAfterConfirmation(PaymentConfirmationService.ConfirmationResult result) {
-        OrderRecord order = orderRepository.findByOrderNo(result.bizNo()).orElse(null);
-        if (order == null) {
-            return "UNKNOWN";
-        }
-        if ("PAID".equals(result.status())) {
-            if (order.status() != OrderStatus.PAID && order.status() != OrderStatus.FULFILLED) {
-                orderRepository.markPaid(order.orderNo(), result.providerTradeNo(), result.channel());
-            }
-            fulfillmentService.fulfill(order.orderNo());
-        } else if ("FAILED".equals(result.status()) && order.status() == OrderStatus.PAYING) {
-            orderRepository.markPayFailed(order.orderNo(), "支付平台返回失败");
-        }
-        OrderRecord updated = orderRepository.findByOrderNo(result.bizNo()).orElse(order);
-        return updated.status().name();
-    }
-
+    /**
+     * 补偿任务：主动查单交给支付域，订单侧只做业务补偿（过期关单、已支付未履约补发）。
+     */
     public void reconcile() {
-        for (OrderRecord order : orderRepository.findPendingQuery(
-                properties.queryAfterSeconds(), properties.reconcileBatchSize())) {
-            try {
-                reconcileOrder(order);
-            } catch (Exception e) {
-                log.warn("订单主动查单失败 orderNo={}", order.orderNo(), e);
-            }
+        try {
+            paymentQueryService.queryPending();
+            outboxDispatcher.dispatchOnce();
+        } catch (Exception e) {
+            log.warn("支付域主动查单失败", e);
         }
         for (OrderRecord order : orderRepository.findExpired(properties.reconcileBatchSize())) {
             orderRepository.close(order.orderNo(), false);
@@ -306,55 +299,11 @@ public class OrderPaymentService {
         }
     }
 
+    /** 管理员立即查单：委托支付域按业务单号查，然后同步投递事件。 */
     public OrderRecord reconcileOrder(OrderRecord order) {
-        if (order.status() != OrderStatus.PAYING) {
-            return order;
-        }
-        PaymentAttemptRecord attempt = paymentRepository.findLatestAttemptByPaymentNo(PaymentNo.of(order.orderNo())).orElse(null);
-        if (attempt == null) {
-            if (order.expired()) {
-                orderRepository.closeAfterProviderNotFound(order.orderNo());
-            }
-            return orderService.require(order.orderNo());
-        }
-        PaymentGateway.PaymentQueryResult result = traceSpans.trace("payment.gateway.query", TraceSpans.tags(
-                "order.no", order.orderNo(),
-                "payment.channel", paymentGateway.channel()
-        ), () -> paymentGateway.query(view(order), attempt));
-        if ("PENDING".equals(result.status())) {
-            log.debug("payment_query_result orderNo={} status={} providerTradeNo={} message={}",
-                    order.orderNo(), result.status(), attempt.providerTradeNo(), result.message());
-        } else {
-            log.info("payment_query_result orderNo={} status={} providerTradeNo={} tradeNo={} amountCents={} message={}",
-                    order.orderNo(), result.status(), attempt.providerTradeNo(),
-                    result.tradeNo(), result.amountCents(), result.message());
-        }
-        if ("NOT_FOUND".equals(result.status())) {
-            if (order.expired()) {
-                orderRepository.closeAfterProviderNotFound(order.orderNo());
-            }
-        } else if ("PAID".equals(result.status())) {
-            PaymentNotification notification = new PaymentNotification(
-                    paymentGateway.channel(),
-                    paymentGateway.channel() + "_QUERY:" + order.orderNo() + ":" + result.tradeNo(),
-                    order.orderNo(),
-                    "PAYMENT_SUCCESS",
-                    result.amountCents(),
-                    result.tradeNo(),
-                    null
-            );
-            acceptVerified(notification);
-        } else if ("FAILED".equals(result.status())) {
-            PaymentNotification notification = new PaymentNotification(
-                    paymentGateway.channel(),
-                    paymentGateway.channel() + "_QUERY_FAIL:" + order.orderNo() + ":" + result.tradeNo(),
-                    order.orderNo(),
-                    "PAYMENT_FAILED",
-                    result.amountCents(),
-                    result.tradeNo(),
-                    null
-            );
-            acceptVerified(notification);
+        if (order.status() == OrderStatus.PAYING) {
+            paymentQueryService.queryByBizNo(order.orderNo());
+            outboxDispatcher.dispatchOnce();
         }
         return orderService.require(order.orderNo());
     }

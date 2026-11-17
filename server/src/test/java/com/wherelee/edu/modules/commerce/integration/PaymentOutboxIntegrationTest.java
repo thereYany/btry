@@ -31,11 +31,9 @@ class PaymentOutboxIntegrationTest extends CommerceIntegrationTestSupport {
         String orderNo = createOrder(nextRequestId()).orderNo();
         completePayment(orderNo);
 
-        assertThat(outboxStatus(PaymentNo.of(orderNo)))
-                .isEqualTo("PENDING");
-
-        int delivered = dispatcher.dispatchOnce();
-        assertThat(delivered).isGreaterThanOrEqualTo(1);
+        // 确认服务写箱后，模拟支付路径会同步触发一轮投递（生产由定时投递器负责）
+        assertThat(outboxStatus(PaymentNo.of(orderNo))).isEqualTo("SENT");
+        dispatcher.dispatchOnce();
         assertThat(outboxStatus(PaymentNo.of(orderNo))).isEqualTo("SENT");
         assertThat(orderRepository.findByOrderNo(orderNo).orElseThrow().status().name())
                 .isEqualTo("FULFILLED");

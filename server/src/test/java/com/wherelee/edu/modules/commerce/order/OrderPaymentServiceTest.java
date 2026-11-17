@@ -32,6 +32,8 @@ class OrderPaymentServiceTest {
     @Mock private OrderFulfillmentService fulfillmentService;
     @Mock private MockSignatureService signatureService;
     @Mock private PaymentMetrics metrics;
+    @Mock private PaymentQueryService paymentQueryService;
+    @Mock private com.wherelee.edu.modules.commerce.payment.outbox.PaymentOutboxDispatcher outboxDispatcher;
 
     private OrderPaymentService service;
 
@@ -41,22 +43,20 @@ class OrderPaymentServiceTest {
                 orderService, orderRepository, paymentRepository, entitlementRepository,
                 paymentGateway, confirmationService, fulfillmentService, signatureService,
                 new PaymentProperties("alipay", false, null, 15, 60, 50, 60000, 30000, 5, 30),
-                metrics, TraceSpans.noop(), paymentOrderRepository);
+                metrics, TraceSpans.noop(), paymentOrderRepository, paymentQueryService, outboxDispatcher);
     }
 
     @Test
-    void expiredPayingOrderClosesWhenProviderReportsTradeNotFound() {
+    void reconcileOrderDelegatesToPaymentDomainQuery() {
         OrderRecord order = order();
-        PaymentAttemptRecord attempt = attempt();
+        when(paymentQueryService.queryByBizNo("ORD-1")).thenReturn(true);
         when(orderService.require("ORD-1")).thenReturn(order);
-        when(paymentRepository.findLatestAttemptByPaymentNo("PORD-1")).thenReturn(Optional.of(attempt));
-        when(paymentGateway.query(any(PaymentOrderView.class), eq(attempt))).thenReturn(
-                new PaymentGateway.PaymentQueryResult("NOT_FOUND", order.priceCents(),
-                        attempt.providerTradeNo(), "ACQ.TRADE_NOT_EXIST"));
 
-        service.reconcileOrder(order);
+        OrderRecord result = service.reconcileOrder(order);
 
-        verify(orderRepository).closeAfterProviderNotFound("ORD-1");
+        verify(paymentQueryService).queryByBizNo("ORD-1");
+        verify(outboxDispatcher).dispatchOnce();
+        org.assertj.core.api.Assertions.assertThat(result).isSameAs(order);
     }
 
     @Test

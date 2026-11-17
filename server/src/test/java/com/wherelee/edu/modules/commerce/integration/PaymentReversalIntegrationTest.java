@@ -85,6 +85,35 @@ class PaymentReversalIntegrationTest extends CommerceIntegrationTestSupport {
     }
 
     @Test
+    @DisplayName("主动查单：过期未交易支付单关闭，业务订单经 PAYMENT_EXPIRED 事件关闭")
+    void expiredPaymentClosesOrderThroughEvent() {
+        String orderNo = createOrder(nextRequestId()).orderNo();
+        pay(orderNo);
+        String paymentNo = PaymentNo.of(orderNo);
+        jdbc.update("""
+                UPDATE t_payment_order
+                SET expire_at = TIMESTAMPADD(MINUTE, -1, CURRENT_TIMESTAMP(3)),
+                    updated_at = TIMESTAMPADD(MINUTE, -5, CURRENT_TIMESTAMP(3))
+                WHERE payment_no = ? AND tenant_id = 0
+                """, paymentNo);
+
+        // 支付单与订单同时到期：支付域判过期，订单侧才允许关闭支付中的订单
+        jdbc.update("UPDATE t_order SET expire_at = TIMESTAMPADD(MINUTE, -1, CURRENT_TIMESTAMP(3)) "
+                + "WHERE order_no = ? AND tenant_id = 0", orderNo);
+
+        paymentService.reconcile();
+
+        assertThat(jdbc.queryForObject(
+                "SELECT status FROM t_payment_order WHERE payment_no = ? AND tenant_id = 0",
+                String.class, paymentNo)).isEqualTo("CLOSED");
+        assertThat(orderRepository.findByOrderNo(orderNo).orElseThrow().status())
+                .isEqualTo(com.wherelee.edu.modules.commerce.order.OrderStatus.CLOSED);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM t_payment_outbox WHERE aggregate_no = ? AND event_type = 'PAYMENT_EXPIRED'",
+                Integer.class, paymentNo)).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("发件箱指标已注册：积压、死信、已投递")
     void outboxMetricsAreRegistered() {
         assertThat(meterRegistry.find("payment.outbox.in_flight").gauge()).isNotNull();
