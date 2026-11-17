@@ -1,15 +1,7 @@
 {
   "summary": {
     "table_count": 19,
-    "cross_module_tables": [
-      "t_order",
-      "t_playback_log",
-      "t_series",
-      "t_series_chapter",
-      "t_series_video",
-      "t_student_series",
-      "t_user"
-    ],
+    "cross_module_tables": [],
     "multi_table_class_count": 5,
     "multi_table_classes": [
       "commerce:PaymentOrderShadowRepository",
@@ -24,11 +16,17 @@
         "order",
         "payment"
       ]
-    }
+    },
+    "composer_modules": [
+      "bootstrap"
+    ]
   },
   "tables": {
     "t_admin_audit_log": {
       "modules": [
+        "platform"
+      ],
+      "effective_modules": [
         "platform"
       ],
       "module_count": 1,
@@ -40,6 +38,9 @@
       "modules": [
         "platform"
       ],
+      "effective_modules": [
+        "platform"
+      ],
       "module_count": 1,
       "class_count": 1,
       "statements": 1,
@@ -47,6 +48,9 @@
     },
     "t_channel_bill": {
       "modules": [
+        "commerce"
+      ],
+      "effective_modules": [
         "commerce"
       ],
       "module_count": 1,
@@ -58,6 +62,9 @@
       "modules": [
         "learning"
       ],
+      "effective_modules": [
+        "learning"
+      ],
       "module_count": 1,
       "class_count": 2,
       "statements": 2,
@@ -65,18 +72,23 @@
     },
     "t_order": {
       "modules": [
-        "commerce",
-        "operations"
+        "commerce"
       ],
-      "module_count": 2,
-      "class_count": 4,
-      "statements": 6,
+      "effective_modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 3,
+      "statements": 5,
       "multi_table_classes": [
         "PaymentOrderShadowRepository"
       ]
     },
     "t_payment_attempt": {
       "modules": [
+        "commerce"
+      ],
+      "effective_modules": [
         "commerce"
       ],
       "module_count": 1,
@@ -90,6 +102,9 @@
       "modules": [
         "commerce"
       ],
+      "effective_modules": [
+        "commerce"
+      ],
       "module_count": 1,
       "class_count": 2,
       "statements": 5,
@@ -97,6 +112,9 @@
     },
     "t_payment_order": {
       "modules": [
+        "commerce"
+      ],
+      "effective_modules": [
         "commerce"
       ],
       "module_count": 1,
@@ -108,6 +126,7 @@
     },
     "t_payment_outbox": {
       "modules": [],
+      "effective_modules": [],
       "module_count": 0,
       "class_count": 0,
       "statements": 0,
@@ -115,16 +134,21 @@
     },
     "t_playback_log": {
       "modules": [
-        "learning",
-        "platform"
+        "learning"
       ],
-      "module_count": 2,
+      "effective_modules": [
+        "learning"
+      ],
+      "module_count": 1,
       "class_count": 3,
       "statements": 4,
       "multi_table_classes": []
     },
     "t_recon_diff": {
       "modules": [
+        "commerce"
+      ],
+      "effective_modules": [
         "commerce"
       ],
       "module_count": 1,
@@ -136,6 +160,9 @@
       "modules": [
         "commerce"
       ],
+      "effective_modules": [
+        "commerce"
+      ],
       "module_count": 1,
       "class_count": 1,
       "statements": 1,
@@ -143,6 +170,9 @@
     },
     "t_refund": {
       "modules": [
+        "commerce"
+      ],
+      "effective_modules": [
         "commerce"
       ],
       "module_count": 1,
@@ -155,7 +185,10 @@
         "bootstrap",
         "course"
       ],
-      "module_count": 2,
+      "effective_modules": [
+        "course"
+      ],
+      "module_count": 1,
       "class_count": 4,
       "statements": 8,
       "multi_table_classes": [
@@ -169,7 +202,10 @@
         "bootstrap",
         "course"
       ],
-      "module_count": 2,
+      "effective_modules": [
+        "course"
+      ],
+      "module_count": 1,
       "class_count": 4,
       "statements": 6,
       "multi_table_classes": [
@@ -183,7 +219,10 @@
         "bootstrap",
         "course"
       ],
-      "module_count": 2,
+      "effective_modules": [
+        "course"
+      ],
+      "module_count": 1,
       "class_count": 4,
       "statements": 5,
       "multi_table_classes": [
@@ -197,13 +236,19 @@
         "bootstrap",
         "commerce"
       ],
-      "module_count": 2,
+      "effective_modules": [
+        "commerce"
+      ],
+      "module_count": 1,
       "class_count": 2,
       "statements": 3,
       "multi_table_classes": []
     },
     "t_teacher_invitation": {
       "modules": [
+        "identity"
+      ],
+      "effective_modules": [
         "identity"
       ],
       "module_count": 1,
@@ -218,7 +263,10 @@
         "bootstrap",
         "identity"
       ],
-      "module_count": 2,
+      "effective_modules": [
+        "identity"
+      ],
+      "module_count": 1,
       "class_count": 5,
       "statements": 7,
       "multi_table_classes": [

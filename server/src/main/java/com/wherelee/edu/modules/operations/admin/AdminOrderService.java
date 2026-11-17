@@ -1,68 +1,50 @@
 package com.wherelee.edu.modules.operations.admin;
 
 import com.wherelee.edu.modules.commerce.api.AdminOrderOperations;
+import com.wherelee.edu.modules.commerce.api.AdminOrderOperations.OrderRow;
+import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
 import com.wherelee.edu.modules.identity.api.AccountDirectory;
 import com.wherelee.edu.modules.identity.api.AccountQuery.AccountProfile;
-import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
-import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 运营端订单管理：列表/详情查询走 commerce 契约，下单人信息走身份域契约。
+ *
+ * <p>本服务不再持有订单表 SQL。</p>
+ */
 @Service
 public class AdminOrderService {
 
-    private static final int MAX_PAGE_SIZE = 50;
-
-    private final AdminOrderMapper mapper;
     private final AdminOrderOperations orderOperations;
     private final AccountDirectory accountDirectory;
 
-    public AdminOrderService(AdminOrderMapper mapper,
-                             AdminOrderOperations orderOperations,
+    public AdminOrderService(AdminOrderOperations orderOperations,
                              AccountDirectory accountDirectory) {
-        this.mapper = mapper;
         this.orderOperations = orderOperations;
         this.accountDirectory = accountDirectory;
     }
 
     public PageResult<AdminOrderVO> page(String keyword, String status, int page, int size) {
-        int safePage = Math.min(Math.max(page, 1), 10_000);
-        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
         String normalizedKeyword = blankToNull(keyword);
-        // 按用户名/昵称搜索在身份域完成，订单表只按 userId 集合过滤
+        // 按用户名/昵称搜索在身份域完成，订单库只按 userId 集合过滤
         List<Long> userIds = normalizedKeyword == null
                 ? null : accountDirectory.searchIds(normalizedKeyword, 200);
-        long total = mapper.count(normalizedKeyword, blankToNull(status), userIds);
-        if (total == 0) {
-            return new PageResult<>(List.of(), 0, safePage, safeSize);
-        }
-        List<AdminOrderVO> records = mapper.findPage(normalizedKeyword, blankToNull(status), userIds,
-                (safePage - 1) * safeSize, safeSize);
-        enrich(records);
-        return new PageResult<>(records, total, safePage, safeSize);
+        PageResult<OrderRow> result = orderOperations.page(
+                normalizedKeyword, blankToNull(status), userIds, page, size);
+        return new PageResult<>(enrich(result.records()), result.total(), result.page(), result.size());
     }
 
     public PageResult<AdminOrderVO> exceptions(int page, int size) {
-        int safePage = Math.min(Math.max(page, 1), 10_000);
-        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        long total = mapper.countExceptions();
-        if (total == 0) {
-            return new PageResult<>(List.of(), 0, safePage, safeSize);
-        }
-        List<AdminOrderVO> records = mapper.findExceptions((safePage - 1) * safeSize, safeSize);
-        enrich(records);
-        return new PageResult<>(records, total, safePage, safeSize);
+        PageResult<OrderRow> result = orderOperations.exceptions(page, size);
+        return new PageResult<>(enrich(result.records()), result.total(), result.page(), result.size());
     }
 
     public AdminOrderDtos.Detail detail(String orderNo) {
-        AdminOrderVO row = mapper.findOne(orderNo);
-        if (row == null) {
-            throw BizException.notFound("订单不存在");
-        }
-        enrich(List.of(row));
+        AdminOrderVO row = enrich(List.of(orderOperations.find(orderNo))).get(0);
         AdminOrderOperations.Snapshot snapshot = orderOperations.snapshot(orderNo);
         return new AdminOrderDtos.Detail(
                 row,
@@ -95,19 +77,43 @@ public class AdminOrderService {
     }
 
     /** 下单人展示信息来自身份域契约，订单库不再 join 用户表。 */
-    private void enrich(List<AdminOrderVO> rows) {
+    private List<AdminOrderVO> enrich(List<OrderRow> rows) {
         if (rows.isEmpty()) {
-            return;
+            return List.of();
         }
         Map<Long, AccountProfile> profiles = accountDirectory.profiles(
-                rows.stream().map(AdminOrderVO::getUserId).toList());
-        for (AdminOrderVO row : rows) {
-            AccountProfile profile = profiles.get(row.getUserId());
+                rows.stream().map(OrderRow::userId).toList());
+        return rows.stream().map(row -> {
+            AdminOrderVO vo = toVo(row);
+            AccountProfile profile = profiles.get(row.userId());
             if (profile != null) {
-                row.setUsername(profile.username());
-                row.setNickname(profile.nickname());
+                vo.setUsername(profile.username());
+                vo.setNickname(profile.nickname());
             }
-        }
+            return vo;
+        }).toList();
+    }
+
+    private static AdminOrderVO toVo(OrderRow row) {
+        AdminOrderVO vo = new AdminOrderVO();
+        vo.setOrderNo(row.orderNo());
+        vo.setUserId(row.userId());
+        vo.setSeriesId(row.seriesId());
+        vo.setSeriesTitle(row.seriesTitle());
+        vo.setPriceCents(row.priceCents());
+        vo.setCurrency(row.currency());
+        vo.setStatus(row.status());
+        vo.setPayChannel(row.payChannel());
+        vo.setProviderTradeNo(row.providerTradeNo());
+        vo.setExpireAt(row.expireAt());
+        vo.setPaidAt(row.paidAt());
+        vo.setFulfilledAt(row.fulfilledAt());
+        vo.setClosedAt(row.closedAt());
+        vo.setFulfillmentAttempts(row.fulfillmentAttempts());
+        vo.setLastError(row.lastError());
+        vo.setCreatedAt(row.createdAt());
+        vo.setUpdatedAt(row.updatedAt());
+        return vo;
     }
 
     private String blankToNull(String value) {

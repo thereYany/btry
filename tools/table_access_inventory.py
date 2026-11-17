@@ -60,6 +60,11 @@ TABLE_DB = {
 }
 
 
+# 组合根（bootstrap）：种子数据/装配代码，本身不归属业务域，
+# 它横跨多张表属于设计允许的「装配」，不计入跨模块统计。
+COMPOSER_MODULES = {"bootstrap"}
+
+
 def db_of(table: str) -> str:
     return TABLE_DB.get(table, "other")
 
@@ -336,9 +341,11 @@ def snapshot(catalog: dict[str, dict], index: dict[str, dict[str, Access]]) -> d
     for table in sorted(catalog):
         classes = index.get(table, {})
         modules = {a.module for a in classes.values()}
+        effective = modules - COMPOSER_MODULES
         tables[table] = {
             "modules": sorted(modules),
-            "module_count": len(modules),
+            "effective_modules": sorted(effective),
+            "module_count": len(effective),
             "class_count": len(classes),
             "statements": sum(len(a.ops) for a in classes.values()),
             "multi_table_classes": sorted(
@@ -366,6 +373,7 @@ def snapshot(catalog: dict[str, dict], index: dict[str, dict[str, Access]]) -> d
             "multi_table_classes": multi_classes,
             "cross_db_multi_table_count": len(cross_db),
             "cross_db_multi_table": cross_db,
+            "composer_modules": sorted(COMPOSER_MODULES),
         },
         "tables": tables,
     }

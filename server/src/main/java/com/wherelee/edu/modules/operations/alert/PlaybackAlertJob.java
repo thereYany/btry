@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.operations.alert;
 
+import com.wherelee.edu.modules.learning.api.PlaybackStatsQuery;
 import com.wherelee.edu.modules.platform.alert.AlertLogRepository;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -22,6 +23,7 @@ public class PlaybackAlertJob {
 
     private final AlertProperties properties;
     private final AlertLogRepository repository;
+    private final PlaybackStatsQuery statsQuery;
     private final AlertNotifier notifier;
     private final StringRedisTemplate redis;
     private final MeterRegistry meterRegistry;
@@ -34,6 +36,7 @@ public class PlaybackAlertJob {
 
     public PlaybackAlertJob(AlertProperties properties,
                             AlertLogRepository repository,
+                            PlaybackStatsQuery statsQuery,
                             AlertNotifier notifier,
                             StringRedisTemplate redis,
                             MeterRegistry meterRegistry,
@@ -42,6 +45,7 @@ public class PlaybackAlertJob {
                             RedisFallbackMetrics fallbackMetrics) {
         this.properties = properties;
         this.repository = repository;
+        this.statsQuery = statsQuery;
         this.notifier = notifier;
         this.redis = redis;
         this.meterRegistry = meterRegistry;
@@ -57,9 +61,9 @@ public class PlaybackAlertJob {
             return;
         }
         LocalDateTime since = LocalDateTime.now().minusMinutes(Math.max(1, properties.windowMinutes()));
-        long errors = repository.countEventSince("ERROR", since);
-        long stalls = repository.countEventSince("STALLED", since);
-        AlertLogRepository.CacheStats cache = repository.cacheStatsSince(since);
+        long errors = statsQuery.countEvents("ERROR", since);
+        long stalls = statsQuery.countEvents("STALLED", since);
+        PlaybackStatsQuery.CacheStats cache = statsQuery.cacheStats(since);
 
         if (errors >= properties.errorThreshold()) {
             emit("PLAYBACK_ERRORS", "HIGH",

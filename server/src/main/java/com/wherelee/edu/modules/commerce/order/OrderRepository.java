@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +46,12 @@ public class OrderRepository {
             rs.getTimestamp("created_at").toLocalDateTime(),
             rs.getTimestamp("updated_at").toLocalDateTime()
     );
+
+    private static final String EXCEPTION_WHERE = """
+            WHERE status IN ('PAID', 'REFUND_FAILED')
+               OR (status = 'PAYING' AND updated_at <= TIMESTAMPADD(MINUTE, -2, CURRENT_TIMESTAMP(3)))
+               OR last_error IS NOT NULL
+            """;
 
     private final JdbcTemplate jdbc;
 
@@ -115,6 +122,58 @@ public class OrderRepository {
                   AND status IN ('CREATED', 'PAYING', 'PAY_FAILED', 'PAID')
                 ORDER BY id DESC LIMIT 1
                 """.formatted(COLUMNS), MAPPER, userId, seriesId).stream().findFirst();
+    }
+
+    /** 运营端订单分页：关键字可选（单号/课程名/用户 id 集合），状态可选。 */
+    public List<OrderRecord> findAdminPage(String keyword, String status, List<Long> userIds,
+                                           int offset, int limit) {
+        List<Object> args = new ArrayList<>();
+        String where = adminWhere(keyword, status, userIds, args);
+        args.add(limit);
+        args.add(offset);
+        return jdbc.query("SELECT %s FROM t_order %s ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?"
+                        .formatted(COLUMNS, where), MAPPER, args.toArray());
+    }
+
+    public long countAdminPage(String keyword, String status, List<Long> userIds) {
+        List<Object> args = new ArrayList<>();
+        String where = adminWhere(keyword, status, userIds, args);
+        Long total = jdbc.queryForObject("SELECT COUNT(*) FROM t_order " + where, Long.class, args.toArray());
+        return total == null ? 0 : total;
+    }
+
+    /** 运营端异常订单：已支付未履约 / 支付中堆积 / 有错误信息。 */
+    public List<OrderRecord> findAdminExceptions(int offset, int limit) {
+        return jdbc.query("SELECT %s FROM t_order %s ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?"
+                        .formatted(COLUMNS, EXCEPTION_WHERE), MAPPER, limit, offset);
+    }
+
+    public long countAdminExceptions() {
+        Long total = jdbc.queryForObject("SELECT COUNT(*) FROM t_order " + EXCEPTION_WHERE, Long.class);
+        return total == null ? 0 : total;
+    }
+
+    private static String adminWhere(String keyword, String status, List<Long> userIds, List<Object> args) {
+        List<String> conditions = new ArrayList<>();
+        if (keyword != null && !keyword.isBlank()) {
+            String like = "%" + keyword.trim() + "%";
+            StringBuilder condition = new StringBuilder(
+                    "(order_no LIKE ? OR series_title_snapshot LIKE ?");
+            args.add(like);
+            args.add(like);
+            if (userIds != null && !userIds.isEmpty()) {
+                condition.append(" OR user_id IN (")
+                        .append(String.join(",", java.util.Collections.nCopies(userIds.size(), "?")))
+                        .append(")");
+                args.addAll(userIds);
+            }
+            conditions.add(condition.append(")").toString());
+        }
+        if (status != null && !status.isBlank()) {
+            conditions.add("status = ?");
+            args.add(status);
+        }
+        return conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
     }
 
     /** 商店列表用：该用户所有进行中订单（每系列取最新一条由调用方决定）。 */

@@ -9,6 +9,7 @@ import com.wherelee.edu.modules.commerce.payment.PaymentService;
 import com.wherelee.edu.modules.commerce.payment.RefundRecord;
 import com.wherelee.edu.modules.commerce.payment.RefundService;
 import com.wherelee.edu.modules.platform.common.BizException;
+import com.wherelee.edu.modules.platform.common.PageResult;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,48 @@ public class AdminOrderOperationsService implements AdminOrderOperations {
         this.paymentService = paymentService;
         this.fulfillmentService = fulfillmentService;
         this.refundService = refundService;
+    }
+
+    @Override
+    public PageResult<OrderRow> page(String keyword, String status, List<Long> userIds,
+                                     int page, int size) {
+        int safePage = Math.min(Math.max(page, 1), 10_000);
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        long total = orderRepository.countAdminPage(keyword, status, userIds);
+        if (total == 0) {
+            return new PageResult<>(List.of(), 0, safePage, safeSize);
+        }
+        List<OrderRow> rows = orderRepository.findAdminPage(keyword, status, userIds,
+                        (safePage - 1) * safeSize, safeSize).stream()
+                .map(AdminOrderOperationsService::row).toList();
+        return new PageResult<>(rows, total, safePage, safeSize);
+    }
+
+    @Override
+    public PageResult<OrderRow> exceptions(int page, int size) {
+        int safePage = Math.min(Math.max(page, 1), 10_000);
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        long total = orderRepository.countAdminExceptions();
+        if (total == 0) {
+            return new PageResult<>(List.of(), 0, safePage, safeSize);
+        }
+        List<OrderRow> rows = orderRepository.findAdminExceptions((safePage - 1) * safeSize, safeSize)
+                .stream().map(AdminOrderOperationsService::row).toList();
+        return new PageResult<>(rows, total, safePage, safeSize);
+    }
+
+    @Override
+    public OrderRow find(String orderNo) {
+        return orderRepository.findByOrderNo(orderNo).map(AdminOrderOperationsService::row)
+                .orElseThrow(() -> BizException.notFound("订单不存在"));
+    }
+
+    private static OrderRow row(OrderRecord order) {
+        return new OrderRow(order.orderNo(), order.userId(), order.seriesId(), order.seriesTitle(),
+                order.priceCents(), order.currency(), order.status().name(), order.payChannel(),
+                order.providerTradeNo(), order.expireAt(), order.paidAt(), order.fulfilledAt(),
+                order.closedAt(), order.fulfillmentAttempts(), order.lastError(),
+                order.createdAt(), order.updatedAt());
     }
 
     @Override

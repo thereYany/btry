@@ -11,12 +11,12 @@
 | `t_alert_log` | operations/alert | 1 | 1 | 0 | AlertLogRepository | — |
 | `t_channel_bill` | commerce | 1 | 1 | 0 | ReconRepository | — |
 | `t_learning_progress` | learning/progress | 1 | 2 | 0 | LearningProgressRepository | ProgressQueryService |
-| ⚠️ `t_order` | commerce/order | 2 | 4 | 2 | OrderRepository | AdminOrderMapper, OrderRepository, PaymentOrderShadowRepository, PaymentRepository |
+| `t_order` | commerce/order | 1 | 3 | 2 | OrderRepository | OrderRepository, PaymentOrderShadowRepository, PaymentRepository |
 | `t_payment_attempt` | commerce/payment | 1 | 3 | 2 | PaymentOrderShadowRepository, PaymentRepository | MockChannelBillProvider, PaymentOrderShadowRepository, PaymentRepository |
 | `t_payment_event` | commerce/payment | 1 | 2 | 0 | PaymentOrderShadowRepository, PaymentRepository | PaymentRepository |
 | `t_payment_order` | commerce | 1 | 2 | 2 | PaymentOrderShadowRepository | PaymentOrderShadowRepository, ReconRepository |
 | `t_payment_outbox` | unknown | 0 | 0 | 0 | — | — |
-| ⚠️ `t_playback_log` | learning/playback | 2 | 3 | 0 | PlaybackLogMapper, PlaybackLogRepository | AlertLogRepository, PlaybackLogMapper |
+| `t_playback_log` | learning/playback | 1 | 3 | 0 | PlaybackLogMapper, PlaybackLogRepository | PlaybackLogMapper, PlaybackStatsQueryService |
 | `t_recon_diff` | commerce | 1 | 1 | 0 | ReconRepository | ReconRepository |
 | `t_recon_task` | commerce | 1 | 1 | 0 | ReconRepository | — |
 | `t_refund` | commerce/payment | 1 | 2 | 0 | PaymentOrderShadowRepository, PaymentRepository | PaymentRepository |
@@ -28,16 +28,6 @@
 | ⚠️ `t_user` | identity | 2 | 5 | 1 | DataInitializer, UserRepository | AccountDirectoryService, AccountQueryService, DataInitializer, TeacherInvitationMapper, UserRepository |
 
 ## 2. 跨模块访问（需要收口的表）
-
-### `t_order` — 2 个模块访问
-
-- **commerce**：`OrderRepository` (READ+WRITE, server/src/main/java/com/wherelee/edu/modules/commerce/order/OrderRepository.java)；`PaymentOrderShadowRepository` (OTHER+READ, server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java)；`PaymentRepository` (READ, server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java)
-- **operations**：`AdminOrderMapper` (READ, server/src/main/resources/mapper/AdminOrderMapper.xml)
-
-### `t_playback_log` — 2 个模块访问
-
-- **learning**：`PlaybackLogMapper` (READ+WRITE, server/src/main/resources/mapper/PlaybackLogMapper.xml)；`PlaybackLogRepository` (WRITE, server/src/main/java/com/wherelee/edu/modules/learning/playback/PlaybackLogRepository.java)
-- **platform**：`AlertLogRepository` (READ, server/src/main/java/com/wherelee/edu/modules/platform/alert/AlertLogRepository.java)
 
 ### `t_series` — 2 个模块访问
 

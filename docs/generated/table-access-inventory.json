@@ -302,14 +302,6 @@
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/commerce/order/OrderRepository.java",
       "multi_tables": []
-    },
-    "AdminOrderMapper": {
-      "module": "operations",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/resources/mapper/AdminOrderMapper.xml",
-      "multi_tables": []
     }
   },
   "t_payment_order": {
@@ -365,33 +357,6 @@
       "multi_tables": []
     }
   },
-  "t_playback_log": {
-    "AlertLogRepository": {
-      "module": "platform",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/platform/alert/AlertLogRepository.java",
-      "multi_tables": []
-    },
-    "PlaybackLogRepository": {
-      "module": "learning",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/learning/playback/PlaybackLogRepository.java",
-      "multi_tables": []
-    },
-    "PlaybackLogMapper": {
-      "module": "learning",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/resources/mapper/PlaybackLogMapper.xml",
-      "multi_tables": []
-    }
-  },
   "t_alert_log": {
     "AlertLogRepository": {
       "module": "platform",
@@ -409,6 +374,33 @@
         "WRITE"
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/platform/audit/AdminAuditRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_playback_log": {
+    "PlaybackStatsQueryService": {
+      "module": "learning",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/src/main/java/com/wherelee/edu/modules/learning/playback/PlaybackStatsQueryService.java",
+      "multi_tables": []
+    },
+    "PlaybackLogRepository": {
+      "module": "learning",
+      "ops": [
+        "WRITE"
+      ],
+      "file": "server/src/main/java/com/wherelee/edu/modules/learning/playback/PlaybackLogRepository.java",
+      "multi_tables": []
+    },
+    "PlaybackLogMapper": {
+      "module": "learning",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/src/main/resources/mapper/PlaybackLogMapper.xml",
       "multi_tables": []
     }
   },
