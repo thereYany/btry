@@ -9,6 +9,8 @@ import com.wherelee.edu.modules.commerce.payment.PaymentEventRecord;
 import com.wherelee.edu.modules.commerce.payment.PaymentProperties;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
 import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowNo;
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.commerce.payment.RefundRecord;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -36,19 +38,22 @@ public class OrderService {
     private final EntitlementRepository entitlementRepository;
     private final PaymentProperties paymentProperties;
     private final PaymentMetrics paymentMetrics;
+    private final PaymentShadowPort shadowPort;
 
     public OrderService(CatalogRepository catalogRepository,
                         OrderRepository orderRepository,
                         PaymentRepository paymentRepository,
                         EntitlementRepository entitlementRepository,
                         PaymentProperties paymentProperties,
-                        PaymentMetrics paymentMetrics) {
+                        PaymentMetrics paymentMetrics,
+                        PaymentShadowPort shadowPort) {
         this.catalogRepository = catalogRepository;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
         this.entitlementRepository = entitlementRepository;
         this.paymentProperties = paymentProperties;
         this.paymentMetrics = paymentMetrics;
+        this.shadowPort = shadowPort;
     }
 
     public List<CatalogItem> catalog(Long userId) {
@@ -57,6 +62,12 @@ public class OrderService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public OrderDtos.OrderView create(Long userId, OrderDtos.CreateOrderRequest request) {
+        OrderDtos.OrderView view = createInternal(userId, request);
+        shadowPort.recordAfterCommit(view.orderNo());
+        return view;
+    }
+
+    private OrderDtos.OrderView createInternal(Long userId, OrderDtos.CreateOrderRequest request) {
         var existingRequest = orderRepository.findByClientRequest(userId, request.clientRequestId());
         if (existingRequest.isPresent()) {
             return view(existingRequest.get(), userId);
@@ -82,8 +93,8 @@ public class OrderService {
         LocalDateTime expireAt = LocalDateTime.now().plusMinutes(Math.max(5, paymentProperties.orderExpireMinutes()));
         try {
             orderRepository.insert(orderNo, userId, series.id(), series.title(),
-                    series.priceCents(), series.currency(), request.clientRequestId(),
-                    activeKey, expireAt);
+                    series.priceCents(), series.currency(), PaymentShadowNo.of(orderNo),
+                    request.clientRequestId(), activeKey, expireAt);
             paymentMetrics.orderCreated();
         } catch (DuplicateKeyException e) {
             return orderRepository.findByClientRequest(userId, request.clientRequestId())
@@ -122,6 +133,12 @@ public class OrderService {
 
     @Transactional
     public OrderDtos.OrderView close(Long userId, String orderNo) {
+        OrderDtos.OrderView view = closeInternal(userId, orderNo);
+        shadowPort.recordAfterCommit(orderNo);
+        return view;
+    }
+
+    private OrderDtos.OrderView closeInternal(Long userId, String orderNo) {
         OrderRecord order = requireOwned(userId, orderNo);
         OrderTransitionPolicy.requireCustomerClosable(order.status());
         orderRepository.close(orderNo, true);

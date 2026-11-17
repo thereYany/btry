@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.order;
 
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
 import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
@@ -35,7 +36,7 @@ class OrderServiceTest {
     void setUp() {
         service = new OrderService(catalogRepository, orderRepository, paymentRepository,
                 entitlementRepository, new PaymentProperties("mock", true, "secret", 15, 15, 20, 15000, 10000, 5, 30),
-                paymentMetrics);
+                paymentMetrics, PaymentShadowPort.NOOP);
     }
 
     @Test
@@ -48,7 +49,7 @@ class OrderServiceTest {
 
         assertThat(view.orderNo()).isEqualTo(existing.orderNo());
         verify(orderRepository, never()).insert(anyString(), anyLong(), anyLong(), anyString(),
-                anyLong(), anyString(), anyString(), anyString(), any());
+                anyLong(), anyString(), anyString(), anyString(), anyString(), any());
     }
 
     @Test
@@ -60,7 +61,7 @@ class OrderServiceTest {
                 .hasMessage("你已经拥有这个课程");
 
         verify(orderRepository, never()).insert(anyString(), anyLong(), anyLong(), anyString(),
-                anyLong(), anyString(), anyString(), anyString(), any());
+                anyLong(), anyString(), anyString(), anyString(), anyString(), any());
     }
 
     @Test
@@ -74,7 +75,7 @@ class OrderServiceTest {
 
         assertThat(view.orderNo()).isEqualTo(active.orderNo());
         verify(orderRepository, never()).insert(anyString(), anyLong(), anyLong(), anyString(),
-                anyLong(), anyString(), anyString(), anyString(), any());
+                anyLong(), anyString(), anyString(), anyString(), anyString(), any());
     }
 
     @Test
@@ -88,7 +89,7 @@ class OrderServiceTest {
         service.create(1L, new OrderDtos.CreateOrderRequest(1L, "req-4"));
 
         verify(orderRepository).insert(anyString(), eq(1L), eq(1L), eq("物理必修一"),
-                eq(25900L), eq("CNY"), eq("req-4"), anyString(), any(LocalDateTime.class));
+                eq(25900L), eq("CNY"), anyString(), eq("req-4"), anyString(), any(LocalDateTime.class));
     }
 
     @Test

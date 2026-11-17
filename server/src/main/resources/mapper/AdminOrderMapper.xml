@@ -7,8 +7,6 @@
     <sql id="columns">
         o.order_no AS orderNo,
         o.user_id AS userId,
-        u.username,
-        u.nickname,
         o.series_id AS seriesId,
         o.series_title_snapshot AS seriesTitle,
         o.price_cents AS priceCents,
@@ -30,9 +28,12 @@
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (o.order_no LIKE CONCAT('%', #{keyword}, '%')
-                     OR u.username LIKE CONCAT('%', #{keyword}, '%')
-                     OR u.nickname LIKE CONCAT('%', #{keyword}, '%')
-                     OR o.series_title_snapshot LIKE CONCAT('%', #{keyword}, '%'))
+                     OR o.series_title_snapshot LIKE CONCAT('%', #{keyword}, '%')
+                <if test="userIds != null and userIds.size() > 0">
+                     OR o.user_id IN
+                     <foreach collection="userIds" item="uid" open="(" separator="," close=")">#{uid}</foreach>
+                </if>
+                )
             </if>
             <if test="status != null and status != ''">
                 AND o.status = #{status}
@@ -43,7 +44,6 @@
     <select id="findPage" resultType="com.wherelee.edu.modules.operations.admin.AdminOrderVO">
         SELECT <include refid="columns"/>
         FROM t_order o
-        JOIN t_user u ON u.id = o.user_id
         <include refid="filters"/>
         ORDER BY o.created_at DESC, o.id DESC
         LIMIT #{size} OFFSET #{offset}
@@ -52,21 +52,18 @@
     <select id="count" resultType="long">
         SELECT COUNT(*)
         FROM t_order o
-        JOIN t_user u ON u.id = o.user_id
         <include refid="filters"/>
     </select>
 
     <select id="findOne" resultType="com.wherelee.edu.modules.operations.admin.AdminOrderVO">
         SELECT <include refid="columns"/>
         FROM t_order o
-        JOIN t_user u ON u.id = o.user_id
         WHERE o.order_no = #{orderNo}
     </select>
 
     <select id="findExceptions" resultType="com.wherelee.edu.modules.operations.admin.AdminOrderVO">
         SELECT <include refid="columns"/>
         FROM t_order o
-        JOIN t_user u ON u.id = o.user_id
         WHERE o.status IN ('PAID', 'REFUND_FAILED')
            OR (o.status = 'PAYING' AND o.updated_at &lt;= TIMESTAMPADD(MINUTE, -2, CURRENT_TIMESTAMP(3)))
            OR o.last_error IS NOT NULL

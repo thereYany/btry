@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.commerce.order.OrderRecord;
 import com.wherelee.edu.modules.commerce.order.OrderRepository;
@@ -17,19 +18,28 @@ public class PaymentConfirmationService {
     private final PaymentRepository paymentRepository;
     private final AlertPublisher alertPublisher;
     private final PaymentMetrics metrics;
+    private final PaymentShadowPort shadowPort;
 
     public PaymentConfirmationService(OrderRepository orderRepository,
                                       PaymentRepository paymentRepository,
                                       AlertPublisher alertPublisher,
-                                      PaymentMetrics metrics) {
+                                      PaymentMetrics metrics,
+                                      PaymentShadowPort shadowPort) {
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
         this.alertPublisher = alertPublisher;
         this.metrics = metrics;
+        this.shadowPort = shadowPort;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public ConfirmationResult confirm(PaymentNotification notification) {
+        ConfirmationResult result = confirmInternal(notification);
+        shadowPort.recordAfterCommit(notification.orderNo());
+        return result;
+    }
+
+    private ConfirmationResult confirmInternal(PaymentNotification notification) {
         OrderRecord order = orderRepository.findByOrderNo(notification.orderNo()).orElse(null);
         if (order == null) {
             alert("PAYMENT_UNKNOWN_ORDER", "支付通知包含未知订单 orderNo=" + notification.orderNo());

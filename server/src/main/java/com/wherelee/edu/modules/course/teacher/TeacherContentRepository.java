@@ -45,13 +45,12 @@ public class TeacherContentRepository {
 
     public Optional<SeriesHeader> findSeriesHeader(Long teacherId, Long seriesId) {
         List<SeriesHeader> rows = jdbc.query("""
-                SELECT s.id, s.title, s.summary, s.status, s.sort, u.nickname AS teacher_name
+                SELECT s.id, s.title, s.summary, s.status, s.sort
                 FROM t_series s
-                JOIN t_user u ON u.id = s.teacher_id
                 WHERE s.id = ? AND s.teacher_id = ?
                 """, (rs, rowNum) -> new SeriesHeader(
                 rs.getLong("id"), rs.getString("title"), rs.getString("summary"),
-                rs.getString("status"), rs.getInt("sort"), rs.getString("teacher_name")
+                rs.getString("status"), rs.getInt("sort"), null
         ), seriesId, teacherId);
         return rows.stream().findFirst();
     }

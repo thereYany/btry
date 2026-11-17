@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
 import com.wherelee.edu.modules.commerce.order.OrderRecord;
@@ -25,6 +26,7 @@ public class OrderFulfillmentService {
     private final PaymentMetrics metrics;
     private final AlertPublisher alertPublisher;
     private final TraceSpans traceSpans;
+    private final PaymentShadowPort shadowPort;
 
     public OrderFulfillmentService(OrderRepository orderRepository,
                                    PaymentRepository paymentRepository,
@@ -32,7 +34,8 @@ public class OrderFulfillmentService {
                                    PlatformTransactionManager transactionManager,
                                    PaymentMetrics metrics,
                                    AlertPublisher alertPublisher,
-                                   TraceSpans traceSpans) {
+                                   TraceSpans traceSpans,
+                                   PaymentShadowPort shadowPort) {
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
         this.entitlementRepository = entitlementRepository;
@@ -40,10 +43,16 @@ public class OrderFulfillmentService {
         this.metrics = metrics;
         this.alertPublisher = alertPublisher;
         this.traceSpans = traceSpans;
+        this.shadowPort = shadowPort;
     }
 
     public boolean fulfill(String orderNo) {
-        return traceSpans.trace("order.fulfill", TraceSpans.tags("order.no", orderNo), () -> fulfillInternal(orderNo));
+        boolean fulfilled = traceSpans.trace("order.fulfill", TraceSpans.tags("order.no", orderNo),
+                () -> fulfillInternal(orderNo));
+        if (fulfilled) {
+            shadowPort.recordAfterCommit(orderNo);
+        }
+        return fulfilled;
     }
 
     private boolean fulfillInternal(String orderNo) {

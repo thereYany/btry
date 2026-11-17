@@ -7,6 +7,7 @@ import com.wherelee.edu.modules.commerce.order.OrderRepository;
 import com.wherelee.edu.modules.commerce.order.OrderService;
 import com.wherelee.edu.modules.commerce.order.OrderStatus;
 import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class PaymentService {
     private final PaymentProperties properties;
     private final PaymentMetrics metrics;
     private final TraceSpans traceSpans;
+    private final PaymentShadowPort shadowPort;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
         Thread thread = new Thread(runnable, "mock-payment-delay");
         thread.setDaemon(true);
@@ -67,7 +69,8 @@ public class PaymentService {
                           MockSignatureService signatureService,
                           PaymentProperties properties,
                           PaymentMetrics metrics,
-                          TraceSpans traceSpans) {
+                          TraceSpans traceSpans,
+                          PaymentShadowPort shadowPort) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
@@ -79,10 +82,17 @@ public class PaymentService {
         this.properties = properties;
         this.metrics = metrics;
         this.traceSpans = traceSpans;
+        this.shadowPort = shadowPort;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public OrderDtos.PayResponse pay(Long userId, String orderNo) {
+        OrderDtos.PayResponse response = payInternal(userId, orderNo);
+        shadowPort.recordAfterCommit(orderNo);
+        return response;
+    }
+
+    private OrderDtos.PayResponse payInternal(Long userId, String orderNo) {
         OrderRecord order = orderService.requireOwned(userId, orderNo);
         if (entitlementRepository.hasActive(userId, order.seriesId())) {
             throw new BizException(HttpStatus.CONFLICT, "你已经拥有这个课程");
@@ -260,6 +270,7 @@ public class PaymentService {
         }
         for (OrderRecord order : orderRepository.findExpired(properties.reconcileBatchSize())) {
             orderRepository.close(order.orderNo(), false);
+            shadowPort.recordAfterCommit(order.orderNo());
         }
         for (OrderRecord order : orderRepository.findPaidUnfulfilled(properties.reconcileBatchSize())) {
             try {

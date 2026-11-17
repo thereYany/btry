@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.commerce.order.OrderRecord;
 import com.wherelee.edu.modules.commerce.order.OrderRepository;
 import com.wherelee.edu.modules.commerce.order.OrderService;
@@ -40,7 +41,7 @@ class PaymentServiceTest {
                 orderService, orderRepository, paymentRepository, entitlementRepository,
                 paymentGateway, confirmationService, fulfillmentService, signatureService,
                 new PaymentProperties("alipay", false, null, 15, 60, 50, 60000, 30000, 5, 30),
-                metrics, TraceSpans.noop());
+                metrics, TraceSpans.noop(), PaymentShadowPort.NOOP);
     }
 
     @Test

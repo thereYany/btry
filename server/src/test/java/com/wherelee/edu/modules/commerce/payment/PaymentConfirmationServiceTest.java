@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.commerce.order.OrderRecord;
 import com.wherelee.edu.modules.commerce.order.OrderRepository;
@@ -30,7 +31,8 @@ class PaymentConfirmationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PaymentConfirmationService(orderRepository, paymentRepository, alertPublisher, metrics);
+        service = new PaymentConfirmationService(orderRepository, paymentRepository, alertPublisher, metrics,
+                PaymentShadowPort.NOOP);
     }
 
     @Test

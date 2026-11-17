@@ -1,5 +1,10 @@
 package com.wherelee.edu.modules.operations.admin;
 
+import com.wherelee.edu.modules.commerce.api.EntitlementAdmin;
+import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
+import com.wherelee.edu.modules.course.api.CatalogQuery;
+import com.wherelee.edu.modules.identity.api.AccountQuery;
+import com.wherelee.edu.modules.identity.api.AccountQuery.AccountProfile;
 import com.wherelee.edu.modules.identity.api.UserAccount;
 import com.wherelee.edu.modules.identity.api.UserAccountOperations;
 import com.wherelee.edu.modules.operations.admin.dto.AdminUserVO;
@@ -12,33 +17,55 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 运营端用户管理：账号数据全部走身份域契约，权益分配走权益域契约。
+ *
+ * <p>本服务不再持有任何用户表/权益表的 SQL——运营端只做编排与展示拼装。</p>
+ */
 @Service
 public class AdminUserService {
 
     private static final int MAX_PAGE_SIZE = 50;
     private static final int MAX_PAGE = 10_000;
 
-    private final AdminUserMapper mapper;
+    private final AccountQuery accountQuery;
     private final UserAccountOperations userAccounts;
+    private final EntitlementQuery entitlementQuery;
+    private final EntitlementAdmin entitlementAdmin;
+    private final CatalogQuery catalogQuery;
 
-    public AdminUserService(AdminUserMapper mapper, UserAccountOperations userAccounts) {
-        this.mapper = mapper;
+    public AdminUserService(AccountQuery accountQuery,
+                            UserAccountOperations userAccounts,
+                            EntitlementQuery entitlementQuery,
+                            EntitlementAdmin entitlementAdmin,
+                            CatalogQuery catalogQuery) {
+        this.accountQuery = accountQuery;
         this.userAccounts = userAccounts;
+        this.entitlementQuery = entitlementQuery;
+        this.entitlementAdmin = entitlementAdmin;
+        this.catalogQuery = catalogQuery;
     }
 
     public PageResult<AdminUserVO> page(String keyword, String role, String status, int page, int size) {
         int safePage = Math.min(Math.max(page, 1), MAX_PAGE);
         int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        long total = mapper.countUsers(keyword, role, status);
+        long total = accountQuery.count(blankToNull(keyword), blankToNull(role), blankToNull(status));
         if (total == 0) {
             return new PageResult<>(List.of(), 0, safePage, safeSize);
         }
-        return new PageResult<>(
-                mapper.findPage(keyword, role, status, (safePage - 1) * safeSize, safeSize),
-                total, safePage, safeSize);
+        PageResult<AccountProfile> accounts = accountQuery.page(
+                blankToNull(keyword), blankToNull(role), blankToNull(status),
+                (safePage - 1) * safeSize, safeSize);
+        Map<Long, Integer> counts = entitlementQuery.activeCountsByUser(
+                accounts.records().stream().map(AccountProfile::id).toList());
+        List<AdminUserVO> records = accounts.records().stream()
+                .map(profile -> toVo(profile, counts.getOrDefault(profile.id(), 0)))
+                .toList();
+        return new PageResult<>(records, total, safePage, safeSize);
     }
 
     public Long create(CreateUserRequest request) {
@@ -66,26 +93,42 @@ public class AdminUserService {
         if (!"STUDENT".equals(target.role())) {
             throw BizException.badRequest("只有学员可以分配系列");
         }
-        List<Long> seriesIds = request.seriesIds() == null ? List.of() : request.seriesIds().stream().distinct().toList();
-        Set<Long> validIds = mapper.findAllSeries().stream()
-                .map(SeriesOptionVO::id)
+        List<Long> seriesIds = request.seriesIds() == null
+                ? List.of() : request.seriesIds().stream().distinct().toList();
+        Set<Long> validIds = catalogQuery.publishedOptions().stream()
+                .map(CatalogQuery.SeriesOption::id)
                 .collect(Collectors.toSet());
         if (!validIds.containsAll(seriesIds)) {
             throw BizException.badRequest("包含不存在的系列");
         }
-        mapper.deleteUserSeries(userId);
-        int sort = 1;
-        for (Long seriesId : seriesIds) {
-            mapper.insertUserSeries(userId, seriesId, sort++);
-        }
+        entitlementAdmin.replaceAdminGrants(userId, seriesIds);
     }
 
     public List<Long> seriesIds(Long userId) {
         userAccounts.require(userId);
-        return mapper.findSeriesIds(userId);
+        return entitlementAdmin.adminSeriesIds(userId);
     }
 
     public List<SeriesOptionVO> seriesOptions() {
-        return mapper.findAllSeries();
+        return catalogQuery.publishedOptions().stream()
+                .map(option -> new SeriesOptionVO(option.id(), option.title()))
+                .toList();
+    }
+
+    private AdminUserVO toVo(AccountProfile profile, int seriesCount) {
+        AdminUserVO vo = new AdminUserVO();
+        vo.setId(profile.id());
+        vo.setUsername(profile.username());
+        vo.setNickname(profile.nickname());
+        vo.setRole(profile.role());
+        vo.setStatus(profile.status());
+        vo.setMustChangePassword(profile.mustChangePassword());
+        vo.setSeriesCount((long) seriesCount);
+        vo.setCreatedAt(profile.createdAt());
+        return vo;
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

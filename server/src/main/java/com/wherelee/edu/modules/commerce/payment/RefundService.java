@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
@@ -10,6 +11,8 @@ import com.wherelee.edu.modules.commerce.order.OrderTransitionPolicy;
 import com.wherelee.edu.modules.commerce.order.OrderRepository;
 import com.wherelee.edu.modules.commerce.order.OrderService;
 import com.wherelee.edu.modules.commerce.order.OrderStatus;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -37,6 +40,7 @@ public class RefundService {
     private final PaymentMetrics metrics;
     private final AlertPublisher alertPublisher;
     private final TraceSpans traceSpans;
+    private final PaymentShadowPort shadowPort;
 
     public RefundService(OrderService orderService,
                          OrderRepository orderRepository,
@@ -47,7 +51,8 @@ public class RefundService {
                          PlatformTransactionManager transactionManager,
                          PaymentMetrics metrics,
                          AlertPublisher alertPublisher,
-                         TraceSpans traceSpans) {
+                         TraceSpans traceSpans,
+                         PaymentShadowPort shadowPort) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
@@ -58,14 +63,32 @@ public class RefundService {
         this.metrics = metrics;
         this.alertPublisher = alertPublisher;
         this.traceSpans = traceSpans;
+        this.shadowPort = shadowPort;
     }
 
     public RefundRecord refund(String orderNo, Long operatorId, String reason, boolean simulateFailure) {
+        RefundRecord result = refundInternal(orderNo, operatorId, reason, simulateFailure);
+        shadowPort.recordAfterCommit(orderNo);
+        return result;
+    }
+
+    private RefundRecord refundInternal(String orderNo, Long operatorId, String reason, boolean simulateFailure) {
         OrderRecord order = orderService.require(orderNo);
-        OrderTransitionPolicy.requireRefundable(order.status());
         RefundRecord refund = paymentRepository.findRefundByOrder(order.id()).orElse(null);
-        if (refund != null && "SUCCEEDED".equals(refund.status())) {
+        // 幂等：已成功或处理中的退款直接返回，不再校验订单状态。
+        // 并发退款时，先到线程已把订单改成 REFUNDING，后到线程若先校验状态会误报"不能退款"。
+        if (refund != null && ("SUCCEEDED".equals(refund.status()) || "PROCESSING".equals(refund.status()))) {
             return refund;
+        }
+        try {
+            OrderTransitionPolicy.requireRefundable(order.status());
+        } catch (BizException e) {
+            // 状态刚被并发线程改掉：只要已经存在退款单，就按幂等返回它
+            RefundRecord raced = paymentRepository.findRefundByOrder(order.id()).orElse(null);
+            if (raced != null) {
+                return raced;
+            }
+            throw e;
         }
         if (refund == null) {
             String refundNo = "REF" + LocalDateTime.now().format(TIME)
@@ -99,7 +122,30 @@ public class RefundService {
             refund = paymentRepository.findRefundByOrder(order.id())
                     .orElseThrow(() -> new IllegalStateException("退款重试后不可读取"));
         }
-        return processRefund(order, refund, simulateFailure);
+        RefundRecord prepared = refund;
+        return retryOnDeadlock(() -> processRefund(order, prepared, simulateFailure));
+    }
+
+    /**
+     * MySQL 死锁是并发写同一行时的正常现象（事务被选为牺牲者），重试即可。
+     * 只重试死锁/锁等待超时，其他异常照常抛出。
+     */
+    private RefundRecord retryOnDeadlock(java.util.function.Supplier<RefundRecord> action) {
+        for (int attempt = 0; ; attempt++) {
+            try {
+                return action.get();
+            } catch (CannotAcquireLockException | DeadlockLoserDataAccessException e) {
+                if (attempt >= 2) {
+                    throw e;
+                }
+                try {
+                    Thread.sleep(20L * (attempt + 1));
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+            }
+        }
     }
 
     public void reconcile() {

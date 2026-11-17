@@ -1,6 +1,8 @@
 package com.wherelee.edu.modules.course.governance;
 
+import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
 import com.wherelee.edu.modules.course.api.CourseGovernance;
+import com.wherelee.edu.modules.identity.api.AccountDirectory;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import org.springframework.stereotype.Service;
@@ -18,9 +20,15 @@ public class CourseGovernanceService implements CourseGovernance {
     private static final int MAX_PAGE = 10_000;
 
     private final AdminSeriesMapper mapper;
+    private final AccountDirectory accountDirectory;
+    private final EntitlementQuery entitlementQuery;
 
-    public CourseGovernanceService(AdminSeriesMapper mapper) {
+    public CourseGovernanceService(AdminSeriesMapper mapper,
+                                   AccountDirectory accountDirectory,
+                                   EntitlementQuery entitlementQuery) {
         this.mapper = mapper;
+        this.accountDirectory = accountDirectory;
+        this.entitlementQuery = entitlementQuery;
     }
 
     @Override
@@ -28,13 +36,17 @@ public class CourseGovernanceService implements CourseGovernance {
         int safePage = Math.min(Math.max(page, 1), MAX_PAGE);
         int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
         String normalizedStatus = status == null || status.isBlank() ? null : status.trim();
-        long total = mapper.count(keyword, normalizedStatus, teacherId);
+        // 关键字匹配教师名在身份域做，课程库只按 teacherId 列表过滤
+        List<Long> teacherIds = keyword == null || keyword.isBlank()
+                ? null : accountDirectory.searchIds(keyword, 200);
+        long total = mapper.count(keyword, normalizedStatus, teacherId, teacherIds);
         if (total == 0) {
             return new PageResult<>(List.of(), 0, safePage, safeSize);
         }
-        List<SeriesSummary> records = mapper.findPage(keyword, normalizedStatus, teacherId,
-                        (safePage - 1) * safeSize, safeSize).stream()
-                .map(this::summary).toList();
+        List<AdminSeriesVO> rows = mapper.findPage(keyword, normalizedStatus, teacherId, teacherIds,
+                (safePage - 1) * safeSize, safeSize);
+        enrich(rows);
+        List<SeriesSummary> records = rows.stream().map(this::summary).toList();
         return new PageResult<>(records, total, safePage, safeSize);
     }
 
@@ -44,6 +56,7 @@ public class CourseGovernanceService implements CourseGovernance {
         if (header == null) {
             throw BizException.notFound("系列不存在");
         }
+        header.setTeacherName(accountDirectory.nickname(header.getTeacherId()));
         Map<Long, List<VideoItem>> videosByChapter = new LinkedHashMap<>();
         for (AdminSeriesVideoVO video : mapper.findVideos(seriesId)) {
             videosByChapter.computeIfAbsent(video.getChapterId(), key -> new ArrayList<>())
@@ -97,6 +110,21 @@ public class CourseGovernanceService implements CourseGovernance {
             throw BizException.badRequest("课程价格过高");
         }
         mapper.updateSale(seriesId, saleStatus, priceCents);
+    }
+
+    /** 教师名与学员数来自身份域/权益域契约，课程库不再 join 它们。 */
+    private void enrich(List<AdminSeriesVO> rows) {
+        if (rows.isEmpty()) {
+            return;
+        }
+        Map<Long, String> names = accountDirectory.nicknames(
+                rows.stream().map(AdminSeriesVO::getTeacherId).toList());
+        Map<Long, Integer> students = entitlementQuery.activeStudentCounts(
+                rows.stream().map(AdminSeriesVO::getId).toList());
+        for (AdminSeriesVO row : rows) {
+            row.setTeacherName(names.getOrDefault(row.getTeacherId(), ""));
+            row.setAssignedStudentCount((long) students.getOrDefault(row.getId(), 0));
+        }
     }
 
     private SeriesSummary summary(AdminSeriesVO row) {

@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.course.teacher;
 
+import com.wherelee.edu.modules.identity.api.AccountDirectory;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ class TeacherSeriesServiceTest {
     @Test
     void cannotOpenAnotherTeachersSeries() {
         TeacherContentRepository repository = mock(TeacherContentRepository.class);
-        TeacherSeriesService service = new TeacherSeriesService(repository);
+        TeacherSeriesService service = new TeacherSeriesService(repository, accountDirectory());
         when(repository.findSeriesHeader(2L, 99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.detail(2L, 99L))
@@ -28,10 +29,10 @@ class TeacherSeriesServiceTest {
     @Test
     void buildsOwnedSeriesDetail() {
         TeacherContentRepository repository = mock(TeacherContentRepository.class);
-        TeacherSeriesService service = new TeacherSeriesService(repository);
+        TeacherSeriesService service = new TeacherSeriesService(repository, accountDirectory());
         when(repository.findSeriesHeader(2L, 1L))
                 .thenReturn(Optional.of(new TeacherContentRepository.SeriesHeader(
-                        1L, "物理必修一", "简介", "PUBLISHED", 1, "物理老师")));
+                        1L, "物理必修一", "简介", "PUBLISHED", 1, null)));
         when(repository.findChapters(1L))
                 .thenReturn(List.of(new TeacherContentRepository.ChapterRow(10L, "第一章", 1)));
         when(repository.findVideos(1L))
@@ -43,5 +44,11 @@ class TeacherSeriesServiceTest {
         assertThat(detail.title()).isEqualTo("物理必修一");
         assertThat(detail.chapters()).hasSize(1);
         assertThat(detail.chapters().get(0).videos()).hasSize(1);
+    }
+
+    private static AccountDirectory accountDirectory() {
+        AccountDirectory directory = org.mockito.Mockito.mock(AccountDirectory.class);
+        org.mockito.Mockito.when(directory.nickname(2L)).thenReturn("物理老师");
+        return directory;
     }
 }

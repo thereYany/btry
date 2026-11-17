@@ -1,5 +1,7 @@
 package com.wherelee.edu.architecture;
 
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
@@ -11,7 +13,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  *
  * <p>这里用测试代替文档约定，防止后续开发重新把实现细节穿透到其他模块。</p>
  */
-@AnalyzeClasses(packages = "com.wherelee.edu")
+@AnalyzeClasses(packages = "com.wherelee.edu", importOptions = ImportOption.DoNotIncludeTests.class)
 class ModuleBoundaryTest {
 
     @ArchTest
@@ -35,15 +37,20 @@ class ModuleBoundaryTest {
                             "..modules.operations.."
                     );
 
+    /**
+     * learning 可以从课程域/权益域的 api 契约取数（学习进度需要判断"这是哪个视频、有没有权限"），
+     * 但不得依赖它们的实现包；身份/运营域仍然完全禁止。
+     */
     @ArchTest
-    static final ArchRule learning_should_not_depend_on_other_business_modules =
+    static final ArchRule learning_should_only_depend_on_other_modules_api =
             noClasses().that().resideInAPackage("..modules.learning..")
-                    .should().dependOnClassesThat().resideInAnyPackage(
-                            "..modules.identity..",
-                            "..modules.course..",
-                            "..modules.commerce..",
-                            "..modules.operations.."
-                    );
+                    .should().dependOnClassesThat(
+                            JavaClass.Predicates.resideInAnyPackage(
+                                    "..modules.identity..", "..modules.operations..")
+                                    .or(JavaClass.Predicates.resideInAnyPackage(
+                                                    "..modules.course..", "..modules.commerce..")
+                                            .and(JavaClass.Predicates.resideOutsideOfPackage("..modules.course.api.."))
+                                            .and(JavaClass.Predicates.resideOutsideOfPackage("..modules.commerce.api.."))));
 
     @ArchTest
     static final ArchRule commerce_should_not_depend_on_operations =

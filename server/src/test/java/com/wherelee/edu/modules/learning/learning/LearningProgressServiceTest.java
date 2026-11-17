@@ -1,5 +1,8 @@
 package com.wherelee.edu.modules.learning.learning;
 
+import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
+import com.wherelee.edu.modules.course.api.CatalogQuery;
+import com.wherelee.edu.modules.course.api.CatalogQuery.VideoContext;
 import com.wherelee.edu.modules.platform.common.BizException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,17 +22,21 @@ class LearningProgressServiceTest {
 
     @Mock
     private LearningProgressRepository repository;
+    @Mock
+    private CatalogQuery catalogQuery;
+    @Mock
+    private EntitlementQuery entitlementQuery;
 
     private LearningProgressService service;
 
     @BeforeEach
     void setUp() {
-        service = new LearningProgressService(repository);
+        service = new LearningProgressService(repository, catalogQuery, entitlementQuery);
     }
 
     @Test
     void rejectsVideoNotAssignedToStudent() {
-        when(repository.findAccessibleVideo(1L, 10L)).thenReturn(Optional.empty());
+        when(catalogQuery.findVideo(10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.update(1L, 10L,
                 new LearningProgressDtos.UpdateRequest(30, 181, false)))
@@ -41,8 +48,9 @@ class LearningProgressServiceTest {
 
     @Test
     void clampsPositionAndCompletesNearEnd() {
-        when(repository.findAccessibleVideo(1L, 10L))
-                .thenReturn(Optional.of(new LearningProgressRepository.AccessibleVideo(10L, 1L, 181)));
+        when(catalogQuery.findVideo(10L)).thenReturn(Optional.of(
+                new VideoContext(10L, 1L, "视频", "k/1.mp4", 181, "READY", "PUBLISHED")));
+        when(entitlementQuery.hasActive(1L, 1L)).thenReturn(true);
 
         service.update(1L, 10L, new LearningProgressDtos.UpdateRequest(200, 181, false));
 
@@ -51,8 +59,9 @@ class LearningProgressServiceTest {
 
     @Test
     void usesCatalogDurationWhenClientOmitsIt() {
-        when(repository.findAccessibleVideo(1L, 10L))
-                .thenReturn(Optional.of(new LearningProgressRepository.AccessibleVideo(10L, 1L, 181)));
+        when(catalogQuery.findVideo(10L)).thenReturn(Optional.of(
+                new VideoContext(10L, 1L, "视频", "k/1.mp4", 181, "READY", "PUBLISHED")));
+        when(entitlementQuery.hasActive(1L, 1L)).thenReturn(true);
 
         service.update(1L, 10L, new LearningProgressDtos.UpdateRequest(30, 0, false));
 
@@ -61,8 +70,9 @@ class LearningProgressServiceTest {
 
     @Test
     void explicitCompletionMovesPositionToEnd() {
-        when(repository.findAccessibleVideo(1L, 10L))
-                .thenReturn(Optional.of(new LearningProgressRepository.AccessibleVideo(10L, 1L, 181)));
+        when(catalogQuery.findVideo(10L)).thenReturn(Optional.of(
+                new VideoContext(10L, 1L, "视频", "k/1.mp4", 181, "READY", "PUBLISHED")));
+        when(entitlementQuery.hasActive(1L, 1L)).thenReturn(true);
 
         service.update(1L, 10L, new LearningProgressDtos.UpdateRequest(30, 181, true));
 

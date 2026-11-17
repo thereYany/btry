@@ -10,10 +10,13 @@ public interface AdminOrderMapper {
 
     List<AdminOrderVO> findPage(@Param("keyword") String keyword,
                                 @Param("status") String status,
+                                @Param("userIds") List<Long> userIds,
                                 @Param("offset") int offset,
                                 @Param("size") int size);
 
-    long count(@Param("keyword") String keyword, @Param("status") String status);
+    long count(@Param("keyword") String keyword,
+               @Param("status") String status,
+               @Param("userIds") List<Long> userIds);
 
     AdminOrderVO findOne(@Param("orderNo") String orderNo);
 

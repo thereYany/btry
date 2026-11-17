@@ -1,0 +1,229 @@
+{
+  "summary": {
+    "table_count": 19,
+    "cross_module_tables": [
+      "t_order",
+      "t_playback_log",
+      "t_series",
+      "t_series_chapter",
+      "t_series_video",
+      "t_student_series",
+      "t_user"
+    ],
+    "multi_table_class_count": 5,
+    "multi_table_classes": [
+      "commerce:PaymentOrderShadowRepository",
+      "course:AdminSeriesMapper",
+      "course:CatalogQueryService",
+      "course:TeacherContentRepository",
+      "identity:TeacherInvitationMapper"
+    ],
+    "cross_db_multi_table_count": 1,
+    "cross_db_multi_table": {
+      "commerce:PaymentOrderShadowRepository": [
+        "order",
+        "payment"
+      ]
+    }
+  },
+  "tables": {
+    "t_admin_audit_log": {
+      "modules": [
+        "platform"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 1,
+      "multi_table_classes": []
+    },
+    "t_alert_log": {
+      "modules": [
+        "platform"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 1,
+      "multi_table_classes": []
+    },
+    "t_channel_bill": {
+      "modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 1,
+      "multi_table_classes": []
+    },
+    "t_learning_progress": {
+      "modules": [
+        "learning"
+      ],
+      "module_count": 1,
+      "class_count": 2,
+      "statements": 2,
+      "multi_table_classes": []
+    },
+    "t_order": {
+      "modules": [
+        "commerce",
+        "operations"
+      ],
+      "module_count": 2,
+      "class_count": 4,
+      "statements": 6,
+      "multi_table_classes": [
+        "PaymentOrderShadowRepository"
+      ]
+    },
+    "t_payment_attempt": {
+      "modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 3,
+      "statements": 6,
+      "multi_table_classes": [
+        "PaymentOrderShadowRepository"
+      ]
+    },
+    "t_payment_event": {
+      "modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 2,
+      "statements": 5,
+      "multi_table_classes": []
+    },
+    "t_payment_order": {
+      "modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 2,
+      "statements": 3,
+      "multi_table_classes": [
+        "PaymentOrderShadowRepository"
+      ]
+    },
+    "t_payment_outbox": {
+      "modules": [],
+      "module_count": 0,
+      "class_count": 0,
+      "statements": 0,
+      "multi_table_classes": []
+    },
+    "t_playback_log": {
+      "modules": [
+        "learning",
+        "platform"
+      ],
+      "module_count": 2,
+      "class_count": 3,
+      "statements": 4,
+      "multi_table_classes": []
+    },
+    "t_recon_diff": {
+      "modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 2,
+      "multi_table_classes": []
+    },
+    "t_recon_task": {
+      "modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 1,
+      "multi_table_classes": []
+    },
+    "t_refund": {
+      "modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 2,
+      "statements": 4,
+      "multi_table_classes": []
+    },
+    "t_series": {
+      "modules": [
+        "bootstrap",
+        "course"
+      ],
+      "module_count": 2,
+      "class_count": 4,
+      "statements": 8,
+      "multi_table_classes": [
+        "AdminSeriesMapper",
+        "CatalogQueryService",
+        "TeacherContentRepository"
+      ]
+    },
+    "t_series_chapter": {
+      "modules": [
+        "bootstrap",
+        "course"
+      ],
+      "module_count": 2,
+      "class_count": 4,
+      "statements": 6,
+      "multi_table_classes": [
+        "AdminSeriesMapper",
+        "CatalogQueryService",
+        "TeacherContentRepository"
+      ]
+    },
+    "t_series_video": {
+      "modules": [
+        "bootstrap",
+        "course"
+      ],
+      "module_count": 2,
+      "class_count": 4,
+      "statements": 5,
+      "multi_table_classes": [
+        "AdminSeriesMapper",
+        "CatalogQueryService",
+        "TeacherContentRepository"
+      ]
+    },
+    "t_student_series": {
+      "modules": [
+        "bootstrap",
+        "commerce"
+      ],
+      "module_count": 2,
+      "class_count": 2,
+      "statements": 3,
+      "multi_table_classes": []
+    },
+    "t_teacher_invitation": {
+      "modules": [
+        "identity"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 2,
+      "multi_table_classes": [
+        "TeacherInvitationMapper"
+      ]
+    },
+    "t_user": {
+      "modules": [
+        "bootstrap",
+        "identity"
+      ],
+      "module_count": 2,
+      "class_count": 5,
+      "statements": 7,
+      "multi_table_classes": [
+        "TeacherInvitationMapper"
+      ]
+    }
+  }
+}

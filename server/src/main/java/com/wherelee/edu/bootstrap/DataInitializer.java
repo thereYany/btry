@@ -1,5 +1,12 @@
-package com.wherelee.edu.modules.platform.config;
+package com.wherelee.edu.bootstrap;
 
+// 演示/初始种子数据加载器。
+//
+// 它横跨 t_user / t_series / t_series_chapter / t_series_video / t_student_series 五张业务表，
+// 属于「业务装配」而不是「内核能力」，因此放在 bootstrap 包、不归属任何业务模块，
+// 避免 platform 内核反向依赖业务表（A 期数据所有权规则 R1）。
+
+import com.wherelee.edu.modules.platform.config.SeedProperties;
 import com.wherelee.edu.modules.platform.storage.DemoProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -53,15 +53,15 @@ public class OrderRepository {
     }
 
     public Long insert(String orderNo, Long userId, Long seriesId, String seriesTitle,
-                       long priceCents, String currency, String clientRequestId,
+                       long priceCents, String currency, String paymentNo, String clientRequestId,
                        String activeKey, LocalDateTime expireAt) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement statement = connection.prepareStatement("""
                     INSERT INTO t_order
                         (order_no, user_id, series_id, series_title_snapshot, price_cents,
-                         currency, status, client_request_id, active_key, expire_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?)
+                         currency, status, payment_no, client_request_id, active_key, expire_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 'CREATED', ?, ?, ?, ?)
                     """, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, orderNo);
             statement.setLong(2, userId);
@@ -69,9 +69,10 @@ public class OrderRepository {
             statement.setString(4, seriesTitle);
             statement.setLong(5, priceCents);
             statement.setString(6, currency);
-            statement.setString(7, clientRequestId);
-            statement.setString(8, activeKey);
-            statement.setTimestamp(9, Timestamp.valueOf(expireAt));
+            statement.setString(7, paymentNo);
+            statement.setString(8, clientRequestId);
+            statement.setString(9, activeKey);
+            statement.setTimestamp(10, Timestamp.valueOf(expireAt));
             return statement;
         }, keyHolder);
         Number key = keyHolder.getKey();
@@ -114,6 +115,16 @@ public class OrderRepository {
                   AND status IN ('CREATED', 'PAYING', 'PAY_FAILED', 'PAID')
                 ORDER BY id DESC LIMIT 1
                 """.formatted(COLUMNS), MAPPER, userId, seriesId).stream().findFirst();
+    }
+
+    /** 商店列表用：该用户所有进行中订单（每系列取最新一条由调用方决定）。 */
+    public List<OrderRecord> findActiveOrders(Long userId) {
+        return jdbc.query("""
+                SELECT %s FROM t_order
+                WHERE user_id = ?
+                  AND status IN ('CREATED', 'PAYING', 'PAY_FAILED', 'PAID')
+                ORDER BY id DESC
+                """.formatted(COLUMNS), MAPPER, userId);
     }
 
     public List<OrderRecord> findUserOrders(Long userId, int offset, int size) {

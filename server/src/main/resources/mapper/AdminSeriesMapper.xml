@@ -8,8 +8,11 @@
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (s.title LIKE CONCAT('%', #{keyword}, '%')
-                     OR u.nickname LIKE CONCAT('%', #{keyword}, '%')
-                     OR u.username LIKE CONCAT('%', #{keyword}, '%'))
+                <if test="teacherIds != null and teacherIds.size() > 0">
+                     OR s.teacher_id IN
+                     <foreach collection="teacherIds" item="tid" open="(" separator="," close=")">#{tid}</foreach>
+                </if>
+                )
             </if>
             <if test="status != null and status != ''">
                 AND s.status = #{status}
@@ -29,20 +32,16 @@
                s.price_cents AS priceCents,
                s.currency,
                s.teacher_id AS teacherId,
-               u.nickname AS teacherName,
                COUNT(DISTINCT c.id) AS chapterCount,
                COUNT(DISTINCT v.id) AS videoCount,
-               (SELECT COUNT(DISTINCT ss.user_id) FROM t_student_series ss
-                WHERE ss.series_id = s.id AND ss.status = 'ACTIVE') AS assignedStudentCount,
                s.published_at AS publishedAt,
                s.updated_at AS updatedAt
         FROM t_series s
-        JOIN t_user u ON u.id = s.teacher_id
         LEFT JOIN t_series_chapter c ON c.series_id = s.id
         LEFT JOIN t_series_video v ON v.chapter_id = c.id
         <include refid="filters"/>
         GROUP BY s.id, s.title, s.summary, s.status, s.sale_status, s.price_cents,
-                 s.currency, s.teacher_id, u.nickname,
+                 s.currency, s.teacher_id,
                  s.published_at, s.updated_at
         ORDER BY s.updated_at DESC, s.id DESC
         LIMIT #{size} OFFSET #{offset}
@@ -51,17 +50,14 @@
     <select id="count" resultType="long">
         SELECT COUNT(*)
         FROM t_series s
-        JOIN t_user u ON u.id = s.teacher_id
         <include refid="filters"/>
     </select>
 
     <select id="findHeader" resultType="com.wherelee.edu.modules.course.governance.AdminSeriesHeaderVO">
         SELECT s.id, s.title, s.summary, s.status,
                s.sale_status AS saleStatus, s.price_cents AS priceCents, s.currency,
-               s.teacher_id AS teacherId,
-               u.nickname AS teacherName, s.updated_at AS updatedAt
+               s.teacher_id AS teacherId, s.updated_at AS updatedAt
         FROM t_series s
-        JOIN t_user u ON u.id = s.teacher_id
         WHERE s.id = #{id}
     </select>
 

@@ -1,5 +1,7 @@
 package com.wherelee.edu.modules.learning.playback;
 
+import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
+import com.wherelee.edu.modules.course.api.CatalogQuery;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.MDC;
@@ -17,7 +19,8 @@ class PlaybackLogTraceTest {
         PlaybackLogRepository repository = mock(PlaybackLogRepository.class);
         PlaybackLogQueue queue = mock(PlaybackLogQueue.class);
         when(queue.offer(any(PlaybackLogEvent.class))).thenReturn(true);
-        PlaybackLogService service = new PlaybackLogService(repository, queue);
+        PlaybackLogService service = new PlaybackLogService(repository, queue,
+                mock(CatalogQuery.class), mock(EntitlementQuery.class));
         MDC.put("traceId", "trace-123");
 
         try {

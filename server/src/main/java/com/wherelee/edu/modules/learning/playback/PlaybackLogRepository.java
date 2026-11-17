@@ -5,8 +5,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public class PlaybackLogRepository {
@@ -31,23 +29,5 @@ public class PlaybackLogRepository {
 
     public int deleteOlderThan(LocalDateTime cutoff) {
         return jdbc.update("DELETE FROM t_playback_log WHERE created_at < ?", Timestamp.valueOf(cutoff));
-    }
-
-    public Optional<VideoOwnership> findOwnedVideo(Long userId, Long videoId) {
-        List<VideoOwnership> rows = jdbc.query("""
-                SELECT v.id AS video_id, c.series_id
-                FROM t_series_video v
-                JOIN t_series_chapter c ON c.id = v.chapter_id
-                JOIN t_student_series ss ON ss.series_id = c.series_id AND ss.user_id = ?
-                 AND ss.status = 'ACTIVE'
-                WHERE v.id = ?
-                """, (rs, rowNum) -> new VideoOwnership(
-                rs.getLong("video_id"),
-                rs.getLong("series_id")
-        ), userId, videoId);
-        return rows.stream().findFirst();
-    }
-
-    public record VideoOwnership(Long videoId, Long seriesId) {
     }
 }

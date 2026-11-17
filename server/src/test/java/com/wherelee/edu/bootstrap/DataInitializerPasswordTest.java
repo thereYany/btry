@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.platform.config;
+package com.wherelee.edu.bootstrap;
 
 import com.wherelee.edu.modules.platform.common.validation.StrongPasswordValidator;
 import org.junit.jupiter.api.Test;

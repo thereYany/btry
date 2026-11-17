@@ -1,5 +1,7 @@
 package com.wherelee.edu.modules.course.governance;
 
+import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
+import com.wherelee.edu.modules.identity.api.AccountDirectory;
 import com.wherelee.edu.modules.platform.common.BizException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,12 +19,16 @@ class CourseGovernanceServiceTest {
 
     @Mock
     private AdminSeriesMapper mapper;
+    @Mock
+    private AccountDirectory accountDirectory;
+    @Mock
+    private EntitlementQuery entitlementQuery;
 
     private CourseGovernanceService service;
 
     @BeforeEach
     void setUp() {
-        service = new CourseGovernanceService(mapper);
+        service = new CourseGovernanceService(mapper, accountDirectory, entitlementQuery);
     }
 
     @Test

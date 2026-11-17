@@ -9,6 +9,8 @@ import com.wherelee.edu.modules.commerce.payment.PaymentNotification;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
 import com.wherelee.edu.modules.commerce.payment.PaymentService;
 import com.wherelee.edu.modules.commerce.payment.RefundService;
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentOrderShadowRepository;
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentOrderShadowService;
 import com.wherelee.edu.modules.commerce.order.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -44,6 +46,8 @@ public abstract class CommerceIntegrationTestSupport {
     @Autowired protected OrderRepository orderRepository;
     @Autowired protected PaymentRepository paymentRepository;
     @Autowired protected EntitlementRepository entitlementRepository;
+    @Autowired protected PaymentOrderShadowService paymentShadowService;
+    @Autowired protected PaymentOrderShadowRepository paymentShadowRepository;
 
     protected Fixture fx;
 
@@ -129,6 +133,7 @@ public abstract class CommerceIntegrationTestSupport {
         jdbc.execute("SET FOREIGN_KEY_CHECKS=0");
         for (String table : List.of(
                 "t_playback_log", "t_admin_audit_log", "t_alert_log",
+                "t_recon_diff", "t_recon_task", "t_channel_bill", "t_payment_outbox", "t_payment_order",
                 "t_refund", "t_payment_event", "t_payment_attempt", "t_order",
                 "t_student_series", "t_learning_progress",
                 "t_series_video", "t_series_chapter", "t_series",

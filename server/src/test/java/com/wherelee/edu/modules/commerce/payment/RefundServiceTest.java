@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.commerce.payment;
 
+import com.wherelee.edu.modules.commerce.payment.shadow.PaymentShadowPort;
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
 import com.wherelee.edu.modules.commerce.order.OrderRecord;
 import com.wherelee.edu.modules.commerce.order.OrderRepository;
@@ -47,7 +48,7 @@ class RefundServiceTest {
                 orderService, orderRepository, paymentRepository, entitlementRepository,
                 paymentGateway,
                 new PaymentProperties("mock", true, "secret", 15, 15, 20, 15000, 10000, 5, 30),
-                transactionManager, metrics, alertPublisher, TraceSpans.noop());
+                transactionManager, metrics, alertPublisher, TraceSpans.noop(), PaymentShadowPort.NOOP);
     }
 
     @Test

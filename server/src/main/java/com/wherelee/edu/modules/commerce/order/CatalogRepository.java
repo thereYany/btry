@@ -1,77 +1,75 @@
 package com.wherelee.edu.modules.commerce.order;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
+import com.wherelee.edu.modules.course.api.CatalogQuery;
+import com.wherelee.edu.modules.course.api.CatalogQuery.CatalogSeries;
 import org.springframework.stereotype.Repository;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+/**
+ * 课程商店读模型：不再直接查课程/用户表，改为三段拼装。
+ *
+ * <pre>
+ * 商品信息   ← course.api.CatalogQuery（内容域自己的表 + 身份域昵称接口）
+ * 是否已购   ← entitlement（本模块内，t_student_series）
+ * 进行中订单 ← order（本模块内，t_order）
+ * </pre>
+ *
+ * <p>代价是 3 次查询代替 1 次 join；收益是商品展示不再依赖课程表结构，
+ * 且跨域访问从 SQL 级降为接口级，后续分库/拆服务时这里只需换实现。</p>
+ */
 @Repository
 public class CatalogRepository {
 
-    private final JdbcTemplate jdbc;
+    private final CatalogQuery catalogQuery;
+    private final EntitlementRepository entitlementRepository;
+    private final OrderRepository orderRepository;
 
-    public CatalogRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public CatalogRepository(CatalogQuery catalogQuery,
+                             EntitlementRepository entitlementRepository,
+                             OrderRepository orderRepository) {
+        this.catalogQuery = catalogQuery;
+        this.entitlementRepository = entitlementRepository;
+        this.orderRepository = orderRepository;
     }
 
     public List<CatalogItem> findOnSale(Long userId) {
-        return jdbc.query("""
-                SELECT s.id,
-                       s.title,
-                       s.summary,
-                       u.nickname AS teacher_name,
-                       (SELECT COUNT(*) FROM t_series_chapter c WHERE c.series_id = s.id) AS chapter_count,
-                       (SELECT COUNT(*) FROM t_series_video v
-                        JOIN t_series_chapter c2 ON c2.id = v.chapter_id
-                        WHERE c2.series_id = s.id) AS video_count,
-                       s.price_cents,
-                       s.currency,
-                       CASE WHEN EXISTS (
-                           SELECT 1 FROM t_student_series ss
-                           WHERE ss.user_id = ? AND ss.series_id = s.id AND ss.status = 'ACTIVE'
-                             AND (ss.valid_to IS NULL OR ss.valid_to > CURRENT_TIMESTAMP(3))
-                       ) THEN 1 ELSE 0 END AS owned,
-                       (SELECT o.order_no FROM t_order o
-                        WHERE o.user_id = ? AND o.series_id = s.id
-                          AND o.status IN ('CREATED', 'PAYING', 'PAY_FAILED', 'PAID')
-                        ORDER BY o.id DESC LIMIT 1) AS active_order_no,
-                       (SELECT o.status FROM t_order o
-                        WHERE o.user_id = ? AND o.series_id = s.id
-                          AND o.status IN ('CREATED', 'PAYING', 'PAY_FAILED', 'PAID')
-                        ORDER BY o.id DESC LIMIT 1) AS active_order_status
-                FROM t_series s
-                JOIN t_user u ON u.id = s.teacher_id
-                WHERE s.status = 'PUBLISHED'
-                  AND s.sale_status = 'ON_SALE'
-                  AND s.price_cents > 0
-                ORDER BY s.sort, s.id
-                """, (rs, rowNum) -> new CatalogItem(
-                rs.getLong("id"),
-                rs.getString("title"),
-                rs.getString("summary"),
-                rs.getString("teacher_name"),
-                rs.getLong("chapter_count"),
-                rs.getLong("video_count"),
-                rs.getLong("price_cents"),
-                rs.getString("currency"),
-                rs.getBoolean("owned"),
-                rs.getString("active_order_no"),
-                rs.getString("active_order_status")
-        ), userId, userId, userId);
+        List<CatalogSeries> series = catalogQuery.findOnSale();
+        if (series.isEmpty()) {
+            return List.of();
+        }
+        Set<Long> owned = entitlementRepository.activeSeriesIds(userId);
+        Map<Long, OrderRecord> activeOrders = new LinkedHashMap<>();
+        for (OrderRecord order : orderRepository.findActiveOrders(userId)) {
+            activeOrders.putIfAbsent(order.seriesId(), order);
+        }
+        return series.stream()
+                .map(item -> {
+                    OrderRecord active = activeOrders.get(item.seriesId());
+                    return new CatalogItem(
+                            item.seriesId(),
+                            item.title(),
+                            item.summary(),
+                            item.teacherName(),
+                            item.chapterCount(),
+                            item.videoCount(),
+                            item.priceCents(),
+                            item.currency(),
+                            owned.contains(item.seriesId()),
+                            active == null ? null : active.orderNo(),
+                            active == null ? null : active.status().name()
+                    );
+                })
+                .toList();
     }
 
     public Optional<SaleSeries> findPurchasable(Long seriesId) {
-        return jdbc.query("""
-                SELECT id, title, price_cents, currency
-                FROM t_series
-                WHERE id = ? AND status = 'PUBLISHED'
-                  AND sale_status = 'ON_SALE' AND price_cents > 0
-                """, (rs, rowNum) -> new SaleSeries(
-                rs.getLong("id"),
-                rs.getString("title"),
-                rs.getLong("price_cents"),
-                rs.getString("currency")
-        ), seriesId).stream().findFirst();
+        return catalogQuery.findPurchasable(seriesId)
+                .map(item -> new SaleSeries(item.seriesId(), item.title(), item.priceCents(), item.currency()));
     }
 }

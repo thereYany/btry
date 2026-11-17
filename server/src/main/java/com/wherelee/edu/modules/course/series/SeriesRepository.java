@@ -1,114 +1,135 @@
 package com.wherelee.edu.modules.course.series;
 
+import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
+import com.wherelee.edu.modules.commerce.api.EntitlementQuery.ActiveEntitlement;
+import com.wherelee.edu.modules.course.api.CatalogQuery;
+import com.wherelee.edu.modules.course.api.CatalogQuery.CatalogSeries;
+import com.wherelee.edu.modules.course.api.CatalogQuery.VideoContext;
+import com.wherelee.edu.modules.course.api.CatalogQuery.VideoRef;
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.wherelee.edu.modules.learning.api.ProgressQuery;
+import com.wherelee.edu.modules.learning.api.ProgressQuery.ProgressSnapshot;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+/**
+ * 学习空间读模型：由三段数据拼装，不再写跨域 SQL。
+ *
+ * <pre>
+ * 课程/章节/视频 ← course.api.CatalogQuery（课程域自己的表）
+ * 有没有权益      ← commerce.api.EntitlementQuery
+ * 看到哪了        ← learning.api.ProgressQuery
+ * </pre>
+ *
+ * <p>原实现的一条 SQL join 了 catalog + identity + learning 三个域的表；
+ * 拆开后每次页面渲染固定 4 次查询（权益 1 + 课程 1 + 视频 1 + 进度 1），
+ * 换来的是学习空间不再依赖任何其他域的表结构。</p>
+ */
 @Repository
 public class SeriesRepository {
 
-    private final JdbcTemplate jdbc;
+    private final CatalogQuery catalogQuery;
+    private final EntitlementQuery entitlementQuery;
+    private final ProgressQuery progressQuery;
 
-    public SeriesRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public SeriesRepository(CatalogQuery catalogQuery,
+                            EntitlementQuery entitlementQuery,
+                            ProgressQuery progressQuery) {
+        this.catalogQuery = catalogQuery;
+        this.entitlementQuery = entitlementQuery;
+        this.progressQuery = progressQuery;
     }
 
     public List<SeriesDtos.SeriesSummary> findForStudent(Long userId) {
-        return jdbc.query("""
-                SELECT s.id,
-                       s.title,
-                       s.summary,
-                       u.nickname AS teacher_name,
-                       COUNT(DISTINCT c.id) AS chapter_count,
-                       COUNT(DISTINCT v.id) AS video_count,
-                       COUNT(DISTINCT CASE WHEN p.completed = 1 THEN v.id END) AS completed_video_count,
-                       MIN(ss.sort) AS student_sort
-                FROM t_student_series ss
-                JOIN t_series s ON s.id = ss.series_id
-                JOIN t_user u ON u.id = s.teacher_id
-                LEFT JOIN t_series_chapter c ON c.series_id = s.id
-                LEFT JOIN t_series_video v ON v.chapter_id = c.id
-                LEFT JOIN t_learning_progress p ON p.user_id = ss.user_id AND p.video_id = v.id
-                WHERE ss.user_id = ? AND ss.status = 'ACTIVE'
-                  AND (ss.valid_to IS NULL OR ss.valid_to > CURRENT_TIMESTAMP(3))
-                GROUP BY s.id, s.title, s.summary, u.nickname
-                ORDER BY student_sort, s.id
-                """, (rs, rowNum) -> new SeriesDtos.SeriesSummary(
-                rs.getLong("id"),
-                rs.getString("title"),
-                rs.getString("summary"),
-                rs.getString("teacher_name"),
-                rs.getLong("chapter_count"),
-                rs.getLong("video_count"),
-                rs.getLong("completed_video_count")
-        ), userId);
+        List<ActiveEntitlement> entitlements = entitlementQuery.activeEntitlements(userId);
+        if (entitlements.isEmpty()) {
+            return List.of();
+        }
+        List<Long> seriesIds = entitlements.stream().map(ActiveEntitlement::seriesId).toList();
+        Map<Long, CatalogSeries> catalog = catalogQuery.findByIds(seriesIds).stream()
+                .collect(Collectors.toMap(CatalogSeries::seriesId, value -> value, (a, b) -> a));
+        Map<Long, List<Long>> videosBySeries = catalogQuery.findVideoRefs(seriesIds).stream()
+                .collect(Collectors.groupingBy(VideoRef::seriesId,
+                        Collectors.mapping(VideoRef::id, Collectors.toList())));
+        Set<Long> allVideoIds = videosBySeries.values().stream()
+                .flatMap(List::stream).collect(Collectors.toSet());
+        Map<Long, ProgressSnapshot> progress = progressQuery.byVideoIds(userId, allVideoIds);
+
+        List<SeriesDtos.SeriesSummary> result = new ArrayList<>();
+        for (ActiveEntitlement entitlement : entitlements) {
+            CatalogSeries series = catalog.get(entitlement.seriesId());
+            if (series == null) {
+                continue;
+            }
+            long completed = videosBySeries.getOrDefault(entitlement.seriesId(), List.of()).stream()
+                    .map(progress::get)
+                    .filter(snapshot -> snapshot != null && snapshot.completed())
+                    .count();
+            result.add(new SeriesDtos.SeriesSummary(
+                    series.seriesId(), series.title(), series.summary(), series.teacherName(),
+                    series.chapterCount(), series.videoCount(), completed));
+        }
+        return result;
     }
 
     public Optional<SeriesHeader> findAssignedSeries(Long userId, Long seriesId) {
-        List<SeriesHeader> rows = jdbc.query("""
-                SELECT s.id, s.title, s.summary, u.nickname AS teacher_name
-                FROM t_series s
-                JOIN t_student_series ss ON ss.series_id = s.id AND ss.user_id = ?
-                JOIN t_user u ON u.id = s.teacher_id
-                WHERE s.id = ? AND ss.status = 'ACTIVE'
-                  AND (ss.valid_to IS NULL OR ss.valid_to > CURRENT_TIMESTAMP(3))
-                """, (rs, rowNum) -> new SeriesHeader(
-                rs.getLong("id"),
-                rs.getString("title"),
-                rs.getString("summary"),
-                rs.getString("teacher_name")
-        ), userId, seriesId);
-        return rows.stream().findFirst();
+        if (!entitlementQuery.hasActive(userId, seriesId)) {
+            return Optional.empty();
+        }
+        return catalogQuery.findById(seriesId)
+                .map(series -> new SeriesHeader(
+                        series.seriesId(), series.title(), series.summary(), series.teacherName()));
     }
 
     public List<ChapterRow> findChapters(Long seriesId) {
-        return jdbc.query("""
-                SELECT id, title
-                FROM t_series_chapter
-                WHERE series_id = ?
-                ORDER BY sort, id
-                """, (rs, rowNum) -> new ChapterRow(rs.getLong("id"), rs.getString("title")), seriesId);
+        return catalogQuery.findChapters(seriesId).stream()
+                .map(chapter -> new ChapterRow(chapter.id(), chapter.title()))
+                .toList();
     }
 
     public List<VideoRow> findVideos(Long seriesId, Long userId) {
-        return jdbc.query("""
-                SELECT v.id, v.chapter_id, v.title, v.duration_seconds,
-                       COALESCE(p.position_seconds, 0) AS position_seconds,
-                       COALESCE(p.completed, 0) AS completed
-                FROM t_series_video v
-                JOIN t_series_chapter c ON c.id = v.chapter_id
-                LEFT JOIN t_learning_progress p ON p.user_id = ? AND p.video_id = v.id
-                WHERE c.series_id = ?
-                ORDER BY c.sort, c.id, v.sort, v.id
-                """, (rs, rowNum) -> new VideoRow(
-                rs.getLong("id"),
-                rs.getLong("chapter_id"),
-                rs.getString("title"),
-                rs.getInt("duration_seconds"),
-                rs.getInt("position_seconds"),
-                rs.getBoolean("completed")
-        ), userId, seriesId);
+        List<VideoRef> videos = catalogQuery.findVideoRefs(List.of(seriesId));
+        if (videos.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, ProgressSnapshot> progress = progressQuery.byVideoIds(
+                userId, videos.stream().map(VideoRef::id).toList());
+        return videos.stream()
+                .map(video -> {
+                    ProgressSnapshot snapshot = progress.get(video.id());
+                    return new VideoRow(
+                            video.id(), video.chapterId(), video.title(), video.durationSeconds(),
+                            snapshot == null ? 0 : snapshot.positionSeconds(),
+                            snapshot != null && snapshot.completed());
+                })
+                .toList();
     }
 
+    /**
+     * 可播放校验：权益 + 课程已发布 + 视频就绪，三者都要满足。
+     *
+     * <p>原实现只校验权益，导致课程下架后已购学员仍能拿到播放地址——本次一并修复。</p>
+     */
     public Optional<SeriesDtos.PlayableVideo> findPlayableVideo(Long userId, Long videoId) {
-        List<SeriesDtos.PlayableVideo> rows = jdbc.query("""
-                SELECT v.id, c.series_id, v.title, v.video_key
-                FROM t_series_video v
-                JOIN t_series_chapter c ON c.id = v.chapter_id
-                JOIN t_student_series ss ON ss.series_id = c.series_id AND ss.user_id = ?
-                JOIN t_series s ON s.id = c.series_id
-                WHERE v.id = ? AND ss.status = 'ACTIVE'
-                  AND (ss.valid_to IS NULL OR ss.valid_to > CURRENT_TIMESTAMP(3))
-                """, (rs, rowNum) -> new SeriesDtos.PlayableVideo(
-                rs.getLong("id"),
-                rs.getLong("series_id"),
-                rs.getString("title"),
-                rs.getString("video_key")
-        ), userId, videoId);
-        return rows.stream().findFirst();
+        VideoContext video = catalogQuery.findVideo(videoId).orElse(null);
+        if (video == null) {
+            return Optional.empty();
+        }
+        if (!"PUBLISHED".equals(video.seriesStatus()) || !"READY".equals(video.mediaStatus())) {
+            return Optional.empty();
+        }
+        if (!entitlementQuery.hasActive(userId, video.seriesId())) {
+            return Optional.empty();
+        }
+        return Optional.of(new SeriesDtos.PlayableVideo(
+                video.id(), video.seriesId(), video.title(), video.videoKey()));
     }
 
     public record SeriesHeader(Long id, String title, String summary, String teacherName) {

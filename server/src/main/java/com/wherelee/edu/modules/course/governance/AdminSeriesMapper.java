@@ -11,12 +11,14 @@ public interface AdminSeriesMapper {
     List<AdminSeriesVO> findPage(@Param("keyword") String keyword,
                                  @Param("status") String status,
                                  @Param("teacherId") Long teacherId,
+                                 @Param("teacherIds") List<Long> teacherIds,
                                  @Param("offset") int offset,
                                  @Param("size") int size);
 
     long count(@Param("keyword") String keyword,
                @Param("status") String status,
-               @Param("teacherId") Long teacherId);
+               @Param("teacherId") Long teacherId,
+               @Param("teacherIds") List<Long> teacherIds);
 
     AdminSeriesHeaderVO findHeader(@Param("id") Long id);
 

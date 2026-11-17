@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.course.teacher;
 
+import com.wherelee.edu.modules.identity.api.AccountDirectory;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
 import org.springframework.stereotype.Service;
@@ -13,9 +14,12 @@ import java.util.Map;
 public class TeacherSeriesService {
 
     private final TeacherContentRepository repository;
+    private final AccountDirectory accountDirectory;
 
-    public TeacherSeriesService(TeacherContentRepository repository) {
+    public TeacherSeriesService(TeacherContentRepository repository,
+                                AccountDirectory accountDirectory) {
         this.repository = repository;
+        this.accountDirectory = accountDirectory;
     }
 
     public List<SeriesDtos.TeacherSeriesSummary> list(Long teacherId) {
@@ -45,6 +49,6 @@ public class TeacherSeriesService {
 
         return new SeriesDtos.TeacherSeriesDetail(
                 header.id(), header.title(), header.summary(), header.status(),
-                header.sort(), header.teacherName(), chapters);
+                header.sort(), accountDirectory.nickname(teacherId), chapters);
     }
 }

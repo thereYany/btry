@@ -5,6 +5,16 @@ on:
   pull_request:
 
 jobs:
+  data-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: 数据边界棘轮检查（跨模块表 / 多表 SQL 只降不升）
+        run: python3 tools/table_access_inventory.py --baseline docs/generated/table-access-baseline.json
+
   backend:
     runs-on: ubuntu-latest
     defaults:
