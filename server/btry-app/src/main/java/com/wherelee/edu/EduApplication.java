@@ -6,7 +6,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {
+        "com.wherelee.edu.modules.commerce",
+        "com.wherelee.edu.modules.course",
+        "com.wherelee.edu.modules.learning",
+        "com.wherelee.edu.modules.identity",
+        "com.wherelee.edu.modules.operations",
+        "com.wherelee.edu.bootstrap"
+})
 @MapperScan({"com.wherelee.edu.modules.learning.playback", "com.wherelee.edu.modules.operations.admin", "com.wherelee.edu.modules.identity.invitation", "com.wherelee.edu.modules.course.governance"})
 @ConfigurationPropertiesScan
 @EnableScheduling
