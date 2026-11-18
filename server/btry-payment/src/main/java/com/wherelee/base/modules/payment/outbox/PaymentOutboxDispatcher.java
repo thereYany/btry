@@ -28,6 +28,8 @@ public class PaymentOutboxDispatcher {
     private final int batchSize;
     private final int maxAttempts;
     private final int backoffBaseSeconds;
+    private final int reclaimAfterSeconds;
+    private volatile boolean emptyListenerWarned;
     private final AtomicInteger inFlight = new AtomicInteger();
     private final AtomicInteger dead = new AtomicInteger();
     private final Counter sent;
@@ -39,12 +41,14 @@ public class PaymentOutboxDispatcher {
                                    MeterRegistry meterRegistry,
                                    @Value("${app.payment.outbox.batch-size:50}") int batchSize,
                                    @Value("${app.payment.outbox.max-attempts:5}") int maxAttempts,
-                                   @Value("${app.payment.outbox.backoff-base-seconds:5}") int backoffBaseSeconds) {
+                                   @Value("${app.payment.outbox.backoff-base-seconds:5}") int backoffBaseSeconds,
+                                   @Value("${app.payment.outbox.reclaim-after-seconds:120}") int reclaimAfterSeconds) {
         this.repository = repository;
         this.listeners = listeners;
         this.batchSize = Math.max(1, batchSize);
         this.maxAttempts = Math.max(1, maxAttempts);
         this.backoffBaseSeconds = Math.max(1, backoffBaseSeconds);
+        this.reclaimAfterSeconds = Math.max(5, reclaimAfterSeconds);
         this.sent = meterRegistry.counter("payment.outbox.sent");
         this.failed = meterRegistry.counter("payment.outbox.failed");
         this.deadLettered = meterRegistry.counter("payment.outbox.dead_lettered");
@@ -67,6 +71,14 @@ public class PaymentOutboxDispatcher {
 
     /** 同步执行一轮投递（测试与手动补偿用）。 */
     public int dispatchOnce() {
+        int reclaimed = repository.reclaimStuck(reclaimAfterSeconds);
+        if (reclaimed > 0) {
+            log.warn("回收卡在 SENDING 的支付事件 {} 条（上次进程可能崩溃）", reclaimed);
+        }
+        if (listeners.isEmpty() && !emptyListenerWarned) {
+            emptyListenerWarned = true;
+            log.warn("没有 PaymentSettledListener：支付事件会被投递并标记 SENT，但不会有业务侧消费");
+        }
         List<PaymentOutboxRepository.OutboxRow> rows = repository.claimDue(batchSize);
         int delivered = 0;
         for (PaymentOutboxRepository.OutboxRow row : rows) {

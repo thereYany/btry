@@ -50,7 +50,7 @@ class PaymentQueryServiceTest {
         assertThat(service.query(payment(LocalDateTime.now().plusMinutes(5)))).isTrue();
 
         ArgumentCaptor<PaymentNotification> captor = ArgumentCaptor.forClass(PaymentNotification.class);
-        verify(confirmationService).accept(captor.capture());
+        verify(confirmationService).accept(captor.capture(), eq("P-ORD-1"));
         assertThat(captor.getValue().eventType()).isEqualTo("PAYMENT_SUCCESS");
         assertThat(captor.getValue().eventKey()).isEqualTo("QUERY:P-ORD-1:MOCK-T-1");
         verify(paymentOrderRepository, never()).markClosed(anyString());
@@ -61,6 +61,8 @@ class PaymentQueryServiceTest {
         when(paymentRepository.findLatestAttemptByPaymentNo("P-ORD-1")).thenReturn(Optional.of(attempt()));
         when(paymentGateway.query(any(PaymentOrderView.class), any())).thenReturn(
                 new PaymentGateway.PaymentQueryResult("NOT_FOUND", 19900L, "MOCK-T-1", "ACQ.TRADE_NOT_EXIST"));
+        when(paymentGateway.close(any(PaymentOrderView.class), any()))
+                .thenReturn(PaymentGateway.CloseResult.notFound("ACQ.TRADE_NOT_EXIST"));
         when(paymentOrderRepository.markClosed("P-ORD-1")).thenReturn(1);
 
         assertThat(service.query(payment(LocalDateTime.now().minusMinutes(1)))).isTrue();
@@ -70,7 +72,7 @@ class PaymentQueryServiceTest {
         verify(outboxRepository).append(captor.capture());
         assertThat(captor.getValue().eventType()).isEqualTo(PaymentEventTypes.PAYMENT_EXPIRED);
         assertThat(captor.getValue().bizNo()).isEqualTo("ORD-1");
-        verify(confirmationService, never()).accept(any());
+        verify(confirmationService, never()).accept(any(), any());
     }
 
     @Test

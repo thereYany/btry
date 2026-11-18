@@ -313,17 +313,21 @@ public class PaymentRepository {
                 """, REFUND_MAPPER, olderThanSeconds, limit);
     }
 
-    public long countPaidUnfulfilledBefore(LocalDateTime cutoff) {
+    public long countSettlementUndeliveredBefore(LocalDateTime cutoff) {
         Long count = jdbc.queryForObject("""
-                SELECT COUNT(*) FROM t_order
-                WHERE status = 'PAID' AND paid_at <= ?
+                SELECT COUNT(*) FROM t_payment_order p
+                WHERE p.status = 'PAID' AND p.paid_at <= ?
+                  AND NOT EXISTS (SELECT 1 FROM t_payment_outbox o
+                                  WHERE o.aggregate_no = p.payment_no
+                                    AND o.event_type = 'PAYMENT_SUCCEEDED'
+                                    AND o.status = 'SENT')
                 """, Long.class, Timestamp.valueOf(cutoff));
         return count == null ? 0 : count;
     }
 
-    public long countPayingBefore(LocalDateTime cutoff) {
+    public long countPayingPaymentBefore(LocalDateTime cutoff) {
         Long count = jdbc.queryForObject("""
-                SELECT COUNT(*) FROM t_order
+                SELECT COUNT(*) FROM t_payment_order
                 WHERE status = 'PAYING' AND updated_at <= ?
                 """, Long.class, Timestamp.valueOf(cutoff));
         return count == null ? 0 : count;

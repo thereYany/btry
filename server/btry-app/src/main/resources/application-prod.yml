@@ -46,6 +46,14 @@ app:
     admin-password: ${SEED_ADMIN_PASSWORD:}
   payment:
     provider: ${PAYMENT_PROVIDER:mock}
+    app-id: ${PAYMENT_APP_ID:btry}
+    query:
+      enabled: ${PAYMENT_QUERY_ENABLED:true}
+      interval-ms: ${PAYMENT_QUERY_INTERVAL_MS:30000}
+      initial-delay-ms: ${PAYMENT_QUERY_INITIAL_DELAY_MS:15000}
+      batch-size: ${PAYMENT_QUERY_BATCH_SIZE:20}
+    outbox:
+      reclaim-after-seconds: ${PAYMENT_OUTBOX_RECLAIM_AFTER_SECONDS:120}
     mock-enabled: ${PAYMENT_MOCK_ENABLED:false}
     mock-secret: ${PAYMENT_MOCK_SECRET:}
     order-expire-minutes: ${PAYMENT_ORDER_EXPIRE_MINUTES:15}
@@ -65,6 +73,13 @@ app:
       return-url: ${ALIPAY_RETURN_URL:}
       charset: ${ALIPAY_CHARSET:UTF-8}
       sign-type: ${ALIPAY_SIGN_TYPE:RSA2}
+      bill:
+        enabled: ${ALIPAY_BILL_ENABLED:false}
+        bill-type: ${ALIPAY_BILL_TYPE:trade}
+        smid: ${ALIPAY_BILL_SMID:}
+        charset: ${ALIPAY_BILL_CHARSET:GBK}
+        connect-timeout-ms: ${ALIPAY_BILL_CONNECT_TIMEOUT_MS:5000}
+        read-timeout-ms: ${ALIPAY_BILL_READ_TIMEOUT_MS:30000}
       format: ${ALIPAY_FORMAT:json}
       connect-timeout-ms: ${ALIPAY_CONNECT_TIMEOUT_MS:5000}
       read-timeout-ms: ${ALIPAY_READ_TIMEOUT_MS:15000}

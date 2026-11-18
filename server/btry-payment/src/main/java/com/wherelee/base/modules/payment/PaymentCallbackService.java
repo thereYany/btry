@@ -22,10 +22,16 @@ public class PaymentCallbackService {
     }
 
     public PaymentConfirmationService.ConfirmationResult acceptVerified(PaymentNotification notification) {
+        return acceptVerified(notification, null);
+    }
+
+    /** 渠道已精确解析出支付单号时使用，避免按业务单号回退查找产生歧义。 */
+    public PaymentConfirmationService.ConfirmationResult acceptVerified(PaymentNotification notification,
+                                                                        String paymentNo) {
         return traceSpans.trace("payment.confirm", TraceSpans.tags(
                 "payment.bizNo", notification.orderNo(),
                 "payment.provider", notification.provider(),
                 "payment.event.type", notification.eventType()
-        ), () -> confirmationService.accept(notification));
+        ), () -> confirmationService.accept(notification, paymentNo));
     }
 }

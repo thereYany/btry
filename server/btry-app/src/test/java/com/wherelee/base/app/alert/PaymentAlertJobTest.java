@@ -23,8 +23,8 @@ class PaymentAlertJobTest {
         AlertNotifier notifier = mock(AlertNotifier.class);
         AlertPublisher publisher = mock(AlertPublisher.class);
         LocalFallbackCache dedup = mock(LocalFallbackCache.class);
-        when(queries.countPaidUnfulfilledBefore(any())).thenReturn(1L);
-        when(queries.countPayingBefore(any())).thenReturn(0L);
+        when(queries.countSettlementUndeliveredBefore(any())).thenReturn(1L);
+        when(queries.countPayingPaymentBefore(any())).thenReturn(0L);
         when(queries.countRefundRetryExhausted()).thenReturn(0L);
         when(dedup.reserve(anyString(), any(Duration.class))).thenReturn(true);
         when(notifier.send(anyString())).thenReturn(new AlertNotifier.DeliveryResult(true, null));
@@ -32,7 +32,7 @@ class PaymentAlertJobTest {
         new PaymentAlertJob(properties, queries, notifier, publisher, dedup).evaluate();
 
         verify(publisher).publish(
-                "PAYMENT_PAID_UNFULFILLED", "HIGH",
-                "已支付但未履约订单 1 笔", true, null);
+                "PAYMENT_SETTLEMENT_UNDELIVERED", "HIGH",
+                "支付成功但结算事件未投递成功 1 笔", true, null);
     }
 }

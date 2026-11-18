@@ -13,8 +13,11 @@ import java.util.List;
 /**
  * 主动查单（支付域）：扫描 PAYING 支付单向渠道对账，而不是扫描订单。
  *
- * <p>结果统一转成领域事件：支付成功 → PAYMENT_SUCCEEDED（复用确认逻辑保证幂等），
- * 渠道确认无单且支付单已过期 → 关闭支付单并发 PAYMENT_EXPIRED，业务侧自行关单。</p>
+ * <p>结果统一转成领域事件：支付成功 → PAYMENT_SUCCEEDED（复用确认逻辑保证幂等）；
+ * 渠道确认无单且支付单已过期 → 先尝试渠道关单，再本地关单并发 PAYMENT_EXPIRED，业务侧自行关单。</p>
+ *
+ * <p>主动查单是"无公网回调域名"场景下的结算兜底：没有配置 notify_url 时，靠
+ * {@link PaymentQueryJob} 定时轮询渠道状态完成确认。</p>
  */
 @Slf4j
 @Service
@@ -79,7 +82,7 @@ public class PaymentQueryService {
                     "PAYMENT_SUCCESS",
                     result.amountCents(),
                     tradeNo,
-                    null));
+                    null), payment.paymentNo());
             log.info("payment_query_settled paymentNo={} tradeNo={} amountCents={}",
                     payment.paymentNo(), tradeNo, result.amountCents());
             return true;
@@ -88,16 +91,38 @@ public class PaymentQueryService {
         boolean notTraded = "FAILED".equals(result.status())
                 || "NOT_FOUND".equals(result.status())
                 || "CREATED".equals(result.status());
-        if (notTraded && expired(payment) && paymentOrderRepository.markClosed(payment.paymentNo()) > 0) {
-            outboxRepository.append(new PaymentSettledEvent(
-                    PaymentEventTypes.PAYMENT_EXPIRED,
-                    payment.paymentNo(), payment.bizType(), payment.bizNo(),
-                    payment.amountCents(), payment.currency(), paymentGateway.channel(),
-                    null, LocalDateTime.now()));
-            log.info("payment_query_expired paymentNo={} bizNo={}", payment.paymentNo(), payment.bizNo());
-            return true;
+        if (notTraded && expired(payment)) {
+            // FAILED 表示渠道侧交易已关闭；其余情况先尝试渠道关单，避免本地关单后用户仍能付款。
+            if (!"FAILED".equals(result.status())) {
+                PaymentGateway.CloseResult close = traceSpans.trace("payment.gateway.close", TraceSpans.tags(
+                        "payment.no", payment.paymentNo(),
+                        "payment.channel", paymentGateway.channel()
+                ), () -> paymentGateway.close(payment, attempt));
+                if (close == null) {
+                    close = PaymentGateway.CloseResult.notFound("渠道未返回关单结果，按本地关单处理");
+                }
+                if (!close.closed() && !close.notFound()) {
+                    log.warn("渠道关单未完成，保留支付单等待下次查单 paymentNo={} message={}",
+                            payment.paymentNo(), close.message());
+                    return false;
+                }
+            }
+            if (paymentOrderRepository.markClosed(payment.paymentNo()) > 0) {
+                outboxRepository.append(new PaymentSettledEvent(
+                        PaymentEventTypes.PAYMENT_EXPIRED,
+                        payment.paymentNo(), payment.bizType(), payment.bizNo(),
+                        payment.amountCents(), payment.currency(), paymentGateway.channel(),
+                        null, LocalDateTime.now()));
+                log.info("payment_query_expired paymentNo={} bizNo={}", payment.paymentNo(), payment.bizNo());
+                return true;
+            }
         }
         return false;
+    }
+
+    /** 按支付单号查单（运营手动补偿/管理员立即查单用）。 */
+    public boolean queryByPaymentNo(String paymentNo) {
+        return paymentOrderRepository.findByPaymentNo(paymentNo).map(this::query).orElse(false);
     }
 
     /** 按业务单号查单（运营手动补偿/管理员立即查单用）。 */

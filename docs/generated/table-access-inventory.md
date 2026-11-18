@@ -1,7 +1,7 @@
 # 表访问清单（自动生成）
 
 - 生成脚本：`tools/table_access_inventory.py`
-- 表数量：16；有代码访问的表：17
+- 表数量：16；有代码访问的表：16
 
 ## 1. 汇总
 
@@ -12,8 +12,8 @@
 | `t_channel_bill` | payment | 1 | 1 | 0 | ReconRepository | — |
 | `t_payment_attempt` | payment | 1 | 2 | 0 | PaymentRepository | MockChannelBillProvider, PaymentRepository |
 | `t_payment_event` | payment | 1 | 1 | 0 | PaymentRepository | PaymentRepository |
-| `t_payment_order` | payment | 1 | 2 | 0 | PaymentOrderRepository | PaymentOrderRepository, ReconRepository |
-| `t_payment_outbox` | payment | 1 | 1 | 0 | PaymentOutboxRepository | PaymentOutboxRepository |
+| `t_payment_order` | payment | 1 | 3 | 1 | PaymentOrderRepository | PaymentOrderRepository, PaymentRepository, ReconRepository |
+| `t_payment_outbox` | payment | 1 | 2 | 1 | PaymentOutboxRepository | PaymentOutboxRepository, PaymentRepository |
 | `t_permission` | identity | 1 | 1 | 2 | — | RbacRepository |
 | `t_recon_diff` | payment | 1 | 1 | 0 | ReconRepository | ReconRepository |
 | `t_recon_task` | payment | 1 | 1 | 0 | ReconRepository | — |
@@ -49,6 +49,7 @@
 | bootstrap | `KernelDataInitializer` | `t_role` / `t_user` / `t_user_role` | server/btry-app/src/main/java/com/wherelee/base/bootstrap/KernelDataInitializer.java |
 | identity | `RbacRepository` | `t_permission` / `t_role` / `t_role_permission` / `t_user_role` | server/btry-identity/src/main/java/com/wherelee/base/modules/identity/rbac/RbacRepository.java |
 | identity | `UserInvitationMapper` | `t_user` / `t_user_invitation` | server/btry-identity/src/main/resources/mapper/UserInvitationMapper.xml |
+| payment | `PaymentRepository` | `t_payment_order` / `t_payment_outbox` | server/btry-payment/src/main/java/com/wherelee/base/modules/payment/PaymentRepository.java |
 
 ## 4. 未被代码访问的表
 

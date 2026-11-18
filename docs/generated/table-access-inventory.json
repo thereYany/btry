@@ -48,6 +48,30 @@
       ]
     }
   },
+  "t_role": {
+    "KernelDataInitializer": {
+      "module": "bootstrap",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/btry-app/src/main/java/com/wherelee/base/bootstrap/KernelDataInitializer.java",
+      "multi_tables": [
+        "t_user",
+        "t_user_role"
+      ]
+    },
+    "RbacRepository": {
+      "module": "identity",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/btry-identity/src/main/java/com/wherelee/base/modules/identity/rbac/RbacRepository.java",
+      "multi_tables": [
+        "t_user_role"
+      ]
+    }
+  },
   "t_user_role": {
     "KernelDataInitializer": {
       "module": "bootstrap",
@@ -72,30 +96,6 @@
         "t_permission",
         "t_role",
         "t_role_permission"
-      ]
-    }
-  },
-  "t_role": {
-    "KernelDataInitializer": {
-      "module": "bootstrap",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/btry-app/src/main/java/com/wherelee/base/bootstrap/KernelDataInitializer.java",
-      "multi_tables": [
-        "t_user",
-        "t_user_role"
-      ]
-    },
-    "RbacRepository": {
-      "module": "identity",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/btry-identity/src/main/java/com/wherelee/base/modules/identity/rbac/RbacRepository.java",
-      "multi_tables": [
-        "t_user_role"
       ]
     }
   },
@@ -136,6 +136,16 @@
       ],
       "file": "server/btry-payment/src/main/java/com/wherelee/base/modules/payment/PaymentOrderRepository.java",
       "multi_tables": []
+    },
+    "PaymentRepository": {
+      "module": "payment",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/base/modules/payment/PaymentRepository.java",
+      "multi_tables": [
+        "t_payment_outbox"
+      ]
     },
     "ReconRepository": {
       "module": "payment",
@@ -188,17 +198,17 @@
       "multi_tables": []
     }
   },
-  "t_order": {
+  "t_payment_outbox": {
     "PaymentRepository": {
       "module": "payment",
       "ops": [
         "READ"
       ],
       "file": "server/btry-payment/src/main/java/com/wherelee/base/modules/payment/PaymentRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_payment_outbox": {
+      "multi_tables": [
+        "t_payment_order"
+      ]
+    },
     "PaymentOutboxRepository": {
       "module": "payment",
       "ops": [

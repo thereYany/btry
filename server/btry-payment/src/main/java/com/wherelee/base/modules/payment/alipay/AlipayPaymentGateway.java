@@ -2,10 +2,12 @@ package com.wherelee.base.modules.payment.alipay;
 
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
+import com.alipay.api.request.AlipayTradeCloseRequest;
 import com.alipay.api.request.AlipayTradeFastpayRefundQueryRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
+import com.alipay.api.response.AlipayTradeCloseResponse;
 import com.alipay.api.response.AlipayTradeFastpayRefundQueryResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
@@ -63,8 +65,12 @@ public class AlipayPaymentGateway implements PaymentGateway {
     @Override
     public PaymentAction initiate(PaymentOrderView order, PaymentAttemptRecord attempt) {
         AlipayTradePagePayRequest request = new AlipayTradePagePayRequest();
-        request.setNotifyUrl(properties.notifyUrl());
-        request.setReturnUrl(properties.returnUrl() + "/" + order.bizNo());
+        if (hasText(properties.notifyUrl())) {
+            request.setNotifyUrl(properties.notifyUrl());
+        }
+        if (hasText(properties.returnUrl())) {
+            request.setReturnUrl(properties.returnUrl() + "/" + order.bizNo());
+        }
 
         Map<String, Object> biz = new LinkedHashMap<>();
         biz.put("out_trade_no", attempt.providerTradeNo());
@@ -119,6 +125,31 @@ public class AlipayPaymentGateway implements PaymentGateway {
             log.warn("支付宝查单异常 orderNo={} errCode={}", order.bizNo(), e.getErrCode(), e);
             return new PaymentQueryResult("PENDING", order.amountCents(), attempt.providerTradeNo(),
                     "查单异常：" + e.getErrCode());
+        }
+    }
+
+    @Override
+    public CloseResult close(PaymentOrderView order, PaymentAttemptRecord attempt) {
+        if (attempt == null || !hasText(attempt.providerTradeNo())) {
+            return CloseResult.notFound("缺少商户单号，无需关单");
+        }
+        AlipayTradeCloseRequest request = new AlipayTradeCloseRequest();
+        request.setBizContent(toJson(Map.of("out_trade_no", attempt.providerTradeNo())));
+        try {
+            AlipayTradeCloseResponse response = client.execute(request);
+            if (response.isSuccess()) {
+                return CloseResult.closedOk();
+            }
+            if ("ACQ.TRADE_NOT_EXIST".equals(response.getSubCode())) {
+                return CloseResult.notFound(message(response.getSubCode(), response.getSubMsg()));
+            }
+            log.warn("支付宝关单失败 orderNo={} outTradeNo={} subCode={} subMsg={}",
+                    order.bizNo(), attempt.providerTradeNo(), response.getSubCode(), response.getSubMsg());
+            return CloseResult.failed(message(response.getSubCode(), response.getSubMsg()));
+        } catch (AlipayApiException e) {
+            log.warn("支付宝关单异常 orderNo={} outTradeNo={} errCode={}",
+                    order.bizNo(), attempt.providerTradeNo(), e.getErrCode(), e);
+            return CloseResult.failed("关单异常：" + e.getErrCode());
         }
     }
 
@@ -192,6 +223,10 @@ public class AlipayPaymentGateway implements PaymentGateway {
             minutes = 1;
         }
         return minutes + "m";
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     private String message(String code, String text) {

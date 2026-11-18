@@ -44,17 +44,17 @@ public class PaymentAlertJob {
             return;
         }
         LocalDateTime now = LocalDateTime.now();
-        long paidStuck = paymentAlertQueries.countPaidUnfulfilledBefore(
+        long paidStuck = paymentAlertQueries.countSettlementUndeliveredBefore(
                 now.minusMinutes(properties.safePaymentPaidUnfulfilledMinutes()));
         if (paidStuck > 0) {
-            emit("PAYMENT_PAID_UNFULFILLED", "HIGH",
-                    "已支付但未履约订单 " + paidStuck + " 笔");
+            emit("PAYMENT_SETTLEMENT_UNDELIVERED", "HIGH",
+                    "支付成功但结算事件未投递成功 " + paidStuck + " 笔");
         }
-        long payingStuck = paymentAlertQueries.countPayingBefore(
+        long payingStuck = paymentAlertQueries.countPayingPaymentBefore(
                 now.minusMinutes(properties.safePaymentPayingStuckMinutes()));
         if (payingStuck > 0) {
             emit("PAYMENT_PAYING_STUCK", "MEDIUM",
-                    "支付中超过 " + properties.safePaymentPayingStuckMinutes() + " 分钟订单 " + payingStuck + " 笔");
+                    "支付中超过 " + properties.safePaymentPayingStuckMinutes() + " 分钟支付单 " + payingStuck + " 笔");
         }
         long refundExhausted = paymentAlertQueries.countRefundRetryExhausted();
         if (refundExhausted > 0 && refundExhausted >= properties.safePaymentRefundRetryExhaustedThreshold()) {

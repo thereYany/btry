@@ -15,6 +15,11 @@ public interface ChannelBillProvider {
 
     List<ChannelBillLine> fetch(String channel, LocalDate billDate);
 
+    /** 账单来源标识（落库审计用）；真实渠道实现应给出可追溯的账单来源。 */
+    default String sourceKey(String channel, LocalDate billDate) {
+        return "mock://bill/" + channel + "/" + billDate;
+    }
+
     /** Mock 渠道：用「支付尝试表里渠道回报的结果」作为渠道侧账单。 */
     String CHANNEL_MOCK = "MOCK";
 }

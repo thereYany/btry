@@ -36,6 +36,11 @@ public class MockPaymentGateway implements PaymentGateway {
     }
 
     @Override
+    public CloseResult close(PaymentOrderView order, PaymentAttemptRecord attempt) {
+        return CloseResult.closedOk();
+    }
+
+    @Override
     public RefundResult refund(PaymentOrderView order, RefundRecord refund, boolean simulateFailure) {
         if (simulateFailure) {
             return new RefundResult(false, null, "Mock 退款失败：模拟网关异常");

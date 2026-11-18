@@ -38,6 +38,10 @@ app:
     window-minutes: 10
   payment:
     provider: mock
+    # 集成测试不跑后台轮询（避免测试期间产生额外渠道/DB 访问）
+    query:
+      enabled: false
+    app-id: btry-it
     mock-enabled: true
     mock-secret: integration-mock-secret
     order-expire-minutes: 15

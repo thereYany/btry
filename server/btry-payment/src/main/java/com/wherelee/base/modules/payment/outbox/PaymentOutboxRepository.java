@@ -64,9 +64,24 @@ public class PaymentOutboxRepository {
                 """, MAPPER, limit);
         return rows.stream().filter(row -> jdbc.update("""
                 UPDATE t_payment_outbox
-                SET status = 'SENDING'
+                SET status = 'SENDING', next_at = CURRENT_TIMESTAMP(3)
                 WHERE id = ? AND status = 'PENDING' AND tenant_id >= 0
                 """, row.id()) == 1).toList();
+    }
+
+    /**
+     * 回收卡在 SENDING 的事件（进程在“抢占后、投递前”崩溃会留下永久 SENDING）。
+     * 只回收超过阈值的行，避免误抢正常投递中的事件。
+     */
+    public int reclaimStuck(int stuckAfterSeconds) {
+        return jdbc.update("""
+                UPDATE t_payment_outbox
+                SET status = 'PENDING', attempts = attempts + 1,
+                    last_error = 'reclaimed from SENDING (crash recovery)',
+                    next_at = CURRENT_TIMESTAMP(3)
+                WHERE status = 'SENDING'
+                  AND next_at <= TIMESTAMPADD(SECOND, -?, CURRENT_TIMESTAMP(3))
+                """, Math.max(5, stuckAfterSeconds));
     }
 
     public PaymentSettledEvent payload(OutboxRow row) {

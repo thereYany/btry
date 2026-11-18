@@ -72,7 +72,7 @@ class AlipayNotifyServiceTest {
     @Test
     void validNotifyConfirmsPaymentOnce() throws Exception {
         stubOrderLookup();
-        when(paymentService.acceptVerified(any())).thenReturn(
+        when(paymentService.acceptVerified(any(), anyString())).thenReturn(
                 new PaymentConfirmationService.ConfirmationResult(true, false, "支付已确认",
                         "P-ORD1", "ORD1", "PAID", 1L, "ALIPAY", "2026110522001400001"));
 
@@ -80,7 +80,7 @@ class AlipayNotifyServiceTest {
 
         assertThat(result).isEqualTo("success");
         ArgumentCaptor<PaymentNotification> captor = ArgumentCaptor.forClass(PaymentNotification.class);
-        verify(paymentService).acceptVerified(captor.capture());
+        verify(paymentService).acceptVerified(captor.capture(), anyString());
         PaymentNotification notification = captor.getValue();
         assertThat(notification.provider()).isEqualTo("ALIPAY");
         assertThat(notification.eventKey()).isEqualTo("NOTIFY-1");
@@ -125,13 +125,13 @@ class AlipayNotifyServiceTest {
     @Test
     void closedTradeMapsToPaymentFailed() throws Exception {
         stubOrderLookup();
-        when(paymentService.acceptVerified(any())).thenReturn(
+        when(paymentService.acceptVerified(any(), anyString())).thenReturn(
                 new PaymentConfirmationService.ConfirmationResult(true, false, "支付失败已入账",
                         "P-ORD1", "ORD1", "FAILED", 1L, "ALIPAY", "2026110522001400001"));
 
         assertThat(service.handle(signedBody(baseParams("TRADE_CLOSED")))).isEqualTo("success");
         ArgumentCaptor<PaymentNotification> captor = ArgumentCaptor.forClass(PaymentNotification.class);
-        verify(paymentService).acceptVerified(captor.capture());
+        verify(paymentService).acceptVerified(captor.capture(), anyString());
         assertThat(captor.getValue().eventType()).isEqualTo("PAYMENT_FAILED");
     }
 
@@ -153,7 +153,7 @@ class AlipayNotifyServiceTest {
     @Test
     void duplicateNotifyStillAcks() throws Exception {
         stubOrderLookup();
-        when(paymentService.acceptVerified(any())).thenReturn(
+        when(paymentService.acceptVerified(any(), anyString())).thenReturn(
                 new PaymentConfirmationService.ConfirmationResult(true, true, "重复支付事件已忽略",
                         "P-ORD1", "ORD1", "PAID", 1L, "ALIPAY", "2026110522001400001"));
 

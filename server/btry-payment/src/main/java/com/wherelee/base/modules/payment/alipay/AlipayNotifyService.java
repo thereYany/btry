@@ -139,7 +139,8 @@ public class AlipayNotifyService {
         PaymentNotification notification = new PaymentNotification(
                 CHANNEL, eventKey, payment.bizNo(), eventType, amountCents, params.get("trade_no"), null);
         try {
-            PaymentConfirmationService.ConfirmationResult result = paymentCallbackService.acceptVerified(notification);
+            PaymentConfirmationService.ConfirmationResult result = paymentCallbackService.acceptVerified(
+                    notification, payment.paymentNo());
             log.info("payment_callback_processed notifyId={} orderNo={} success={} duplicate={} paymentStatus={}",
                     eventKey, payment.bizNo(), result.success(), result.duplicate(), result.status());
         } catch (Exception e) {

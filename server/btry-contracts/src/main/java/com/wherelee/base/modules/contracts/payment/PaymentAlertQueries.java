@@ -9,9 +9,11 @@ import java.time.LocalDateTime;
  */
 public interface PaymentAlertQueries {
 
-    long countPaidUnfulfilledBefore(LocalDateTime before);
+    /** 已支付但结算事件尚未成功投递给业务侧（发件箱未 SENT）的支付单数。 */
+    long countSettlementUndeliveredBefore(LocalDateTime before);
 
-    long countPayingBefore(LocalDateTime before);
+    /** 长时间停留在 PAYING 的支付单数（渠道长时间未确认）。 */
+    long countPayingPaymentBefore(LocalDateTime before);
 
     long countRefundRetryExhausted();
 }

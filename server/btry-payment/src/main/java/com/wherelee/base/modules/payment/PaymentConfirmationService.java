@@ -45,17 +45,33 @@ public class PaymentConfirmationService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public ConfirmationResult accept(PaymentNotification notification) {
+        return accept(notification, null);
+    }
+
+    /**
+     * 确认支付结果。
+     *
+     * @param paymentNo 已由调用方（渠道回调/查单）精确定位到的支付单号；为空时回退按业务单号查找
+     *                  （兼容历史调用）。渠道交易号与支付单的绑定关系由渠道适配器按 (channel, provider_trade_no)
+     *                  精确解析，避免不同业务方 bizNo 冲突时确认到错误支付单。
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public ConfirmationResult accept(PaymentNotification notification, String paymentNo) {
         return traceSpans.trace("payment.confirm", TraceSpans.tags(
                 "payment.bizNo", notification.orderNo(),
                 "payment.provider", notification.provider(),
                 "payment.event.type", notification.eventType()
-        ), () -> acceptInternal(notification));
+        ), () -> acceptInternal(notification, paymentNo));
     }
 
-    private ConfirmationResult acceptInternal(PaymentNotification notification) {
-        PaymentOrderView payment = paymentOrderRepository.findByBizNo(notification.orderNo()).orElse(null);
+    private ConfirmationResult acceptInternal(PaymentNotification notification, String paymentNo) {
+        PaymentOrderView payment = (paymentNo != null && !paymentNo.isBlank()
+                ? paymentOrderRepository.findByPaymentNo(paymentNo)
+                : paymentOrderRepository.findByBizNo(notification.orderNo()))
+                .orElse(null);
         if (payment == null) {
-            alert("PAYMENT_UNKNOWN_ORDER", "支付通知包含未知支付单 bizNo=" + notification.orderNo());
+            alert("PAYMENT_UNKNOWN_ORDER", "支付通知包含未知支付单 bizNo=" + notification.orderNo()
+                    + (paymentNo == null ? "" : " paymentNo=" + paymentNo));
             return ConfirmationResult.rejected("未知支付单");
         }
         boolean successEvent = "PAYMENT_SUCCESS".equals(notification.eventType());

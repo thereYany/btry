@@ -18,13 +18,13 @@ public class PaymentAlertQueryService implements PaymentAlertQueries {
     }
 
     @Override
-    public long countPaidUnfulfilledBefore(LocalDateTime before) {
-        return paymentRepository.countPaidUnfulfilledBefore(before);
+    public long countSettlementUndeliveredBefore(LocalDateTime before) {
+        return paymentRepository.countSettlementUndeliveredBefore(before);
     }
 
     @Override
-    public long countPayingBefore(LocalDateTime before) {
-        return paymentRepository.countPayingBefore(before);
+    public long countPayingPaymentBefore(LocalDateTime before) {
+        return paymentRepository.countPayingPaymentBefore(before);
     }
 
     @Override

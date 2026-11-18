@@ -68,7 +68,7 @@ public class ReconciliationService implements AdminReconciliationOperations {
 
     private ReconSummary runInternal(String channel, LocalDate date, ChannelBillProvider provider) {
         List<ChannelBillLine> bill = provider.fetch(channel, date);
-        repository.upsertBill(channel, date, "mock://bill/" + channel + "/" + date,
+        repository.upsertBill(channel, date, provider.sourceKey(channel, date),
                 checksum(bill), bill.size());
         String taskNo = repository.beginTask(channel, date);
 

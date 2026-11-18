@@ -9,7 +9,7 @@ btry 是一个**与业务无关的 Java 业务基座**（Java 21 / Spring Boot 4
 | `btry-platform` | 共享内核 starter：租户 SQL 拦截、事务/幂等/限流/审计 AOP、告警、对象存储 + 签名 URL 缓存、Tracing、Resilience4j 降级、统一异常/分页、健康检查 |
 | `btry-contracts` | 跨模块稳定契约：`contracts.identity.*`（账号/角色/邀请只读与写操作）、`contracts.payment.*`（发起支付/查询/对账/告警查询；退款编排由业务侧驱动） |
 | `btry-identity` | 账号、登录/JWT、修改密码、登录限流、RBAC（角色/权限码）、通用用户邀请（roleCode） |
-| `btry-payment` | 支付单/支付尝试/回调事件/事务性发件箱/退款单与重试状态/渠道对账（账单源 SPI）；Mock 与支付宝（公钥模式 v2 SDK）渠道适配；`PaymentSettledEvent` 对外事件。退款编排由业务侧驱动 |
+| `btry-payment` | 支付单/支付尝试/回调事件/事务性发件箱（崩溃回收）/退款单与重试状态/渠道关单/主动查单轮询/T+1 账单对账；Mock 与支付宝（公钥模式 v2 SDK）渠道适配；`PaymentSettledEvent` 对外事件。退款编排由业务侧驱动 |
 | `btry-app` | 内核演示宿主（仅 14 个类）：启动类、内核种子（admin）、运营端账号/角色/对账接口、支付告警巡检 |
 
 依赖方向：`app → identity/payment → platform/contracts`；`platform` 不依赖任何业务；支付不认识任何业务，只认 `bizType + bizNo`，业务侧实现 `PaymentSettledListener` 自行履约。
@@ -52,6 +52,12 @@ mvn -B -Pintegration test
 ```
 
 另有架构门禁（ArchUnit）：内核不得依赖任何垂直业务、`platform` 不得反向依赖、Modulith 模块校验等，见 `btry-app/src/test/java/com/wherelee/base/architecture/`。
+
+## 支付渠道
+
+默认 `mock`；设置 `PAYMENT_PROVIDER=alipay` + `ALIPAY_*` 环境变量可切真实支付宝（电脑网站支付）。
+无公网域名时可以不配 `ALIPAY_NOTIFY_URL`，由内核主动查单任务轮询结算；有域名后再回调为主、查单兜底。
+详见 [真实支付接入运行手册](docs/支付真实接入运行手册.md)。
 
 ## 数据边界门禁
 

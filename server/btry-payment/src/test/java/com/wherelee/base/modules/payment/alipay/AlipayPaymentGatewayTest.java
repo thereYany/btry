@@ -1,10 +1,12 @@
 package com.wherelee.base.modules.payment.alipay;
 
 import com.alipay.api.AlipayClient;
+import com.alipay.api.request.AlipayTradeCloseRequest;
 import com.alipay.api.request.AlipayTradeFastpayRefundQueryRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
+import com.alipay.api.response.AlipayTradeCloseResponse;
 import com.alipay.api.response.AlipayTradeFastpayRefundQueryResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
@@ -200,5 +202,55 @@ class AlipayPaymentGatewayTest {
     private RefundRecord refund() {
         return new RefundRecord(1L, "REF1", 1L, 1L, "PROCESSING", 0, null, null,
                 "用户申请退款", 9L, now, null, null);
+    }
+
+    @Test
+    void closeCallsTradeCloseAndReturnsClosed() throws Exception {
+        AlipayTradeCloseResponse response = new AlipayTradeCloseResponse();
+        response.setCode("10000");
+        when(client.execute(any(AlipayTradeCloseRequest.class))).thenReturn(response);
+
+        PaymentGateway.CloseResult result = gateway.close(order(), attempt());
+
+        assertThat(result.closed()).isTrue();
+        ArgumentCaptor<AlipayTradeCloseRequest> captor = ArgumentCaptor.forClass(AlipayTradeCloseRequest.class);
+        verify(client).execute(captor.capture());
+        assertThat(captor.getValue().getBizContent()).contains("ORD1_1");
+    }
+
+    @Test
+    void closeTreatsTradeNotExistAsNotFound() throws Exception {
+        AlipayTradeCloseResponse response = new AlipayTradeCloseResponse();
+        response.setCode("40004");
+        response.setSubCode("ACQ.TRADE_NOT_EXIST");
+        response.setSubMsg("交易不存在");
+        when(client.execute(any(AlipayTradeCloseRequest.class))).thenReturn(response);
+
+        PaymentGateway.CloseResult result = gateway.close(order(), attempt());
+
+        assertThat(result.closed()).isFalse();
+        assertThat(result.notFound()).isTrue();
+    }
+
+    @Test
+    void initiateOmitsNotifyAndReturnUrlWhenNotConfigured() throws Exception {
+        AlipayProperties properties = new AlipayProperties(
+                "2021000000000000", "private-key", "public-key", "2088000000000000",
+                "https://openapi.alipay.com/gateway.do", "", "",
+                "UTF-8", "RSA2", "json", 5000, 15000);
+        AlipayPaymentGateway noCallbackGateway =
+                new AlipayPaymentGateway(client, properties, tools.jackson.databind.json.JsonMapper.builder().build());
+        AlipayTradePagePayResponse response = new AlipayTradePagePayResponse();
+        response.setCode("10000");
+        response.setBody("https://openapi.alipay.com/gateway.do?out_trade_no=ORD1_1");
+        when(client.pageExecute(any(AlipayTradePagePayRequest.class), eq("GET"))).thenReturn(response);
+
+        PaymentGateway.PaymentAction action = noCallbackGateway.initiate(order(), attempt());
+
+        assertThat(action.cashierUrl()).isNotBlank();
+        ArgumentCaptor<AlipayTradePagePayRequest> captor = ArgumentCaptor.forClass(AlipayTradePagePayRequest.class);
+        verify(client).pageExecute(captor.capture(), eq("GET"));
+        assertThat(captor.getValue().getNotifyUrl()).isNull();
+        assertThat(captor.getValue().getReturnUrl()).isNull();
     }
 }
