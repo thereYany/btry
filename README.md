@@ -1,125 +1,100 @@
-# 学习空间
+# btry · 通用业务基座
 
-一个内部录播课程平台：学生登录后浏览课程商店、购买系列，并在学习空间按章节观看视频。
+btry 是一个**与业务无关的 Java 业务基座**（Java 21 / Spring Boot 4.1.2 / MySQL / Redis）：把登录鉴权、账号与邀请、RBAC、支付、退款、对账、租户隔离、审计、告警、对象存储这些"每个业务都会重复造一遍"的能力做成可复用模块。
 
-## 状态
+**网课业务不在这里**：录播课程平台（课程商店/学习空间/订单/权益/教师端/运营端）已迁到独立仓库 **ctry** —— <https://github.com/thereYany/ctry>。btry 只提供内核能力与一个最小的内核演示宿主（`btry-app`）。
 
-- 本地运行：`tools\start-local.ps1`
-- 生产演示：`https://whereri.site/learn/`
-- CI：[![ci](https://github.com/thereYany/btry/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thereYany/btry/actions/workflows/ci.yml)（工作流定义：[`.github/workflows/ci.yml`](.github/workflows/ci.yml)）
-- 验证、压测和运维记录：见 [验证与运维](docs/验证与运维.md)
+## 模块
 
-## 功能
+| 模块 | 说明 |
+|---|---|
+| `btry-platform` | 共享内核 starter：租户 SQL 拦截、事务/幂等/限流/审计 AOP、告警、对象存储 + 签名 URL 缓存、Tracing、Resilience4j 降级、统一异常/分页、健康检查 |
+| `btry-contracts` | 跨模块稳定契约：`contracts.identity.*`（账号/角色/邀请只读与写操作）、`contracts.payment.*`（发起支付/退款/对账/告警查询） |
+| `btry-identity` | 账号、登录/JWT、修改密码、登录限流、RBAC（角色/权限码）、通用用户邀请（roleCode） |
+| `btry-payment` | 支付单/支付尝试/回调事件/事务性发件箱/退款重试/渠道对账；Mock 与支付宝渠道适配；`PaymentSettledEvent` 对外事件 |
+| `btry-app` | 内核演示宿主（仅 14 个类）：启动类、内核种子（admin）、运营端账号/角色/对账接口、支付告警巡检 |
 
-- 学员：课程商店、下单支付、学习空间、断点续播和学习进度。
-- 教师：邀请激活、系列/章节/视频管理、COS 直传和发布状态。
-- 管理员：账号管理、课程分配、内容治理、订单查询、退款和人工补偿。
-- 支付：支付宝电脑网站支付与本地 Mock 收银台，订单状态机、权益发放和全额退款。
-- 视频：COS 预签名播放、播放 URL 缓存、播放日志和异常排查。
-- 账号：管理员创建学员，教师通过一次性邀请链接激活，不开放自助注册。
-
-## 架构
-
-```text
-浏览器（Vue 3）
-  ├─ 学员：课程商店 / 学习空间 / 播放器
-  ├─ 教师：系列、章节、视频
-  └─ 管理员：账号、内容、订单、退款
-        │
-        ▼
-Spring Boot 3（Java 17）
-  ├─ identity / course / learning / commerce / operations
-  ├─ MySQL 8 + Flyway
-  ├─ Redis：播放 URL 缓存、限流、幂等兜底
-  ├─ COS：视频上传与预签名播放
-  └─ 支付宝 / Mock 支付
-```
+依赖方向：`app → identity/payment → platform/contracts`；`platform` 不依赖任何业务；支付不认识订单/课程，只认 `bizType + bizNo`，业务侧实现 `PaymentSettledListener` 自行履约。
 
 ## 快速开始
 
 ### 前置
 
-- JDK 17
-- Maven 3.9+
-- Node.js 18+
-- MySQL 8
-- Redis 5+
-- COS 凭据
+- JDK 21、Maven 3.9+
+- MySQL 8、Redis 6+
 
-### 启动
+### 构建与启动
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\start-local.ps1
+```bash
+cd server
+mvn -B -DskipTests install          # 安装内核模块到本地 Maven 仓库（垂直应用依赖它）
+
+DB_URL='jdbc:mysql://127.0.0.1:3306/btry_core?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true' \
+DB_USER=root DB_PASSWORD=root \
+mvn -B -pl btry-app spring-boot:run
 ```
 
-启动后访问 `http://127.0.0.1:5175`。停止服务：
+启动后后端在 `http://127.0.0.1:8084`，健康检查 `/actuator/health`，Prometheus 指标在管理端口 `9091/actuator/prometheus`。
+首次启动会创建 `admin` 账号（`SEED_ADMIN_PASSWORD` 指定初始密码；留空则随机生成并在启动日志打印一次，首次登录强制改密）。
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\stop-local.ps1
+核心接口：`POST /api/auth/login`、`/api/auth/me`、`/api/admin/users`、`/api/admin/roles`、`/api/admin/invitations`、`/api/admin/recon/*`、`/api/payments/mock/*`（内核 Mock 支付辅助接口）。
+
+## 测试
+
+```bash
+# 单元测试（不含 integration tag）
+mvn -B test
+
+# 集成测试：真实 MySQL + Redis
+IT_DB_URL='jdbc:mysql://127.0.0.1:3306/btry_it?allowPublicKeyRetrieval=true&useSSL=false&allowMultiQueries=true' \
+IT_DB_USER=btry IT_DB_PASSWORD=btrypass \
+IT_REDIS_HOST=127.0.0.1 IT_REDIS_PORT=6379 IT_REDIS_DATABASE=15 \
+COS_SECRET_ID=dummy COS_SECRET_KEY=dummy \
+mvn -B -Pintegration test
 ```
 
-更完整的本地启动、恢复和排障步骤见 [本地运行与恢复手册](docs/本地运行与恢复手册.md)。
+另有架构门禁（ArchUnit）：内核不得依赖任何垂直业务、`platform` 不得反向依赖、Modulith 模块校验等，见 `btry-app/src/test/java/com/wherelee/edu/architecture/`。
 
-### 演示账号
+## 数据边界门禁
 
-| 账号 | 角色 | 说明 |
-|---|---|---|
-| `admin` | 管理员 | 账号、内容治理、订单与退款 |
-| `teacher` | 教师 | 系列、章节、视频和发布 |
-| `student` / `student_flow` | 学员 | 已分配系列，用于学习空间验收 |
-| `student_pay` | 学员 | 无课程权益，用于下单和支付验收 |
+从仓库根目录执行（跨模块表访问、多表 SQL 类、单表最多访问模块数只能降不能升）：
 
-初始密码由 `SEED_ADMIN_PASSWORD` / `SEED_TEACHER_PASSWORD` / `SEED_STUDENT_PASSWORD` 设置；留空时启动日志打印一次，首次登录强制修改。生产演示环境两个系列均为 `¥0.01`，用于支付宝真实支付验收。
+```bash
+python3 tools/table_access_inventory.py --baseline docs/generated/table-access-baseline.json
+```
 
-## 配置
+## 数据库与 Flyway
 
-| 变量 | 说明 |
-|---|---|
-| `DB_USER` / `DB_PASSWORD` | MySQL 账号 |
-| `REDIS_HOST` / `REDIS_PORT` | Redis 地址 |
-| `JWT_SECRET` | JWT 签名密钥，生产必须覆盖 |
-| `COS_BUCKET` / `COS_REGION` | COS 桶和区域 |
-| `COS_SECRET_ID` / `COS_SECRET_KEY` | COS 凭据；未设置时读取本机 `~/.cos.conf` |
-| `PAYMENT_PROVIDER` | `mock` 或 `alipay`，生产必须为 `alipay` |
-| `ALIPAY_APP_ID` / `ALIPAY_PRIVATE_KEY` / `ALIPAY_PUBLIC_KEY` | 支付宝应用配置 |
-| `SEED_ADMIN_PASSWORD` / `SEED_TEACHER_PASSWORD` / `SEED_STUDENT_PASSWORD` | 首次启动的演示账号密码 |
-
-完整配置见 `server/src/main/resources/application.yml` 和 [本地运行与恢复手册](docs/本地运行与恢复手册.md)。
-
-## 主要流程
-
-1. 学员在课程商店创建订单，通过支付宝或 Mock 收银台支付，支付成功后获得课程权益并进入学习空间。
-2. 教师通过邀请链接激活账号，创建系列、章节和视频，视频直传 COS 后发布。
-3. 管理员负责账号、课程分配、内容治理、订单查询、退款和履约补偿。
+- 内核表由各模块 jar 自带迁移：`db/migration/platform`（V3xx）、`db/migration/identity`（V1xx）、`db/migration/payment`（V2xx）。
+- 垂直应用在自己的 Flyway `locations` 里追加自己的迁移目录（ctry 使用 V9xx 段、独立库 `btry_ctry`）。
+- 内核表：`t_user`、`t_user_invitation`、`t_role`、`t_permission`、`t_role_permission`、`t_user_role`、`t_payment_*`、`t_recon_*`、`t_channel_bill`、`t_refund`、`t_alert_log`、`t_admin_audit_log`。
 
 ## 目录
 
 ```text
-server/  Spring Boot 后端
-web/     Vue 3 前端
-docs/    设计、运行、支付、视频和验证文档
-tools/   本地脚本、冒烟测试和压测工具
-deploy/  Docker、Compose 和 Nginx 配置
+server/   多模块后端（platform / contracts / identity / payment / app）
+docs/     设计与运行文档（含内核与垂直拆分方案）
+tools/    数据边界门禁、冒烟与压测脚本
+deploy/   历史部署脚本（课程平台时期，保留备查）
 ```
 
 ## 文档
 
-- [本地运行与恢复手册](docs/本地运行与恢复手册.md)
-- [订单与 Mock 支付实施方案](docs/订单与Mock支付实施方案.md)
-- [支付宝真实支付接入指引与计划](docs/支付宝真实支付接入指引与计划.md)
-- [视频播放调研与实施方案](docs/视频播放调研与实施方案.md)
-- [生产运维手册](docs/生产运维手册.md)
-- [验证与运维](docs/验证与运维.md)
-- [模块解耦设计计划](docs/模块解耦设计计划.md)
-- [账号与权限演进方案](docs/账号与权限演进方案.md)
+- [内核与垂直拆分方案（解耦 V2）](docs/内核与垂直拆分方案.md)
+- [模块解耦设计计划（V1）](docs/模块解耦设计计划.md)
+- [数据所有权与分库边界](docs/数据所有权与分库边界.md)
+- [Redis 降级与 MQ 边界](docs/Redis降级与MQ边界.md)
+- [CI 流水线与仓库镜像](docs/CI流水线与仓库镜像.md)
 
 ## 非目标
 
-- 不开放自助注册。
-- 不引入完整 RBAC、动态菜单和多管理员体系。
-- 不接 CDN、HLS 或服务端转码。
-- 不做评论、评分、问答、公告和站内信。
-- 不接微信支付。
+- 不内置任何垂直业务（课程/电商/会员……）；垂直业务在各自仓库实现并依赖本基座。
+- 不做自助注册（账号由管理员创建或邀请激活，角色码由垂直应用定义）。
+- 不引入 2PC/XA，跨域一致性用「本地事务 + 发件箱 + 幂等消费 + 对账」。
+
+## CI
+
+[![ci](https://github.com/thereYany/btry/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thereYany/btry/actions/workflows/ci.yml)（数据边界门禁 + 单元测试 + 集成测试）
 
 ## License
 
