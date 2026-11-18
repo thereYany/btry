@@ -27,6 +27,10 @@ public class OrderPaymentSettledListener implements PaymentSettledListener {
 
     @Override
     public void onSettled(PaymentSettledEvent event) {
+        // 只处理课程订单事件；其他垂直域（资料包等）由各自监听器消费
+        if (!"COURSE_ORDER".equals(event.bizType())) {
+            return;
+        }
         OrderRecord order = orderRepository.findByOrderNo(event.bizNo()).orElse(null);
         if (order == null) {
             // 抛出而不是忽略：让投递器重试，最终进死信暴露问题

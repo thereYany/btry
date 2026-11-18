@@ -44,6 +44,14 @@ public class PaymentOrderRepository {
                 """, MAPPER, bizNo).stream().findFirst();
     }
 
+    public Optional<PaymentOrderView> findByBiz(String bizType, String bizNo) {
+        return jdbc.query("""
+                SELECT payment_no, biz_no, app_id, biz_type, subject, amount_cents, currency,
+                       status, channel, provider_trade_no, expire_at, paid_at
+                FROM t_payment_order WHERE biz_type = ? AND biz_no = ?
+                """, MAPPER, bizType, bizNo).stream().findFirst();
+    }
+
     public Optional<PaymentOrderView> findByProviderTradeNo(String channel, String providerTradeNo) {
         return jdbc.query("""
                 SELECT payment_no, biz_no, app_id, biz_type, subject, amount_cents, currency,

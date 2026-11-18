@@ -115,6 +115,13 @@ public class PaymentRepository {
                 """, ATTEMPT_MAPPER, orderId).stream().findFirst();
     }
 
+    public int nextAttemptNoByPaymentNo(String paymentNo) {
+        Integer max = jdbc.queryForObject(
+                "SELECT COALESCE(MAX(attempt_no), 0) FROM t_payment_attempt WHERE payment_no = ?",
+                Integer.class, paymentNo);
+        return (max == null ? 0 : max) + 1;
+    }
+
     public Optional<PaymentAttemptRecord> findLatestAttemptByPaymentNo(String paymentNo) {
         return jdbc.query("""
                 SELECT * FROM t_payment_attempt WHERE payment_no = ?

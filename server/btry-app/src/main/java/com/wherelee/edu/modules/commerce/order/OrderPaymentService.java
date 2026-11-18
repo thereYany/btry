@@ -14,6 +14,8 @@ import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
 import com.wherelee.edu.modules.commerce.payment.PaymentProperties;
 import com.wherelee.edu.modules.commerce.payment.PaymentQueryService;
 import com.wherelee.edu.modules.commerce.payment.outbox.PaymentOutboxDispatcher;
+import com.wherelee.edu.modules.commerce.payment.PaymentFacade;
+import com.wherelee.edu.modules.contracts.commerce.PaymentOperations;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
 import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import com.wherelee.edu.modules.platform.common.BizException;
@@ -64,6 +66,7 @@ public class OrderPaymentService {
     private final PaymentMetrics metrics;
     private final TraceSpans traceSpans;
     private final PaymentOrderRepository paymentOrderRepository;
+    private final PaymentOperations paymentOperations;
     private final PaymentQueryService paymentQueryService;
     private final PaymentOutboxDispatcher outboxDispatcher;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
@@ -84,6 +87,7 @@ public class OrderPaymentService {
                           PaymentMetrics metrics,
                           TraceSpans traceSpans,
                           PaymentOrderRepository paymentOrderRepository,
+                          PaymentFacade paymentFacade,
                           PaymentQueryService paymentQueryService,
                           PaymentOutboxDispatcher outboxDispatcher) {
         this.orderService = orderService;
@@ -98,6 +102,7 @@ public class OrderPaymentService {
         this.metrics = metrics;
         this.traceSpans = traceSpans;
         this.paymentOrderRepository = paymentOrderRepository;
+        this.paymentOperations = paymentFacade;
         this.paymentQueryService = paymentQueryService;
         this.outboxDispatcher = outboxDispatcher;
     }
@@ -112,47 +117,30 @@ public class OrderPaymentService {
         if (entitlementRepository.hasActive(userId, order.seriesId())) {
             throw new BizException(HttpStatus.CONFLICT, "你已经拥有这个课程");
         }
-        if (order.status() == OrderStatus.PAYING) {
-            PaymentAttemptRecord attempt = requireProcessingAttempt(PaymentNo.of(order.orderNo()));
-            PaymentGateway.PaymentAction action = initiate(order, attempt);
-            return new OrderDtos.PayResponse(order.orderNo(), order.status().name(),
-                    paymentGateway.channel(), action.cashierUrl());
-        }
         if (order.status() == OrderStatus.FULFILLED) {
             throw new BizException(HttpStatus.CONFLICT, "课程权益已经发放");
         }
-        if (order.expired()) {
+        if (order.status() != OrderStatus.PAYING && order.expired()) {
             orderRepository.close(order.orderNo(), false);
             throw BizException.badRequest("订单已过期，请重新下单");
         }
-        // 支付反转：发起支付时由支付单承载状态，订单只保留 payment_no 引用
-        paymentOrderRepository.insertIfAbsent(view(order), TenantContext.current(), LocalDateTime.now());
-        orderRepository.setPaymentNo(orderNo, PaymentNo.of(orderNo));
-        int changed = orderRepository.markPaying(order.orderNo(), paymentGateway.channel());
+
+        PaymentOperations.InitiateResult payment = paymentOperations.initiate(
+                new PaymentOperations.InitiateCommand(
+                        PaymentNo.of(orderNo), "COURSE_ORDER", orderNo,
+                        order.priceCents(), order.currency(), order.seriesTitle(), order.expireAt()));
+        orderRepository.setPaymentNo(orderNo, payment.paymentNo());
+        int changed = orderRepository.markPaying(order.orderNo(), payment.channel());
         if (changed == 0) {
             OrderRecord current = orderService.require(orderNo);
             if (current.status() == OrderStatus.PAYING) {
-                PaymentAttemptRecord attempt = requireProcessingAttempt(PaymentNo.of(current.orderNo()));
-                PaymentGateway.PaymentAction action = initiate(current, attempt);
                 return new OrderDtos.PayResponse(current.orderNo(), current.status().name(),
-                        paymentGateway.channel(), action.cashierUrl());
+                        payment.channel(), payment.cashierUrl());
             }
             throw new BizException(HttpStatus.CONFLICT, "当前订单状态不能发起支付");
         }
-
-        int attemptNo = paymentRepository.nextAttemptNo(order.id());
-        String tradeNo = paymentGateway.outTradeNo(view(order), attemptNo);
-        // 反转后支付尝试只关联支付单，不再持有 order_id
-        paymentRepository.createAttempt(
-                null, PaymentNo.of(order.orderNo()), attemptNo, paymentGateway.channel(), tradeNo,
-                order.priceCents(), digest(order.orderNo() + "|" + attemptNo + "|" + order.priceCents()));
-        PaymentAttemptRecord attempt = paymentRepository.findLatestAttemptByPaymentNo(PaymentNo.of(order.orderNo()))
-                .orElseThrow(() -> new IllegalStateException("支付尝试创建后不可读取"));
-        paymentOrderRepository.markPaying(PaymentNo.of(orderNo), paymentGateway.channel(), tradeNo);
-        PaymentGateway.PaymentAction action = initiate(
-                orderRepository.findByOrderNo(orderNo).orElse(order), attempt);
         return new OrderDtos.PayResponse(order.orderNo(), OrderStatus.PAYING.name(),
-                paymentGateway.channel(), action.cashierUrl());
+                payment.channel(), payment.cashierUrl());
     }
 
     public PaymentDtos.MockCashierView cashier(Long userId, String orderNo) {

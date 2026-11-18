@@ -28,6 +28,7 @@ class OrderPaymentServiceTest {
     @Mock private com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository entitlementRepository;
     @Mock private PaymentGateway paymentGateway;
     @Mock private PaymentOrderRepository paymentOrderRepository;
+    @Mock private com.wherelee.edu.modules.commerce.payment.PaymentFacade paymentFacade;
     @Mock private PaymentConfirmationService confirmationService;
     @Mock private OrderFulfillmentService fulfillmentService;
     @Mock private MockSignatureService signatureService;
@@ -43,7 +44,8 @@ class OrderPaymentServiceTest {
                 orderService, orderRepository, paymentRepository, entitlementRepository,
                 paymentGateway, confirmationService, fulfillmentService, signatureService,
                 new PaymentProperties("alipay", false, null, 15, 60, 50, 60000, 30000, 5, 30),
-                metrics, TraceSpans.noop(), paymentOrderRepository, paymentQueryService, outboxDispatcher);
+                metrics, TraceSpans.noop(), paymentOrderRepository, paymentFacade,
+                paymentQueryService, outboxDispatcher);
     }
 
     @Test
@@ -60,18 +62,18 @@ class OrderPaymentServiceTest {
     }
 
     @Test
-    void payingOrderCannotReuseTerminalPaymentAttempt() {
+    void payingOrderReusesGenericPaymentInitiation() {
         OrderRecord order = order();
-        PaymentAttemptRecord attempt = new PaymentAttemptRecord(
-                1L, 1L, 1, "ALIPAY", "FAILED", "ORD-1_1",
-                "CREATED", 1L, "digest", "PROVIDER_FAILED", "failed", null,
-                LocalDateTime.now(), LocalDateTime.now());
         when(orderService.requireOwned(1L, "ORD-1")).thenReturn(order);
-        when(paymentRepository.findLatestAttemptByPaymentNo("PORD-1")).thenReturn(Optional.of(attempt));
+        when(paymentFacade.initiate(any())).thenReturn(
+                new com.wherelee.edu.modules.contracts.commerce.PaymentOperations.InitiateResult(
+                        "PORD-1", "PAYING", "ALIPAY", "/mock-pay/ORD-1"));
+        when(orderRepository.markPaying(eq("ORD-1"), eq("ALIPAY"))).thenReturn(1);
 
-        assertThatThrownBy(() -> service.pay(1L, "ORD-1"))
-                .isInstanceOf(BizException.class)
-                .hasMessage("支付尝试已结束，请刷新订单状态");
+        var response = service.pay(1L, "ORD-1");
+
+        org.assertj.core.api.Assertions.assertThat(response.cashierUrl()).isEqualTo("/mock-pay/ORD-1");
+        verify(paymentFacade).initiate(any());
     }
     private OrderRecord order() {
         LocalDateTime now = LocalDateTime.now();

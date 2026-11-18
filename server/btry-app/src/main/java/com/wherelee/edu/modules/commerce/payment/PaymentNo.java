@@ -16,4 +16,10 @@ public final class PaymentNo {
     public static String of(String bizNo) {
         return PREFIX + bizNo;
     }
+
+    /** 新垂直域使用的支付单号（非确定性；幂等由 (app,bizType,bizNo) 唯一键保证）。 */
+    public static String issue() {
+        String suffix = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+        return PREFIX + System.currentTimeMillis() + suffix;
+    }
 }
