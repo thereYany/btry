@@ -1,34 +1,34 @@
 [%autowidth.stretch, cols="h,a"]
 |===
 |Base package
-|`com.wherelee.edu.modules.payment`
+|`com.wherelee.base.modules.payment`
 |Spring components
 |_Services_
 
-* `c.w.e.m.p.PaymentAlertQueryService`
-* `c.w.e.m.p.PaymentCallbackService`
-* `c.w.e.m.p.PaymentConfirmationService`
-* `c.w.e.m.p.PaymentFacade`
-* `c.w.e.m.p.PaymentQueryService`
+* `c.w.b.m.p.PaymentAlertQueryService`
+* `c.w.b.m.p.PaymentCallbackService`
+* `c.w.b.m.p.PaymentConfirmationService`
+* `c.w.b.m.p.PaymentFacade`
+* `c.w.b.m.p.PaymentQueryService`
 
 _Repositories_
 
-* `c.w.e.m.p.PaymentOrderRepository`
-* `c.w.e.m.p.PaymentRepository`
+* `c.w.b.m.p.PaymentOrderRepository`
+* `c.w.b.m.p.PaymentRepository`
 
 _Configuration properties_
 
-* `c.w.e.m.p.PaymentProperties`
+* `c.w.b.m.p.PaymentProperties`
 
 _Others_
 
-* `c.w.e.m.p.PaymentGateway` (via `c.w.e.m.p.MockPaymentGateway`)
-* `c.w.e.m.p.MockSignatureService`
-* `c.w.e.m.p.PaymentConfig`
-* `c.w.e.m.p.PaymentMetrics`
-* `c.w.e.m.p.PaymentSafetyGuard`
-* `c.w.e.m.p.PaymentGateway` (via `c.w.e.m.p.alipay.AlipayPaymentGateway`)
+* `c.w.b.m.p.PaymentGateway` (via `c.w.b.m.p.MockPaymentGateway`)
+* `c.w.b.m.p.MockSignatureService`
+* `c.w.b.m.p.PaymentConfig`
+* `c.w.b.m.p.PaymentMetrics`
+* `c.w.b.m.p.PaymentSafetyGuard`
+* `c.w.b.m.p.PaymentGateway` (via `c.w.b.m.p.alipay.AlipayPaymentGateway`)
 |Bean references
-|* `c.w.e.m.p.tracing.TraceSpans` (in Platform)
-* `c.w.e.m.p.alert.AlertPublisher` (in Platform)
+|* `c.w.b.m.p.tracing.TraceSpans` (in Platform)
+* `c.w.b.m.p.alert.AlertPublisher` (in Platform)
 |===

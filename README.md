@@ -7,9 +7,9 @@ btry 是一个**与业务无关的 Java 业务基座**（Java 21 / Spring Boot 4
 | 模块 | 说明 |
 |---|---|
 | `btry-platform` | 共享内核 starter：租户 SQL 拦截、事务/幂等/限流/审计 AOP、告警、对象存储 + 签名 URL 缓存、Tracing、Resilience4j 降级、统一异常/分页、健康检查 |
-| `btry-contracts` | 跨模块稳定契约：`contracts.identity.*`（账号/角色/邀请只读与写操作）、`contracts.payment.*`（发起支付/退款/对账/告警查询） |
+| `btry-contracts` | 跨模块稳定契约：`contracts.identity.*`（账号/角色/邀请只读与写操作）、`contracts.payment.*`（发起支付/查询/对账/告警查询；退款编排由业务侧驱动） |
 | `btry-identity` | 账号、登录/JWT、修改密码、登录限流、RBAC（角色/权限码）、通用用户邀请（roleCode） |
-| `btry-payment` | 支付单/支付尝试/回调事件/事务性发件箱/退款重试/渠道对账；Mock 与支付宝渠道适配；`PaymentSettledEvent` 对外事件 |
+| `btry-payment` | 支付单/支付尝试/回调事件/事务性发件箱/退款单与重试状态/渠道对账（账单源 SPI）；Mock 与支付宝（公钥模式 v2 SDK）渠道适配；`PaymentSettledEvent` 对外事件。退款编排由业务侧驱动 |
 | `btry-app` | 内核演示宿主（仅 14 个类）：启动类、内核种子（admin）、运营端账号/角色/对账接口、支付告警巡检 |
 
 依赖方向：`app → identity/payment → platform/contracts`；`platform` 不依赖任何业务；支付不认识任何业务，只认 `bizType + bizNo`，业务侧实现 `PaymentSettledListener` 自行履约。
@@ -35,7 +35,7 @@ mvn -B -pl btry-app spring-boot:run
 启动后后端在 `http://127.0.0.1:8084`，健康检查 `/actuator/health`，Prometheus 指标在管理端口 `9091/actuator/prometheus`。
 首次启动会创建 `admin` 账号（`SEED_ADMIN_PASSWORD` 指定初始密码；留空则随机生成并在启动日志打印一次，首次登录强制改密）。
 
-核心接口：`POST /api/auth/login`、`/api/auth/me`、`/api/admin/users`、`/api/admin/roles`、`/api/admin/invitations`、`/api/admin/recon/*`、`/api/payments/mock/*`（内核 Mock 支付辅助接口）。
+核心接口：`POST /api/auth/login`、`/api/auth/me`、`/api/admin/users`、`/api/admin/roles`、`/api/admin/invitations`、`/api/admin/recon/*`；`POST /api/payments/alipay/notify`（provider=alipay 时启用的回调入口，公开路径）。
 
 ## 测试
 
@@ -51,7 +51,7 @@ COS_SECRET_ID=dummy COS_SECRET_KEY=dummy \
 mvn -B -Pintegration test
 ```
 
-另有架构门禁（ArchUnit）：内核不得依赖任何垂直业务、`platform` 不得反向依赖、Modulith 模块校验等，见 `btry-app/src/test/java/com/wherelee/edu/architecture/`。
+另有架构门禁（ArchUnit）：内核不得依赖任何垂直业务、`platform` 不得反向依赖、Modulith 模块校验等，见 `btry-app/src/test/java/com/wherelee/base/architecture/`。
 
 ## 数据边界门禁
 
@@ -82,7 +82,7 @@ examples/ 新垂直项目脚手架（x-try-template）
 
 - [内核与垂直拆分方案（解耦 V2）](docs/内核与垂直拆分方案.md)
 - [模块解耦设计计划（V1）](docs/模块解耦设计计划.md)
-- [数据所有权与分库边界](docs/数据所有权与分库边界.md)
+- [支付反转实施记录](docs/支付反转实施记录.md)
 - [Redis 降级与 MQ 边界](docs/Redis降级与MQ边界.md)
 - [CI 流水线与仓库镜像](docs/CI流水线与仓库镜像.md)
 

@@ -28,26 +28,26 @@
 
 ### `t_role` — 2 个模块访问
 
-- **bootstrap**：`KernelDataInitializer` (READ, server/btry-app/src/main/java/com/wherelee/edu/bootstrap/KernelDataInitializer.java)
-- **identity**：`RbacRepository` (READ+WRITE, server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java)
+- **bootstrap**：`KernelDataInitializer` (READ, server/btry-app/src/main/java/com/wherelee/base/bootstrap/KernelDataInitializer.java)
+- **identity**：`RbacRepository` (READ+WRITE, server/btry-identity/src/main/java/com/wherelee/base/modules/identity/rbac/RbacRepository.java)
 
 ### `t_user` — 2 个模块访问
 
-- **bootstrap**：`KernelDataInitializer` (READ+WRITE, server/btry-app/src/main/java/com/wherelee/edu/bootstrap/KernelDataInitializer.java)
-- **identity**：`AccountDirectoryService` (READ, server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/user/AccountDirectoryService.java)；`AccountQueryService` (READ, server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/user/AccountQueryService.java)；`UserInvitationMapper` (READ, server/btry-identity/src/main/resources/mapper/UserInvitationMapper.xml)；`UserRepository` (READ+WRITE, server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/user/UserRepository.java)
+- **bootstrap**：`KernelDataInitializer` (READ+WRITE, server/btry-app/src/main/java/com/wherelee/base/bootstrap/KernelDataInitializer.java)
+- **identity**：`AccountDirectoryService` (READ, server/btry-identity/src/main/java/com/wherelee/base/modules/identity/user/AccountDirectoryService.java)；`AccountQueryService` (READ, server/btry-identity/src/main/java/com/wherelee/base/modules/identity/user/AccountQueryService.java)；`UserInvitationMapper` (READ, server/btry-identity/src/main/resources/mapper/UserInvitationMapper.xml)；`UserRepository` (READ+WRITE, server/btry-identity/src/main/java/com/wherelee/base/modules/identity/user/UserRepository.java)
 
 ### `t_user_role` — 2 个模块访问
 
-- **bootstrap**：`KernelDataInitializer` (OTHER, server/btry-app/src/main/java/com/wherelee/edu/bootstrap/KernelDataInitializer.java)
-- **identity**：`RbacRepository` (OTHER+READ+WRITE, server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java)
+- **bootstrap**：`KernelDataInitializer` (OTHER, server/btry-app/src/main/java/com/wherelee/base/bootstrap/KernelDataInitializer.java)
+- **identity**：`RbacRepository` (OTHER+READ+WRITE, server/btry-identity/src/main/java/com/wherelee/base/modules/identity/rbac/RbacRepository.java)
 
 
 ## 3. 多表 SQL（跨域查询候选）
 
 | 模块 | 类 | 涉及表 | 文件 |
 |---|---|---|---|
-| bootstrap | `KernelDataInitializer` | `t_role` / `t_user` / `t_user_role` | server/btry-app/src/main/java/com/wherelee/edu/bootstrap/KernelDataInitializer.java |
-| identity | `RbacRepository` | `t_permission` / `t_role` / `t_role_permission` / `t_user_role` | server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java |
+| bootstrap | `KernelDataInitializer` | `t_role` / `t_user` / `t_user_role` | server/btry-app/src/main/java/com/wherelee/base/bootstrap/KernelDataInitializer.java |
+| identity | `RbacRepository` | `t_permission` / `t_role` / `t_role_permission` / `t_user_role` | server/btry-identity/src/main/java/com/wherelee/base/modules/identity/rbac/RbacRepository.java |
 | identity | `UserInvitationMapper` | `t_user` / `t_user_invitation` | server/btry-identity/src/main/resources/mapper/UserInvitationMapper.xml |
 
 ## 4. 未被代码访问的表

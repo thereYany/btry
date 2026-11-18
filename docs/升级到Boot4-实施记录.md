@@ -38,7 +38,7 @@
 | Java / Boot | `java.version=21`，parent `4.1.2` |
 | 单元测试 | **131 通过 / 0 失败** |
 | 集成测试 | **37 通过 / 0 失败**（含支付回调/查单/对账/退款/多租户） |
-| 架构规则 | 9 条 ArchUnit 全绿（含 R5：payment 不得依赖 order/entitlement） |
+| 架构规则 | 9 条 ArchUnit 全绿（含 R5：payment 不得依赖业务模块） |
 | 数据边界门禁 | 跨模块表 0、多表 SQL 4 类（未上升） |
 | 启动冒烟 | `java -jar` + `/actuator/health` → HTTP 200，db/liveness/readiness/diskSpace 全 UP |
 | Flyway 冒烟 | 克隆库上从 V13 自动迁移到 **V17**（V14–V17 全部成功） |

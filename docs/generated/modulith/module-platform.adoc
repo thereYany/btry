@@ -1,46 +1,46 @@
 [%autowidth.stretch, cols="h,a"]
 |===
 |Base package
-|`com.wherelee.edu.modules.platform`
+|`com.wherelee.base.modules.platform`
 |Spring components
 |_Controllers_
 
-* `c.w.e.m.p.web.HealthController`
+* `c.w.b.m.p.web.HealthController`
 
 _Services_
 
-* `c.w.e.m.p.alert.AlertPublisher` (via `c.w.e.m.p.alert.AlertLogPublisher`)
-* `c.w.e.m.p.storage.CosObjectStorage`
-* `c.w.e.m.p.storage.SignedUrlCache`
+* `c.w.b.m.p.alert.AlertPublisher` (via `c.w.b.m.p.alert.AlertLogPublisher`)
+* `c.w.b.m.p.storage.CosObjectStorage`
+* `c.w.b.m.p.storage.SignedUrlCache`
 
 _Repositories_
 
-* `c.w.e.m.p.alert.AlertLogRepository`
-* `c.w.e.m.p.audit.AdminAuditRepository`
+* `c.w.b.m.p.alert.AlertLogRepository`
+* `c.w.b.m.p.audit.AdminAuditRepository`
 
 _Configuration properties_
 
-* `c.w.e.m.p.config.SecurityProperties`
-* `c.w.e.m.p.storage.StorageProperties`
-* `c.w.e.m.p.tenant.TenantProperties`
+* `c.w.b.m.p.config.SecurityProperties`
+* `c.w.b.m.p.storage.StorageProperties`
+* `c.w.b.m.p.tenant.TenantProperties`
 
 _Others_
 
-* `c.w.e.m.p.aop.AdminAuditAspect`
-* `c.w.e.m.p.aop.IdempotentAspect`
-* `c.w.e.m.p.aop.MeasuredAspect`
-* `c.w.e.m.p.aop.RateLimitAspect`
-* `c.w.e.m.p.common.GlobalExceptionHandler`
-* `c.w.e.m.p.common.validation.StrongPasswordValidator`
-* `c.w.e.m.p.common.web.SecurityHeadersFilter`
-* `c.w.e.m.p.common.web.TraceIdFilter`
-* `c.w.e.m.p.config.PlatformAutoConfiguration`
-* `c.w.e.m.p.config.WebConfig`
-* `c.w.e.m.p.resilience.LocalFallbackCache`
-* `c.w.e.m.p.resilience.LocalRateLimiter`
-* `c.w.e.m.p.resilience.RedisFallbackMetrics`
-* `c.w.e.m.p.resilience.ResilienceMetricsConfig`
-* `c.w.e.m.p.tenant.TenantJdbcConfig`
-* `c.w.e.m.p.tenant.TenantSqlRewriter`
-* `c.w.e.m.p.tracing.TraceSpans`
+* `c.w.b.m.p.aop.AdminAuditAspect`
+* `c.w.b.m.p.aop.IdempotentAspect`
+* `c.w.b.m.p.aop.MeasuredAspect`
+* `c.w.b.m.p.aop.RateLimitAspect`
+* `c.w.b.m.p.common.GlobalExceptionHandler`
+* `c.w.b.m.p.common.validation.StrongPasswordValidator`
+* `c.w.b.m.p.common.web.SecurityHeadersFilter`
+* `c.w.b.m.p.common.web.TraceIdFilter`
+* `c.w.b.m.p.config.PlatformAutoConfiguration`
+* `c.w.b.m.p.config.WebConfig`
+* `c.w.b.m.p.resilience.LocalFallbackCache`
+* `c.w.b.m.p.resilience.LocalRateLimiter`
+* `c.w.b.m.p.resilience.RedisFallbackMetrics`
+* `c.w.b.m.p.resilience.ResilienceMetricsConfig`
+* `c.w.b.m.p.tenant.TenantJdbcConfig`
+* `c.w.b.m.p.tenant.TenantSqlRewriter`
+* `c.w.b.m.p.tracing.TraceSpans`
 |===
