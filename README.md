@@ -2,8 +2,6 @@
 
 btry 是一个**与业务无关的 Java 业务基座**（Java 21 / Spring Boot 4.1.2 / MySQL / Redis）：把登录鉴权、账号与邀请、RBAC、支付、退款、对账、租户隔离、审计、告警、对象存储这些"每个业务都会重复造一遍"的能力做成可复用模块。
 
-**网课业务不在这里**：录播课程平台（课程商店/学习空间/订单/权益/教师端/运营端）已迁到独立仓库 **ctry** —— <https://github.com/thereYany/ctry>。btry 只提供内核能力与一个最小的内核演示宿主（`btry-app`）。
-
 ## 模块
 
 | 模块 | 说明 |
@@ -66,7 +64,7 @@ python3 tools/table_access_inventory.py --baseline docs/generated/table-access-b
 ## 数据库与 Flyway
 
 - 内核表由各模块 jar 自带迁移：`db/migration/platform`（V3xx）、`db/migration/identity`（V1xx）、`db/migration/payment`（V2xx）。
-- 垂直应用在自己的 Flyway `locations` 里追加自己的迁移目录（ctry 使用 V9xx 段、独立库 `btry_ctry`）。
+- 垂直应用在自己的 Flyway `locations` 里追加自己的迁移目录，并使用独立数据库。
 - 内核表：`t_user`、`t_user_invitation`、`t_role`、`t_permission`、`t_role_permission`、`t_user_role`、`t_payment_*`、`t_recon_*`、`t_channel_bill`、`t_refund`、`t_alert_log`、`t_admin_audit_log`。
 
 ## 目录
@@ -75,7 +73,7 @@ python3 tools/table_access_inventory.py --baseline docs/generated/table-access-b
 server/   多模块后端（platform / contracts / identity / payment / app）
 docs/     设计与运行文档（含内核与垂直拆分方案）
 tools/    数据边界门禁、冒烟与压测脚本
-deploy/   历史部署脚本（课程平台时期，保留备查）
+deploy/   历史部署脚本（保留备查）
 ```
 
 ## 文档
