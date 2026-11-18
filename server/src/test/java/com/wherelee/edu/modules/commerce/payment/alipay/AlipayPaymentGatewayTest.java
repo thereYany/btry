@@ -9,7 +9,7 @@ import com.alipay.api.response.AlipayTradeFastpayRefundQueryResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
 import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
@@ -49,7 +49,7 @@ class AlipayPaymentGatewayTest {
                 "https://whereri.site/api/payments/alipay/notify",
                 "https://whereri.site/learn/orders",
                 "UTF-8", "RSA2", "json", 5000, 15000);
-        gateway = new AlipayPaymentGateway(client, properties, new ObjectMapper());
+        gateway = new AlipayPaymentGateway(client, properties, tools.jackson.databind.json.JsonMapper.builder().build());
     }
 
     @Test

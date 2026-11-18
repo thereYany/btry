@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.5</version>
+        <version>4.1.2</version>
         <relativePath/>
     </parent>
 
@@ -18,7 +18,7 @@
     <description>Internal recorded-course learning space</description>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <jjwt.version>0.12.6</jjwt.version>
         <cos.version>5.6.247</cos.version>
         <alipay.version>4.40.1067.ALL</alipay.version>
@@ -40,7 +40,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -59,23 +59,27 @@
             <artifactId>micrometer-tracing-bridge-otel</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-micrometer-tracing-opentelemetry</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-otlp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>3.0.3</version>
+            <version>4.1.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-spring-boot3</artifactId>
-            <version>2.2.0</version>
+            <version>2.3.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-micrometer</artifactId>
-            <version>2.2.0</version>
+            <version>2.3.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
@@ -90,6 +94,10 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -139,7 +147,7 @@
             <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
-            <version>1.3.0</version>
+            <version>1.5.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -10,8 +10,8 @@ import com.alipay.api.response.AlipayTradeFastpayRefundQueryResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.commerce.payment.PaymentOrderView;
 import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
@@ -204,7 +204,7 @@ public class AlipayPaymentGateway implements PaymentGateway {
     private String toJson(Map<String, ?> biz) {
         try {
             return objectMapper.writeValueAsString(biz);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("支付宝业务参数序列化失败", e);
         }
     }

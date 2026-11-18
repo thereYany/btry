@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.platform.storage;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.resilience.RedisFallbackMetrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
