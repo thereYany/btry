@@ -2,7 +2,8 @@ package com.wherelee.edu.modules.commerce.order;
 
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
 import jakarta.validation.Valid;
@@ -26,7 +27,7 @@ public class OrderController {
     }
 
     @PostMapping
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.ORDER_CREATE)
     @RateLimit(key = "order:create", limit = 20, windowSeconds = 60)
     @Measured("order.create")
     public OrderDtos.OrderView create(@RequestAttribute("userId") Long userId,
@@ -35,7 +36,7 @@ public class OrderController {
     }
 
     @GetMapping
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.ORDER_READ)
     @Measured("order.page")
     public PageResult<OrderDtos.OrderView> list(@RequestAttribute("userId") Long userId,
                                                 @RequestParam(defaultValue = "1") int page,
@@ -44,7 +45,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderNo}")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.ORDER_READ)
     @Measured("order.detail")
     public OrderDtos.OrderDetail detail(@RequestAttribute("userId") Long userId,
                                         @PathVariable String orderNo) {
@@ -52,7 +53,7 @@ public class OrderController {
     }
 
     @PostMapping("/{orderNo}/close")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.ORDER_CANCEL)
     @RateLimit(key = "order:close", limit = 10, windowSeconds = 60)
     @Measured("order.close")
     public OrderDtos.OrderView close(@RequestAttribute("userId") Long userId,

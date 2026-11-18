@@ -3,7 +3,8 @@ package com.wherelee.edu.modules.course.teacher;
 import com.wherelee.edu.modules.platform.aop.AdminAudit;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.course.teacher.dto.TeacherVideoUploadDtos;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +25,7 @@ public class TeacherVideoUploadController {
     }
 
     @PostMapping("/series/{seriesId}/chapters/{chapterId}/videos/{videoId}/upload-url")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_VIDEO_UPLOAD)
     @RateLimit(key = "teacher:video:uploadUrl", limit = 30, windowSeconds = 60)
     @Measured("teacher.video.uploadUrl")
     @AdminAudit(action = "TEACHER_VIDEO_UPLOAD_URL", targetType = "VIDEO", targetIdArg = 3)
@@ -38,7 +39,7 @@ public class TeacherVideoUploadController {
     }
 
     @PostMapping("/series/{seriesId}/chapters/{chapterId}/videos/{videoId}/complete")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_VIDEO_UPLOAD)
     @Measured("teacher.video.complete")
     @AdminAudit(action = "TEACHER_VIDEO_COMPLETE", targetType = "VIDEO", targetIdArg = 3)
     public TeacherVideoUploadDtos.CompleteResponse complete(

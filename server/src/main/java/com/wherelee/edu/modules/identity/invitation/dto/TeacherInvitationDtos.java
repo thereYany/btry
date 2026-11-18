@@ -16,7 +16,9 @@ public final class TeacherInvitationDtos {
             String username,
             @NotBlank(message = "昵称不能为空")
             @Size(max = 20, message = "昵称不能超过 20 字")
-            String nickname
+            String nickname,
+            @Pattern(regexp = "^[A-Z][A-Z0-9_]{1,39}$", message = "角色码格式不正确")
+            String roleCode
     ) {
     }
 
@@ -24,6 +26,7 @@ public final class TeacherInvitationDtos {
             Long id,
             String username,
             String nickname,
+            String roleCode,
             String inviteUrl,
             LocalDateTime expiresAt
     ) implements AuditedResult {
@@ -41,6 +44,7 @@ public final class TeacherInvitationDtos {
     public record PreviewResponse(
             String username,
             String nickname,
+            String roleCode,
             LocalDateTime expiresAt
     ) {
     }

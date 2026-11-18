@@ -23,17 +23,20 @@ public class TeacherInvitationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final InvitationTokenService tokenService;
+    private final com.wherelee.edu.modules.identity.rbac.RbacRepository rbacRepository;
     private final InvitationProperties properties;
 
     public TeacherInvitationService(TeacherInvitationMapper mapper,
                                     UserRepository userRepository,
                                     PasswordEncoder passwordEncoder,
                                     InvitationTokenService tokenService,
+                                    com.wherelee.edu.modules.identity.rbac.RbacRepository rbacRepository,
                                     InvitationProperties properties) {
         this.mapper = mapper;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.rbacRepository = rbacRepository;
         this.properties = properties;
     }
 
@@ -41,8 +44,22 @@ public class TeacherInvitationService {
     public TeacherInvitationDtos.CreatedResponse create(TeacherInvitationDtos.CreateRequest request, Long adminId) {
         String username = request.username().trim();
         String nickname = request.nickname().trim();
+        String roleCode = request.roleCode() == null || request.roleCode().isBlank()
+                ? "TEACHER" : request.roleCode().trim();
+        if ("ADMIN".equals(roleCode)) {
+            throw BizException.badRequest("不允许通过邀请授予管理员角色");
+        }
+        if (rbacRepository.findRoleId(roleCode).isEmpty()) {
+            throw BizException.badRequest("角色不存在：" + roleCode);
+        }
         if (userRepository.findByUsername(username).isPresent()) {
             throw BizException.badRequest("用户名已存在");
+        }
+        if ("ADMIN".equals(roleCode)) {
+            throw BizException.badRequest("不允许通过邀请授予管理员角色");
+        }
+        if (rbacRepository.findRoleId(roleCode).isEmpty()) {
+            throw BizException.badRequest("角色不存在：" + roleCode);
         }
         LocalDateTime now = LocalDateTime.now();
         if (mapper.findPendingByUsername(username, now, TenantContext.current()) != null) {
@@ -55,6 +72,7 @@ public class TeacherInvitationService {
         invitation.setTokenHash(tokenService.hash(token));
         invitation.setUsername(username);
         invitation.setNickname(nickname);
+        invitation.setRoleCode(roleCode);
         invitation.setStatus("PENDING");
         invitation.setExpiresAt(expiresAt);
         invitation.setCreatedBy(adminId);
@@ -62,7 +80,7 @@ public class TeacherInvitationService {
         mapper.insert(invitation);
 
         return new TeacherInvitationDtos.CreatedResponse(
-                invitation.getId(), username, nickname,
+                invitation.getId(), username, nickname, roleCode,
                 properties.normalizedBaseUrl() + "/invite/" + token, expiresAt);
     }
 
@@ -99,7 +117,9 @@ public class TeacherInvitationService {
         TeacherInvitation invitation = findByToken(token);
         requireUsable(invitation);
         return new TeacherInvitationDtos.PreviewResponse(
-                invitation.getUsername(), invitation.getNickname(), invitation.getExpiresAt());
+                invitation.getUsername(), invitation.getNickname(),
+                invitation.getRoleCode() == null ? "TEACHER" : invitation.getRoleCode(),
+                invitation.getExpiresAt());
     }
 
     @Transactional
@@ -119,7 +139,7 @@ public class TeacherInvitationService {
                     invitation.getUsername(),
                     passwordEncoder.encode(request.password()),
                     invitation.getNickname(),
-                    "TEACHER",
+                    invitation.getRoleCode() == null ? "TEACHER" : invitation.getRoleCode(),
                     false);
         } catch (DuplicateKeyException e) {
             throw BizException.badRequest("用户名已被占用");

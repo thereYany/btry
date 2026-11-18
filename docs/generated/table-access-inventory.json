@@ -199,6 +199,25 @@
       "multi_tables": []
     }
   },
+  "t_payment_order": {
+    "PaymentOrderRepository": {
+      "module": "commerce",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentOrderRepository.java",
+      "multi_tables": []
+    },
+    "ReconRepository": {
+      "module": "commerce",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/recon/ReconRepository.java",
+      "multi_tables": []
+    }
+  },
   "t_payment_attempt": {
     "PaymentRepository": {
       "module": "commerce",
@@ -208,18 +227,6 @@
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java",
       "multi_tables": []
-    },
-    "PaymentOrderShadowRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java",
-      "multi_tables": [
-        "t_order",
-        "t_payment_order"
-      ]
     },
     "MockChannelBillProvider": {
       "module": "commerce",
@@ -240,14 +247,6 @@
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java",
       "multi_tables": []
-    },
-    "PaymentOrderShadowRepository": {
-      "module": "commerce",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java",
-      "multi_tables": []
     }
   },
   "t_refund": {
@@ -258,14 +257,6 @@
         "WRITE"
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java",
-      "multi_tables": []
-    },
-    "PaymentOrderShadowRepository": {
-      "module": "commerce",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java",
       "multi_tables": []
     }
   },
@@ -278,17 +269,6 @@
       "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java",
       "multi_tables": []
     },
-    "PaymentOrderShadowRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java",
-      "multi_tables": [
-        "t_payment_attempt",
-        "t_payment_order"
-      ]
-    },
     "OrderRepository": {
       "module": "commerce",
       "ops": [
@@ -299,25 +279,14 @@
       "multi_tables": []
     }
   },
-  "t_payment_order": {
-    "PaymentOrderShadowRepository": {
+  "t_payment_outbox": {
+    "PaymentOutboxRepository": {
       "module": "commerce",
       "ops": [
         "READ",
         "WRITE"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java",
-      "multi_tables": [
-        "t_order",
-        "t_payment_attempt"
-      ]
-    },
-    "ReconRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/recon/ReconRepository.java",
+      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/outbox/PaymentOutboxRepository.java",
       "multi_tables": []
     }
   },
@@ -415,6 +384,63 @@
       ],
       "file": "server/src/main/java/com/wherelee/edu/modules/learning/learning/LearningProgressRepository.java",
       "multi_tables": []
+    }
+  },
+  "t_user_role": {
+    "RbacRepository": {
+      "module": "identity",
+      "ops": [
+        "OTHER",
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
+      "multi_tables": [
+        "t_permission",
+        "t_role",
+        "t_role_permission"
+      ]
+    }
+  },
+  "t_role": {
+    "RbacRepository": {
+      "module": "identity",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
+      "multi_tables": [
+        "t_user_role"
+      ]
+    }
+  },
+  "t_role_permission": {
+    "RbacRepository": {
+      "module": "identity",
+      "ops": [
+        "OTHER",
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
+      "multi_tables": [
+        "t_permission",
+        "t_user_role"
+      ]
+    }
+  },
+  "t_permission": {
+    "RbacRepository": {
+      "module": "identity",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
+      "multi_tables": [
+        "t_role_permission",
+        "t_user_role"
+      ]
     }
   },
   "t_teacher_invitation": {

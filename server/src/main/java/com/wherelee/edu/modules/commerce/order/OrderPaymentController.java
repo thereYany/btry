@@ -3,7 +3,8 @@ package com.wherelee.edu.modules.commerce.order;
 import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -19,7 +20,7 @@ public class OrderPaymentController {
     }
 
     @PostMapping("/api/orders/{orderNo}/pay")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.ORDER_PAY)
     @RateLimit(key = "order:pay", limit = 20, windowSeconds = 60)
     @Measured("order.pay")
     public OrderDtos.PayResponse pay(@RequestAttribute("userId") Long userId,

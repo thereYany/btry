@@ -2,7 +2,8 @@ package com.wherelee.edu.modules.learning.learning;
 
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -22,7 +23,7 @@ public class LearningProgressController {
     }
 
     @PutMapping("/videos/{id}/progress")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.LEARNING_PROGRESS_WRITE)
     @RateLimit(key = "learning:progress", limit = 240, windowSeconds = 60)
     @Measured("learning.progress.update")
     public void update(@RequestAttribute("userId") Long userId,

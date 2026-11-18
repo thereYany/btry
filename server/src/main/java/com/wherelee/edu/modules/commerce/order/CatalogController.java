@@ -1,7 +1,8 @@
 package com.wherelee.edu.modules.commerce.order;
 
 import com.wherelee.edu.modules.platform.aop.Measured;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +21,7 @@ public class CatalogController {
     }
 
     @GetMapping
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.COURSE_CATALOG_READ)
     @Measured("catalog.series")
     public List<CatalogItem> list(@RequestAttribute("userId") Long userId) {
         return orderService.catalog(userId);

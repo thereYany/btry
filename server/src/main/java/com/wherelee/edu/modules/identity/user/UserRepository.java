@@ -28,9 +28,12 @@ public class UserRepository {
     );
 
     private final JdbcTemplate jdbc;
+    private final com.wherelee.edu.modules.identity.rbac.RbacRepository rbacRepository;
 
-    public UserRepository(JdbcTemplate jdbc) {
+    public UserRepository(JdbcTemplate jdbc,
+                          com.wherelee.edu.modules.identity.rbac.RbacRepository rbacRepository) {
         this.jdbc = jdbc;
+        this.rbacRepository = rbacRepository;
     }
 
     public Optional<User> findByUsername(String username) {
@@ -112,6 +115,9 @@ public class UserRepository {
         if (key == null) {
             throw new IllegalStateException("创建账号后未返回用户 ID");
         }
-        return key.longValue();
+        long userId = key.longValue();
+        // 新用户同步写入 user_role，权限解析不再依赖 t_user.role 单一字段
+        rbacRepository.bindRole(userId, role);
+        return userId;
     }
 }

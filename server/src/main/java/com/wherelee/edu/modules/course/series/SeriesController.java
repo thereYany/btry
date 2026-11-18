@@ -1,7 +1,8 @@
 package com.wherelee.edu.modules.course.series;
 
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,19 +24,19 @@ public class SeriesController {
     }
 
     @GetMapping("/series")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.COURSE_CATALOG_READ)
     public List<SeriesDtos.SeriesSummary> list(@RequestAttribute("userId") Long userId) {
         return seriesService.listForStudent(userId);
     }
 
     @GetMapping("/series/{id}")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.COURSE_SERIES_READ)
     public SeriesDtos.SeriesDetail detail(@RequestAttribute("userId") Long userId, @PathVariable Long id) {
         return seriesService.detail(userId, id);
     }
 
     @GetMapping("/videos/{id}/play")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.COURSE_SERIES_READ)
     @RateLimit(key = "play", limit = 120, windowSeconds = 60)
     public SeriesDtos.PlayInfo play(@RequestAttribute("userId") Long userId, @PathVariable Long id,
                                     @RequestHeader(value = "User-Agent", required = false) String userAgent) {

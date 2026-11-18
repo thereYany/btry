@@ -16,6 +16,7 @@ public class TeacherInvitation {
     private String tokenHash;
     private String username;
     private String nickname;
+    private String roleCode;
     private String status;
     private LocalDateTime expiresAt;
     private Long createdBy;

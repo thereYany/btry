@@ -45,6 +45,8 @@ app:
   jwt:
     secret: ${JWT_SECRET:etry-btry-demo-jwt-secret-change-before-production-2026}
     ttl-minutes: ${JWT_TTL_MINUTES:10080}
+    issuer: ${JWT_ISSUER:btry}
+    audience: ${JWT_AUDIENCE:btry-web}
   cos:
     bucket: ${COS_BUCKET:rag-1325750042}
     region: ${COS_REGION:ap-shanghai}

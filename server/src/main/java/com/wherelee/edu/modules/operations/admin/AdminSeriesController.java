@@ -4,7 +4,8 @@ import com.wherelee.edu.modules.operations.admin.dto.AdminSeriesDtos;
 import com.wherelee.edu.modules.platform.aop.AdminAudit;
 import com.wherelee.edu.modules.platform.aop.Idempotent;
 import com.wherelee.edu.modules.platform.aop.Measured;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +28,7 @@ public class AdminSeriesController {
     }
 
     @GetMapping
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_SERIES_MANAGE)
     @Measured("admin.content.series.page")
     public PageResult<AdminSeriesVO> page(@RequestParam(required = false) String keyword,
                                           @RequestParam(required = false) String status,
@@ -38,14 +39,14 @@ public class AdminSeriesController {
     }
 
     @GetMapping("/{id}")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_SERIES_MANAGE)
     @Measured("admin.content.series.detail")
     public AdminSeriesDtos.SeriesDetail detail(@PathVariable Long id) {
         return service.detail(id);
     }
 
     @PutMapping("/{id}/status")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_SERIES_MANAGE)
     @Idempotent(key = "admin:content:seriesStatus", windowSeconds = 3)
     @Measured("admin.content.series.status")
     @AdminAudit(action = "ADMIN_SERIES_STATUS", targetType = "SERIES", targetIdArg = 1)
@@ -56,7 +57,7 @@ public class AdminSeriesController {
     }
 
     @PutMapping("/{id}/sale")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_SERIES_MANAGE)
     @Idempotent(key = "admin:content:seriesSale", windowSeconds = 3)
     @Measured("admin.content.series.sale")
     @AdminAudit(action = "ADMIN_SERIES_SALE", targetType = "SERIES", targetIdArg = 1)

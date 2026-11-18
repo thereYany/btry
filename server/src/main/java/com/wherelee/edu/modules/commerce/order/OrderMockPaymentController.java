@@ -3,7 +3,8 @@ package com.wherelee.edu.modules.commerce.order;
 import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +25,7 @@ public class OrderMockPaymentController {
     }
 
     @GetMapping("/{orderNo}")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.PAYMENT_MOCK)
     @Measured("payment.mock.cashier")
     public PaymentDtos.MockCashierView cashier(@RequestAttribute("userId") Long userId,
                                                @PathVariable String orderNo) {
@@ -32,7 +33,7 @@ public class OrderMockPaymentController {
     }
 
     @PostMapping("/{orderNo}/events")
-    @RequireRole("STUDENT")
+    @RequirePermission(PermissionCodes.PAYMENT_MOCK)
     @RateLimit(key = "payment:mockEvent", limit = 30, windowSeconds = 60)
     @Measured("payment.mock.event")
     public PaymentDtos.MockEventResponse simulate(@RequestAttribute("userId") Long userId,

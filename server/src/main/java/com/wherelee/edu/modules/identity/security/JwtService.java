@@ -17,6 +17,8 @@ public class JwtService {
 
     private final SecretKey key;
     private final Duration ttl;
+    private final String issuer;
+    private final String audience;
 
     public JwtService(JwtProperties properties) {
         String secret = properties.secret();
@@ -25,11 +27,15 @@ public class JwtService {
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.ttl = Duration.ofMinutes(properties.ttlMinutes());
+        this.issuer = properties.issuer();
+        this.audience = properties.audience();
     }
 
     public String createToken(User user) {
         Instant now = Instant.now();
         return Jwts.builder()
+                .issuer(issuer)
+                .audience().add(audience).and()
                 .subject(String.valueOf(user.id()))
                 .claim("username", user.username())
                 .claim("ver", user.tokenVersion())
@@ -43,6 +49,8 @@ public class JwtService {
     public TokenPayload parse(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(key)
+                .requireIssuer(issuer)
+                .requireAudience(audience)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

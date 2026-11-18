@@ -9,6 +9,7 @@ public class TeacherInvitationVO {
     private Long id;
     private String username;
     private String nickname;
+    private String roleCode;
     private String status;
     private LocalDateTime expiresAt;
     private String createdByName;

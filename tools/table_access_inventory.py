@@ -40,6 +40,10 @@ MODULE_RE = re.compile(r"com\.wherelee\.edu\.modules\.([a-z]+)")
 TABLE_DB = {
     "t_user": "identity",
     "t_teacher_invitation": "identity",
+    "t_role": "identity",
+    "t_permission": "identity",
+    "t_role_permission": "identity",
+    "t_user_role": "identity",
     "t_order": "order",
     "t_payment_order": "payment",
     "t_payment_attempt": "payment",
@@ -258,6 +262,10 @@ def propose_owner(table: str, modules: dict[str, Access]) -> str:
     fixed = {
         "t_user": "identity",
         "t_teacher_invitation": "identity",
+        "t_role": "identity",
+        "t_permission": "identity",
+        "t_role_permission": "identity",
+        "t_user_role": "identity",
         "t_admin_audit_log": "operations/audit",
         "t_alert_log": "operations/alert",
         "t_order": "commerce/order",

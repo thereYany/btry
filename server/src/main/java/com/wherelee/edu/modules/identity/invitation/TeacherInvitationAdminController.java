@@ -4,7 +4,8 @@ import com.wherelee.edu.modules.platform.aop.AdminAudit;
 import com.wherelee.edu.modules.platform.aop.Idempotent;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import com.wherelee.edu.modules.identity.invitation.dto.TeacherInvitationDtos;
 import jakarta.validation.Valid;
@@ -29,7 +30,7 @@ public class TeacherInvitationAdminController {
     }
 
     @PostMapping
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_INVITATION_MANAGE)
     @RateLimit(key = "admin:teacherInvite", limit = 20, windowSeconds = 60)
     @Idempotent(key = "admin:teacherInvite", windowSeconds = 5)
     @Measured("admin.teacherInvitation.create")
@@ -42,7 +43,7 @@ public class TeacherInvitationAdminController {
     }
 
     @GetMapping
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_INVITATION_MANAGE)
     @Measured("admin.teacherInvitation.page")
     public PageResult<TeacherInvitationVO> page(
             @RequestParam(required = false) String status,
@@ -52,7 +53,7 @@ public class TeacherInvitationAdminController {
     }
 
     @PutMapping("/{id}/revoke")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_INVITATION_MANAGE)
     @Idempotent(key = "admin:teacherInviteRevoke", windowSeconds = 3)
     @Measured("admin.teacherInvitation.revoke")
     @AdminAudit(action = "TEACHER_INVITE_REVOKE", targetType = "TEACHER_INVITATION",

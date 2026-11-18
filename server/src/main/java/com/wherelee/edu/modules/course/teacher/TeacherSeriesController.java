@@ -1,7 +1,8 @@
 package com.wherelee.edu.modules.course.teacher;
 
 import com.wherelee.edu.modules.platform.aop.Measured;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,14 +23,14 @@ public class TeacherSeriesController {
     }
 
     @GetMapping
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_SERIES_MANAGE)
     @Measured("teacher.series.page")
     public List<SeriesDtos.TeacherSeriesSummary> list(@RequestAttribute("userId") Long teacherId) {
         return service.list(teacherId);
     }
 
     @GetMapping("/{id}")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_SERIES_MANAGE)
     @Measured("teacher.series.detail")
     public SeriesDtos.TeacherSeriesDetail detail(@RequestAttribute("userId") Long teacherId,
                                                  @PathVariable Long id) {

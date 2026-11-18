@@ -1,5 +1,7 @@
-package com.wherelee.edu.modules.platform.aop;
+package com.wherelee.edu.modules.identity.rbac;
 
+
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.platform.common.BizException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -13,14 +15,21 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Aspect
 @Component
 @Order(1)
-public class RoleAspect {
+public class PermissionAspect {
 
-    @Around("@annotation(requireRole)")
-    public Object around(ProceedingJoinPoint joinPoint, RequireRole requireRole) throws Throwable {
+    private final PermissionService permissionService;
+
+    public PermissionAspect(PermissionService permissionService) {
+        this.permissionService = permissionService;
+    }
+
+    @Around("@annotation(requirePermission)")
+    public Object around(ProceedingJoinPoint joinPoint, RequirePermission requirePermission) throws Throwable {
         ServletRequestAttributes attributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        String role = attributes == null ? null : String.valueOf(attributes.getRequest().getAttribute("role"));
-        if (!requireRole.value().equals(role)) {
+        Object userId = attributes == null
+                ? null : attributes.getRequest().getAttribute("userId");
+        if (!(userId instanceof Long id) || !permissionService.hasAny(id, requirePermission.value())) {
             throw new BizException(HttpStatus.FORBIDDEN, "无权限执行此操作");
         }
         return joinPoint.proceed();

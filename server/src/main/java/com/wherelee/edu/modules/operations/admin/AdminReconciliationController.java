@@ -7,7 +7,8 @@ import com.wherelee.edu.modules.platform.aop.AdminAudit;
 import com.wherelee.edu.modules.platform.aop.Idempotent;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -41,7 +42,7 @@ public class AdminReconciliationController {
     }
 
     @PostMapping("/run")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_RECON_MANAGE)
     @RateLimit(key = "recon-run", limit = 10, windowSeconds = 60)
     @Idempotent(key = "recon-run", windowSeconds = 5)
     @Measured("admin.recon.run")
@@ -52,7 +53,7 @@ public class AdminReconciliationController {
     }
 
     @GetMapping("/diffs")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_RECON_MANAGE)
     @Measured("admin.recon.diffs")
     public PageResult<DiffView> diffs(@RequestParam(required = false) String status,
                                       @RequestParam(defaultValue = "1") int page,
@@ -61,7 +62,7 @@ public class AdminReconciliationController {
     }
 
     @PutMapping("/diffs/{id}/handle")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_RECON_MANAGE)
     @AdminAudit(action = "RECON_HANDLE", targetType = "RECON_DIFF", targetIdArg = 0)
     @Measured("admin.recon.handle")
     public void handle(@RequestAttribute("userId") Long operatorId,

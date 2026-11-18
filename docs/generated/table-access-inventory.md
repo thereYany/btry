@@ -1,7 +1,7 @@
 # 表访问清单（自动生成）
 
 - 生成脚本：`tools/table_access_inventory.py`
-- 表数量：19；有代码访问的表：18
+- 表数量：23；有代码访问的表：23
 
 ## 1. 汇总
 
@@ -11,21 +11,25 @@
 | `t_alert_log` | operations/alert | 1 | 1 | 0 | AlertLogRepository | — |
 | `t_channel_bill` | commerce | 1 | 1 | 0 | ReconRepository | — |
 | `t_learning_progress` | learning/progress | 1 | 2 | 0 | LearningProgressRepository | ProgressQueryService |
-| `t_order` | commerce/order | 1 | 3 | 2 | OrderRepository | OrderRepository, PaymentOrderShadowRepository, PaymentRepository |
-| `t_payment_attempt` | commerce/payment | 1 | 3 | 2 | PaymentOrderShadowRepository, PaymentRepository | MockChannelBillProvider, PaymentOrderShadowRepository, PaymentRepository |
-| `t_payment_event` | commerce/payment | 1 | 2 | 0 | PaymentOrderShadowRepository, PaymentRepository | PaymentRepository |
-| `t_payment_order` | commerce | 1 | 2 | 2 | PaymentOrderShadowRepository | PaymentOrderShadowRepository, ReconRepository |
-| `t_payment_outbox` | unknown | 0 | 0 | 0 | — | — |
+| `t_order` | commerce/order | 1 | 2 | 0 | OrderRepository | OrderRepository, PaymentRepository |
+| `t_payment_attempt` | commerce/payment | 1 | 2 | 0 | PaymentRepository | MockChannelBillProvider, PaymentRepository |
+| `t_payment_event` | commerce/payment | 1 | 1 | 0 | PaymentRepository | PaymentRepository |
+| `t_payment_order` | commerce | 1 | 2 | 0 | PaymentOrderRepository | PaymentOrderRepository, ReconRepository |
+| `t_payment_outbox` | commerce | 1 | 1 | 0 | PaymentOutboxRepository | PaymentOutboxRepository |
+| `t_permission` | identity | 1 | 1 | 2 | — | RbacRepository |
 | `t_playback_log` | learning/playback | 1 | 3 | 0 | PlaybackLogMapper, PlaybackLogRepository | PlaybackLogMapper, PlaybackStatsQueryService |
 | `t_recon_diff` | commerce | 1 | 1 | 0 | ReconRepository | ReconRepository |
 | `t_recon_task` | commerce | 1 | 1 | 0 | ReconRepository | — |
-| `t_refund` | commerce/payment | 1 | 2 | 0 | PaymentOrderShadowRepository, PaymentRepository | PaymentRepository |
+| `t_refund` | commerce/payment | 1 | 1 | 0 | PaymentRepository | PaymentRepository |
+| `t_role` | identity | 1 | 1 | 1 | RbacRepository | RbacRepository |
+| `t_role_permission` | identity | 1 | 1 | 2 | RbacRepository | RbacRepository |
 | ⚠️ `t_series` | course/catalog | 2 | 4 | 2 | AdminSeriesMapper, DataInitializer, TeacherContentRepository | AdminSeriesMapper, CatalogQueryService, DataInitializer, TeacherContentRepository |
 | ⚠️ `t_series_chapter` | course/catalog | 2 | 4 | 2 | DataInitializer, TeacherContentRepository | AdminSeriesMapper, CatalogQueryService, DataInitializer, TeacherContentRepository |
 | ⚠️ `t_series_video` | course/catalog | 2 | 4 | 2 | DataInitializer, TeacherContentRepository | AdminSeriesMapper, CatalogQueryService, TeacherContentRepository |
 | ⚠️ `t_student_series` | commerce/entitlement | 2 | 2 | 0 | EntitlementRepository | EntitlementRepository |
 | `t_teacher_invitation` | identity | 1 | 1 | 1 | TeacherInvitationMapper | TeacherInvitationMapper |
 | ⚠️ `t_user` | identity | 2 | 5 | 1 | DataInitializer, UserRepository | AccountDirectoryService, AccountQueryService, DataInitializer, TeacherInvitationMapper, UserRepository |
+| `t_user_role` | identity | 1 | 1 | 3 | RbacRepository | RbacRepository |
 
 ## 2. 跨模块访问（需要收口的表）
 
@@ -59,12 +63,12 @@
 
 | 模块 | 类 | 涉及表 | 文件 |
 |---|---|---|---|
-| commerce | `PaymentOrderShadowRepository` | `t_order` / `t_payment_attempt` / `t_payment_order` | server/src/main/java/com/wherelee/edu/modules/commerce/payment/shadow/PaymentOrderShadowRepository.java |
 | course | `AdminSeriesMapper` | `t_series` / `t_series_chapter` / `t_series_video` | server/src/main/resources/mapper/AdminSeriesMapper.xml |
 | course | `CatalogQueryService` | `t_series` / `t_series_chapter` / `t_series_video` | server/src/main/java/com/wherelee/edu/modules/course/catalog/CatalogQueryService.java |
 | course | `TeacherContentRepository` | `t_series` / `t_series_chapter` / `t_series_video` | server/src/main/java/com/wherelee/edu/modules/course/teacher/TeacherContentRepository.java |
+| identity | `RbacRepository` | `t_permission` / `t_role` / `t_role_permission` / `t_user_role` | server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java |
 | identity | `TeacherInvitationMapper` | `t_teacher_invitation` / `t_user` | server/src/main/resources/mapper/TeacherInvitationMapper.xml |
 
 ## 4. 未被代码访问的表
 
-`t_payment_outbox`
+_无。_

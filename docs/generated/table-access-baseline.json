@@ -1,22 +1,17 @@
 {
   "summary": {
-    "table_count": 19,
+    "table_count": 23,
     "cross_module_tables": [],
     "multi_table_class_count": 5,
     "multi_table_classes": [
-      "commerce:PaymentOrderShadowRepository",
       "course:AdminSeriesMapper",
       "course:CatalogQueryService",
       "course:TeacherContentRepository",
+      "identity:RbacRepository",
       "identity:TeacherInvitationMapper"
     ],
-    "cross_db_multi_table_count": 1,
-    "cross_db_multi_table": {
-      "commerce:PaymentOrderShadowRepository": [
-        "order",
-        "payment"
-      ]
-    },
+    "cross_db_multi_table_count": 0,
+    "cross_db_multi_table": {},
     "composer_modules": [
       "bootstrap"
     ]
@@ -78,11 +73,9 @@
         "commerce"
       ],
       "module_count": 1,
-      "class_count": 3,
-      "statements": 4,
-      "multi_table_classes": [
-        "PaymentOrderShadowRepository"
-      ]
+      "class_count": 2,
+      "statements": 3,
+      "multi_table_classes": []
     },
     "t_payment_attempt": {
       "modules": [
@@ -92,11 +85,9 @@
         "commerce"
       ],
       "module_count": 1,
-      "class_count": 3,
-      "statements": 5,
-      "multi_table_classes": [
-        "PaymentOrderShadowRepository"
-      ]
+      "class_count": 2,
+      "statements": 3,
+      "multi_table_classes": []
     },
     "t_payment_event": {
       "modules": [
@@ -106,8 +97,8 @@
         "commerce"
       ],
       "module_count": 1,
-      "class_count": 2,
-      "statements": 4,
+      "class_count": 1,
+      "statements": 3,
       "multi_table_classes": []
     },
     "t_payment_order": {
@@ -120,17 +111,33 @@
       "module_count": 1,
       "class_count": 2,
       "statements": 3,
-      "multi_table_classes": [
-        "PaymentOrderShadowRepository"
-      ]
+      "multi_table_classes": []
     },
     "t_payment_outbox": {
-      "modules": [],
-      "effective_modules": [],
-      "module_count": 0,
-      "class_count": 0,
-      "statements": 0,
+      "modules": [
+        "commerce"
+      ],
+      "effective_modules": [
+        "commerce"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 2,
       "multi_table_classes": []
+    },
+    "t_permission": {
+      "modules": [
+        "identity"
+      ],
+      "effective_modules": [
+        "identity"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 1,
+      "multi_table_classes": [
+        "RbacRepository"
+      ]
     },
     "t_playback_log": {
       "modules": [
@@ -176,9 +183,37 @@
         "commerce"
       ],
       "module_count": 1,
-      "class_count": 2,
-      "statements": 3,
+      "class_count": 1,
+      "statements": 2,
       "multi_table_classes": []
+    },
+    "t_role": {
+      "modules": [
+        "identity"
+      ],
+      "effective_modules": [
+        "identity"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 2,
+      "multi_table_classes": [
+        "RbacRepository"
+      ]
+    },
+    "t_role_permission": {
+      "modules": [
+        "identity"
+      ],
+      "effective_modules": [
+        "identity"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 3,
+      "multi_table_classes": [
+        "RbacRepository"
+      ]
     },
     "t_series": {
       "modules": [
@@ -271,6 +306,20 @@
       "statements": 7,
       "multi_table_classes": [
         "TeacherInvitationMapper"
+      ]
+    },
+    "t_user_role": {
+      "modules": [
+        "identity"
+      ],
+      "effective_modules": [
+        "identity"
+      ],
+      "module_count": 1,
+      "class_count": 1,
+      "statements": 3,
+      "multi_table_classes": [
+        "RbacRepository"
       ]
     }
   }

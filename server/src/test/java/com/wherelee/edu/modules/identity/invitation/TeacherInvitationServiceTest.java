@@ -2,6 +2,7 @@ package com.wherelee.edu.modules.identity.invitation;
 
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.identity.invitation.dto.TeacherInvitationDtos;
+import com.wherelee.edu.modules.identity.rbac.RbacRepository;
 import com.wherelee.edu.modules.identity.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,8 @@ class TeacherInvitationServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private InvitationTokenService tokenService;
+    @Mock
+    private RbacRepository rbacRepository;
 
     private TeacherInvitationService service;
 
@@ -42,12 +45,13 @@ class TeacherInvitationServiceTest {
         InvitationProperties properties = new InvitationProperties(
                 "https://learn.example.com/", 72, 20, 10);
         service = new TeacherInvitationService(
-                mapper, userRepository, passwordEncoder, tokenService, properties);
+                mapper, userRepository, passwordEncoder, tokenService, rbacRepository, properties);
     }
 
     @Test
     void createStoresOnlyTokenHashAndReturnsOneTimeLink() {
         when(userRepository.findByUsername("physics_teacher")).thenReturn(Optional.empty());
+        when(rbacRepository.findRoleId("TEACHER")).thenReturn(Optional.of(1L));
         when(mapper.findPendingByUsername(eq("physics_teacher"), any(), eq(0L))).thenReturn(null);
         when(tokenService.generate()).thenReturn("plain-token");
         when(tokenService.hash("plain-token")).thenReturn("a".repeat(64));
@@ -58,7 +62,7 @@ class TeacherInvitationServiceTest {
         }).when(mapper).insert(any(TeacherInvitation.class));
 
         TeacherInvitationDtos.CreatedResponse response = service.create(
-                new TeacherInvitationDtos.CreateRequest("physics_teacher", "物理老师"), 1L);
+                new TeacherInvitationDtos.CreateRequest("physics_teacher", "物理老师", null), 1L);
 
         ArgumentCaptor<TeacherInvitation> captor = ArgumentCaptor.forClass(TeacherInvitation.class);
         verify(mapper).insert(captor.capture());
@@ -70,11 +74,12 @@ class TeacherInvitationServiceTest {
     @Test
     void rejectsDuplicatePendingInvitation() {
         when(userRepository.findByUsername("physics_teacher")).thenReturn(Optional.empty());
+        when(rbacRepository.findRoleId("TEACHER")).thenReturn(Optional.of(1L));
         when(mapper.findPendingByUsername(eq("physics_teacher"), any(), eq(0L)))
                 .thenReturn(pendingInvitation(LocalDateTime.now().plusHours(1)));
 
         assertThatThrownBy(() -> service.create(
-                new TeacherInvitationDtos.CreateRequest("physics_teacher", "物理老师"), 1L))
+                new TeacherInvitationDtos.CreateRequest("physics_teacher", "物理老师", null), 1L))
                 .isInstanceOf(BizException.class)
                 .hasMessage("该用户名已有未过期的教师邀请");
     }

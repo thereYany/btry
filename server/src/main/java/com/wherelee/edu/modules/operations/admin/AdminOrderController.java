@@ -4,7 +4,8 @@ import com.wherelee.edu.modules.platform.aop.AdminAudit;
 import com.wherelee.edu.modules.platform.aop.Idempotent;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
 import jakarta.validation.Valid;
@@ -28,7 +29,7 @@ public class AdminOrderController {
     }
 
     @GetMapping
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_ORDER_MANAGE)
     @Measured("admin.order.page")
     public PageResult<AdminOrderVO> page(@RequestParam(required = false) String keyword,
                                          @RequestParam(required = false) String status,
@@ -38,7 +39,7 @@ public class AdminOrderController {
     }
 
     @GetMapping("/exceptions")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_ORDER_MANAGE)
     @Measured("admin.order.exceptions")
     public PageResult<AdminOrderVO> exceptions(@RequestParam(defaultValue = "1") int page,
                                                @RequestParam(defaultValue = "20") int size) {
@@ -46,14 +47,14 @@ public class AdminOrderController {
     }
 
     @GetMapping("/{orderNo}")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_ORDER_MANAGE)
     @Measured("admin.order.detail")
     public AdminOrderDtos.Detail detail(@PathVariable String orderNo) {
         return service.detail(orderNo);
     }
 
     @PostMapping("/{orderNo}/query")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_ORDER_MANAGE)
     @RateLimit(key = "admin:orderQuery", limit = 30, windowSeconds = 60)
     @Measured("admin.order.query")
     @AdminAudit(action = "ORDER_QUERY", targetType = "ORDER")
@@ -62,7 +63,7 @@ public class AdminOrderController {
     }
 
     @PostMapping("/{orderNo}/fulfill")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_ORDER_MANAGE)
     @Idempotent(key = "admin:orderFulfill", windowSeconds = 3)
     @Measured("admin.order.fulfill")
     @AdminAudit(action = "ORDER_FULFILL", targetType = "ORDER")
@@ -71,7 +72,7 @@ public class AdminOrderController {
     }
 
     @PostMapping("/{orderNo}/close")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_ORDER_MANAGE)
     @Idempotent(key = "admin:orderClose", windowSeconds = 3)
     @Measured("admin.order.close")
     @AdminAudit(action = "ORDER_CLOSE", targetType = "ORDER")
@@ -80,7 +81,7 @@ public class AdminOrderController {
     }
 
     @PostMapping("/{orderNo}/refund")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_ORDER_MANAGE)
     @Idempotent(key = "admin:orderRefund", windowSeconds = 5)
     @Measured("admin.order.refund")
     @AdminAudit(action = "ORDER_REFUND", targetType = "ORDER")

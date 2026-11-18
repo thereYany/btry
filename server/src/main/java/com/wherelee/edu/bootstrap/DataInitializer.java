@@ -6,6 +6,7 @@ package com.wherelee.edu.bootstrap;
 // 属于「业务装配」而不是「内核能力」，因此放在 bootstrap 包、不归属任何业务模块，
 // 避免 platform 内核反向依赖业务表（A 期数据所有权规则 R1）。
 
+import com.wherelee.edu.modules.identity.rbac.RbacRepository;
 import com.wherelee.edu.modules.platform.config.SeedProperties;
 import com.wherelee.edu.modules.platform.storage.DemoProperties;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 @Slf4j
 @Component
@@ -33,6 +35,7 @@ public class DataInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
+    private final RbacRepository rbacRepository;
     private final DemoProperties demo;
     private final SeedProperties seed;
 
@@ -72,7 +75,9 @@ public class DataInitializer implements ApplicationRunner {
                 log.info("创建账号 username={} role={}，初始密码来自配置，首次登录必须改密", username, role);
             }
         }
-        return jdbc.queryForObject("SELECT id FROM t_user WHERE username = ?", Long.class, username);
+        Long userId = jdbc.queryForObject("SELECT id FROM t_user WHERE username = ?", Long.class, username);
+        Arrays.stream(role.split(",")).forEach(code -> rbacRepository.bindRole(userId, code.trim()));
+        return userId;
     }
 
     /**

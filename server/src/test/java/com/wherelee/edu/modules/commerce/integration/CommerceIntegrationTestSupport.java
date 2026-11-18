@@ -135,7 +135,7 @@ public abstract class CommerceIntegrationTestSupport {
                 "t_refund", "t_payment_event", "t_payment_attempt", "t_order",
                 "t_student_series", "t_learning_progress",
                 "t_series_video", "t_series_chapter", "t_series",
-                "t_teacher_invitation", "t_user")) {
+                "t_teacher_invitation", "t_user_role", "t_user")) {
             jdbc.execute("TRUNCATE TABLE " + table);
         }
         jdbc.execute("SET FOREIGN_KEY_CHECKS=1");
@@ -157,7 +157,12 @@ public abstract class CommerceIntegrationTestSupport {
                     (username, password_hash, nickname, role, status, must_change_password, token_version)
                 VALUES (?, 'integration-not-used', ?, ?, 'ACTIVE', FALSE, 0)
                 """, username, nickname, role);
-        return jdbc.queryForObject("SELECT id FROM t_user WHERE username = ?", Long.class, username);
+        Long userId = jdbc.queryForObject("SELECT id FROM t_user WHERE username = ?", Long.class, username);
+        Long roleId = jdbc.queryForObject(
+                "SELECT id FROM t_role WHERE tenant_id = 0 AND code = ?", Long.class, role);
+        jdbc.update("INSERT IGNORE INTO t_user_role (tenant_id, user_id, role_id) VALUES (0, ?, ?)",
+                userId, roleId);
+        return userId;
     }
 
     private Long insertSeries(Long teacherId, String title, long priceCents) {

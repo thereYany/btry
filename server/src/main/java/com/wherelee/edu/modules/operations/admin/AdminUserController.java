@@ -10,7 +10,8 @@ import com.wherelee.edu.modules.platform.aop.AdminAudit;
 import com.wherelee.edu.modules.platform.aop.Idempotent;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +37,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/users")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_USER_MANAGE)
     @Measured("admin.user.page")
     public PageResult<AdminUserVO> users(@RequestParam(required = false) String keyword,
                                          @RequestParam(required = false) String role,
@@ -47,7 +48,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/users")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_USER_MANAGE)
     @RateLimit(key = "admin:createUser", limit = 30, windowSeconds = 60)
     @Idempotent(key = "admin:createUser", windowSeconds = 5)
     @Measured("admin.user.create")
@@ -57,7 +58,7 @@ public class AdminUserController {
     }
 
     @PutMapping("/users/{id}/status")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_USER_MANAGE)
     @Idempotent(key = "admin:changeUserStatus", windowSeconds = 3)
     @Measured("admin.user.status")
     @AdminAudit(action = "USER_STATUS_CHANGE", targetType = "USER", targetIdArg = 1)
@@ -68,7 +69,7 @@ public class AdminUserController {
     }
 
     @PutMapping("/users/{id}/password")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_USER_MANAGE)
     @Idempotent(key = "admin:resetUserPassword", windowSeconds = 5)
     @Measured("admin.user.resetPassword")
     @AdminAudit(action = "USER_PASSWORD_RESET", targetType = "USER", targetIdArg = 1)
@@ -79,21 +80,21 @@ public class AdminUserController {
     }
 
     @GetMapping("/series")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_USER_MANAGE)
     @Measured("admin.series.options")
     public List<SeriesOptionVO> series() {
         return service.seriesOptions();
     }
 
     @GetMapping("/users/{id}/series")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_USER_MANAGE)
     @Measured("admin.user.series")
     public List<Long> userSeries(@PathVariable Long id) {
         return service.seriesIds(id);
     }
 
     @PutMapping("/users/{id}/series")
-    @RequireRole("ADMIN")
+    @RequirePermission(PermissionCodes.ADMIN_USER_MANAGE)
     @Idempotent(key = "admin:assignSeries", windowSeconds = 3)
     @Measured("admin.user.assignSeries")
     @AdminAudit(action = "USER_SERIES_ASSIGN", targetType = "USER", targetIdArg = 0)

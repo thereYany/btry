@@ -4,7 +4,8 @@ import com.wherelee.edu.modules.platform.aop.AdminAudit;
 import com.wherelee.edu.modules.platform.aop.Idempotent;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
-import com.wherelee.edu.modules.platform.aop.RequireRole;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import com.wherelee.edu.modules.course.teacher.dto.TeacherContentDtos;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,7 +28,7 @@ public class TeacherContentController {
     }
 
     @PostMapping("/series")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @RateLimit(key = "teacher:series:create", limit = 20, windowSeconds = 60)
     @Idempotent(key = "teacher:series:create", windowSeconds = 3)
     @Measured("teacher.series.create")
@@ -39,7 +40,7 @@ public class TeacherContentController {
     }
 
     @PutMapping("/series/{id}")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @Measured("teacher.series.update")
     @AdminAudit(action = "TEACHER_SERIES_UPDATE", targetType = "SERIES", targetIdArg = 1)
     public void updateSeries(@RequestAttribute("userId") Long teacherId,
@@ -49,7 +50,7 @@ public class TeacherContentController {
     }
 
     @PutMapping("/series/{id}/status")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @Measured("teacher.series.status")
     @AdminAudit(action = "TEACHER_SERIES_STATUS", targetType = "SERIES", targetIdArg = 1)
     public void updateStatus(@RequestAttribute("userId") Long teacherId,
@@ -59,7 +60,7 @@ public class TeacherContentController {
     }
 
     @PostMapping("/series/{seriesId}/chapters")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @Idempotent(key = "teacher:chapter:create", windowSeconds = 3)
     @Measured("teacher.chapter.create")
     @AdminAudit(action = "TEACHER_CHAPTER_CREATE", targetType = "CHAPTER",
@@ -71,7 +72,7 @@ public class TeacherContentController {
     }
 
     @PutMapping("/series/{seriesId}/chapters/{chapterId}")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @Measured("teacher.chapter.update")
     @AdminAudit(action = "TEACHER_CHAPTER_UPDATE", targetType = "CHAPTER", targetIdArg = 2)
     public void updateChapter(@RequestAttribute("userId") Long teacherId,
@@ -82,7 +83,7 @@ public class TeacherContentController {
     }
 
     @DeleteMapping("/series/{seriesId}/chapters/{chapterId}")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @Measured("teacher.chapter.delete")
     @AdminAudit(action = "TEACHER_CHAPTER_DELETE", targetType = "CHAPTER", targetIdArg = 2)
     public void deleteChapter(@RequestAttribute("userId") Long teacherId,
@@ -92,7 +93,7 @@ public class TeacherContentController {
     }
 
     @PostMapping("/series/{seriesId}/chapters/{chapterId}/videos")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @Idempotent(key = "teacher:video:create", windowSeconds = 3)
     @Measured("teacher.video.create")
     @AdminAudit(action = "TEACHER_VIDEO_CREATE", targetType = "VIDEO",
@@ -105,7 +106,7 @@ public class TeacherContentController {
     }
 
     @PutMapping("/series/{seriesId}/chapters/{chapterId}/videos/{videoId}")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @Measured("teacher.video.update")
     @AdminAudit(action = "TEACHER_VIDEO_UPDATE", targetType = "VIDEO", targetIdArg = 3)
     public void updateVideo(@RequestAttribute("userId") Long teacherId,
@@ -117,7 +118,7 @@ public class TeacherContentController {
     }
 
     @DeleteMapping("/series/{seriesId}/chapters/{chapterId}/videos/{videoId}")
-    @RequireRole("TEACHER")
+    @RequirePermission(PermissionCodes.TEACHER_CONTENT_MANAGE)
     @Measured("teacher.video.delete")
     @AdminAudit(action = "TEACHER_VIDEO_DELETE", targetType = "VIDEO", targetIdArg = 3)
     public void deleteVideo(@RequestAttribute("userId") Long teacherId,
