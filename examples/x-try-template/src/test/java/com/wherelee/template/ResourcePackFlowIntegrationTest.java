@@ -1,8 +1,8 @@
 package com.wherelee.template;
 
-import com.wherelee.edu.modules.identity.security.JwtService;
-import com.wherelee.edu.modules.identity.user.User;
-import com.wherelee.edu.modules.identity.user.UserRepository;
+import com.wherelee.base.modules.identity.security.JwtService;
+import com.wherelee.base.modules.identity.user.User;
+import com.wherelee.base.modules.identity.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class ResourcePackFlowIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        jdbc.update("DELETE FROM t_resource_pack_entitlement");
+        jdbc.update("DELETE FROM t_resource_pack_grant");
         jdbc.update("DELETE FROM t_resource_pack_order");
         jdbc.update("DELETE FROM t_resource_pack");
         jdbc.update("INSERT INTO t_resource_pack (tenant_id, title, description, price_cents, status) "
@@ -44,10 +44,10 @@ class ResourcePackFlowIntegrationTest {
         jdbc.update("DELETE FROM t_user WHERE username = 'template_user'");
         jdbc.update("""
                 INSERT INTO t_user (username, password_hash, nickname, role, status, must_change_password, token_version)
-                VALUES ('template_user', 'not-used', '模板用户', 'STUDENT', 'ACTIVE', FALSE, 0)
+                VALUES ('template_user', 'not-used', '模板用户', 'ADMIN', 'ACTIVE', FALSE, 0)
                 """);
         userId = jdbc.queryForObject("SELECT id FROM t_user WHERE username = 'template_user'", Long.class);
-        Long roleId = jdbc.queryForObject("SELECT id FROM t_role WHERE tenant_id = 0 AND code = 'STUDENT'", Long.class);
+        Long roleId = jdbc.queryForObject("SELECT id FROM t_role WHERE tenant_id = 0 AND code = 'ADMIN'", Long.class);
         jdbc.update("INSERT IGNORE INTO t_user_role (tenant_id, user_id, role_id) VALUES (0, ?, ?)", userId, roleId);
         User user = userRepository.findById(userId).orElseThrow();
         bearer = "Bearer " + jwtService.createToken(user);
@@ -76,10 +76,10 @@ class ResourcePackFlowIntegrationTest {
                 "SELECT status FROM t_resource_pack_order WHERE order_no = ?", String.class, orderNo))
                 .isEqualTo("PAID");
         assertThat(jdbc.queryForObject(
-                "SELECT COUNT(*) FROM t_resource_pack_entitlement WHERE user_id = ?", Integer.class, userId))
+                "SELECT COUNT(*) FROM t_resource_pack_grant WHERE user_id = ?", Integer.class, userId))
                 .isEqualTo(1);
 
-        mockMvc.perform(get("/api/resource-packs/entitlements/me").header("Authorization", bearer))
+        mockMvc.perform(get("/api/resource-packs/grants/me").header("Authorization", bearer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].packId").value(packId));
     }

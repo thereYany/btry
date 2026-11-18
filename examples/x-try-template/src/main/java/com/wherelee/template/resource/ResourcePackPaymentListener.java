@@ -1,13 +1,13 @@
 package com.wherelee.template.resource;
 
-import com.wherelee.edu.modules.payment.api.PaymentEventTypes;
-import com.wherelee.edu.modules.payment.api.PaymentSettledEvent;
-import com.wherelee.edu.modules.payment.api.PaymentSettledListener;
+import com.wherelee.base.modules.payment.api.PaymentEventTypes;
+import com.wherelee.base.modules.payment.api.PaymentSettledEvent;
+import com.wherelee.base.modules.payment.api.PaymentSettledListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-/** 资料包垂直域的履约：消费支付成功事件，幂等发放权益。 */
+/** 资料包垂直域的履约：消费支付成功事件，幂等发放授权。 */
 @Slf4j
 @Component
 public class ResourcePackPaymentListener implements PaymentSettledListener {
@@ -32,7 +32,7 @@ public class ResourcePackPaymentListener implements PaymentSettledListener {
         jdbc.update("UPDATE t_resource_pack_order SET status = 'PAID', paid_at = CURRENT_TIMESTAMP(3) "
                 + "WHERE order_no = ? AND tenant_id = 0 AND status <> 'PAID'", event.bizNo());
         jdbc.update("""
-                INSERT IGNORE INTO t_resource_pack_entitlement (tenant_id, user_id, pack_id, order_no)
+                INSERT IGNORE INTO t_resource_pack_grant (tenant_id, user_id, pack_id, order_no)
                 SELECT 0, user_id, pack_id, order_no FROM t_resource_pack_order
                 WHERE order_no = ? AND tenant_id = 0
                 """, event.bizNo());

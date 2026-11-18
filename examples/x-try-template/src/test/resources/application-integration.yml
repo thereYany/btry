@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: ${IT_DB_URL:jdbc:mysql://127.0.0.1:3306/btry_template?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai}
+    username: ${IT_DB_USER:btry}
+    password: ${IT_DB_PASSWORD:btrypass}
+  data:
+    redis:
+      host: ${IT_REDIS_HOST:127.0.0.1}
+      port: ${IT_REDIS_PORT:6379}
+      password: ${IT_REDIS_PASSWORD:}
+      database: ${IT_REDIS_DATABASE:15}
+  flyway:
+    enabled: true
+
+server:
+  port: 0
+
+management:
+  server:
+    port: 0
+
+app:
+  tenant:
+    # 模板集成测试直连数据库做数据准备，关闭租户 SQL 门禁；生产保持 true
+    enforce: false
+    default-tenant-id: 0
+  security:
+    login-protection-enabled: false
+  storage:
+    enabled: false
+  payment:
+    provider: mock
+    mock-enabled: true
+    mock-secret: template-mock-secret

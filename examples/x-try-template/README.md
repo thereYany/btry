@@ -40,10 +40,10 @@
 1. `GET /api/resource-packs`：资料包列表（权限码复用内核 RBAC）；
 2. `POST /api/resource-packs/{id}/orders`：下单并调用内核 `PaymentOperations` 发起支付；
 3. `POST /api/resource-packs/orders/{orderNo}/mock-pay`：仅 Mock 渠道的本地验证入口；
-4. 支付成功后内核发件箱投递 `PAYMENT_SUCCEEDED`，模板的 `ResourcePackPaymentListener` 幂等发放权益；
-5. `GET /api/resource-packs/entitlements/me`：查看已购权益。
+4. 支付成功后内核发件箱投递 `PAYMENT_SUCCEEDED`，模板的 `ResourcePackPaymentListener` 幂等发放授权；
+5. `GET /api/resource-packs/grants/me`：查看已购授权。
 
-对应集成测试：`ResourcePackFlowIntegrationTest`（登录 → 下单 → 支付 → 履约 → 权益）。
+对应集成测试：`ResourcePackFlowIntegrationTest`（登录 → 下单 → 支付 → 履约 → 授权）。
 
 ## 已复用的内核能力
 

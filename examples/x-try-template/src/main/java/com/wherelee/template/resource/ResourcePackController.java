@@ -1,11 +1,11 @@
 package com.wherelee.template.resource;
 
-import com.wherelee.edu.modules.payment.PaymentConfirmationService;
-import com.wherelee.edu.modules.payment.PaymentNotification;
-import com.wherelee.edu.modules.payment.outbox.PaymentOutboxDispatcher;
-import com.wherelee.edu.modules.contracts.payment.PaymentOperations;
-import com.wherelee.edu.modules.platform.aop.PermissionCodes;
-import com.wherelee.edu.modules.platform.aop.RequirePermission;
+import com.wherelee.base.modules.payment.PaymentConfirmationService;
+import com.wherelee.base.modules.payment.PaymentNotification;
+import com.wherelee.base.modules.payment.outbox.PaymentOutboxDispatcher;
+import com.wherelee.base.modules.contracts.payment.PaymentOperations;
+import com.wherelee.base.modules.platform.aop.PermissionCodes;
+import com.wherelee.base.modules.platform.aop.RequirePermission;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,11 +97,11 @@ public class ResourcePackController {
                         .map(PaymentOperations.PaymentView::status).orElse("UNKNOWN"));
     }
 
-    @GetMapping("/entitlements/me")
+    @GetMapping("/grants/me")
     @RequirePermission(PermissionCodes.ADMIN_USER_MANAGE)
-    public List<Map<String, Object>> myEntitlements(@RequestAttribute("userId") Long userId) {
+    public List<Map<String, Object>> myGrants(@RequestAttribute("userId") Long userId) {
         return jdbc.queryForList("""
-                SELECT e.pack_id AS packId, p.title FROM t_resource_pack_entitlement e
+                SELECT e.pack_id AS packId, p.title FROM t_resource_pack_grant e
                 JOIN t_resource_pack p ON p.id = e.pack_id
                 WHERE e.tenant_id = 0 AND e.user_id = ? ORDER BY e.id
                 """, userId);

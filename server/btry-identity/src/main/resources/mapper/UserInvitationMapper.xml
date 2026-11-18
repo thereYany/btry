@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.wherelee.edu.modules.identity.invitation.UserInvitationMapper">
+<mapper namespace="com.wherelee.base.modules.identity.invitation.UserInvitationMapper">
 
-    <resultMap id="invitationMap" type="com.wherelee.edu.modules.identity.invitation.UserInvitation">
+    <resultMap id="invitationMap" type="com.wherelee.base.modules.identity.invitation.UserInvitation">
         <id property="id" column="id"/>
         <result property="tokenHash" column="token_hash"/>
         <result property="username" column="username"/>
@@ -59,7 +59,7 @@
         LIMIT 1
     </select>
 
-    <select id="findPage" resultType="com.wherelee.edu.modules.identity.invitation.UserInvitationVO">
+    <select id="findPage" resultType="com.wherelee.base.modules.identity.invitation.UserInvitationVO">
         SELECT i.id,
                i.username,
                i.nickname,

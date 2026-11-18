@@ -24,7 +24,7 @@ CREATE TABLE t_resource_pack_order (
     UNIQUE KEY uk_rp_order_tenant_no (tenant_id, order_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE t_resource_pack_entitlement (
+CREATE TABLE t_resource_pack_grant (
     id BIGINT NOT NULL AUTO_INCREMENT,
     tenant_id BIGINT NOT NULL DEFAULT 0,
     user_id BIGINT NOT NULL,

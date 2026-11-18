@@ -81,4 +81,4 @@ logging:
     name: ${LOG_FILE:logs/btry-prod.log}
   level:
     root: info
-    com.wherelee.edu: info
+    com.wherelee.base: info

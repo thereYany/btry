@@ -2,7 +2,7 @@
 """扫描 btry 后端代码，生成「表 → 访问者 → 读写类型」清单。
 
 用途：A 期数据地基的第一步——在改库之前，先量化每张表被哪些模块、哪些类、
-以什么方式（读/写/多表 join）访问。输出是 markdown，供 docs/数据所有权与分库边界.md 引用。
+以什么方式（读/写/多表 join）访问。输出是 markdown，供 docs/generated/table-access-*.md 与 docs/README.md 引用。
 
 用法：
     python3 tools/table_access_inventory.py            # 打印到 stdout
@@ -13,7 +13,7 @@
 - 扫描 Java 文本块/字符串字面量与 MyBatis XML 的 select/insert/update/delete 语句；
 - INSERT INTO <t> / UPDATE <t> / DELETE FROM <t> 记为 WRITE，FROM <t> / JOIN <t> 记为 READ；
 - 同一条语句里出现 >=2 张表记为 MULTI（多表 SQL，跨域 join 的来源）；
-- 模块 = com.wherelee.edu.modules.<module>，XML 通过 mapper namespace 反查模块。
+- 模块 = com.wherelee.base.modules.<module>，XML 通过 mapper namespace 反查模块。
 """
 
 from __future__ import annotations
@@ -34,9 +34,9 @@ MAPPER_DIRS = sorted((ROOT / "server").glob("*/src/main/resources/mapper"))
 
 TABLE_RE = re.compile(r"\bt_[a-z_]+[a-z]\b")
 CREATE_RE = re.compile(r"create\s+table\s+`?(t_[a-z_]+)`?", re.IGNORECASE)
-MODULE_RE = re.compile(r"com\.wherelee\.edu\.modules\.([a-z]+)")
+MODULE_RE = re.compile(r"com\.wherelee\.base\.modules\.([a-z]+)")
 
-# 表 → 目标分库（对应 docs/数据所有权与分库边界.md §3）。
+# 表 → 目标分库（数据边界基线，供跨模块检查与表归属审计使用）。
 # A 期的"跨库 join=0"= 同一条 SQL 引用了两个以上库的表。
 TABLE_DB = {
     # identity 内核
@@ -119,8 +119,8 @@ def module_of(java_file: Path) -> str:
         if idx + 1 < len(parts):
             return parts[idx + 1]
     # 不在 modules 下的顶层组件（如 bootstrap 种子装配）也算独立单元
-    if "edu" in parts:
-        idx = parts.index("edu")
+    if "base" in parts:
+        idx = parts.index("base")
         if idx + 1 < len(parts) and parts[idx + 1].endswith(".java") is False:
             return parts[idx + 1]
     return "unknown"
