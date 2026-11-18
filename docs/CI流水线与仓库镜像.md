@@ -6,10 +6,10 @@
 
 | remote | 地址 | 用途 |
 |---|---|---|
-| `origin` | `https://github.com/thereYany/btry.git` | CI 主仓库（新账号，push 触发 Actions） |
+| `origin` | `https://ghfast.top/https://github.com/thereYany/btry.git` | CI 主仓库（新账号，push 触发 Actions；经代理推送） |
 | `upstream` | `https://ghfast.top/https://github.com/WhereLee/etry.git` | 原仓库，只读保留，不再推送 |
 
-服务器上 GitHub 的 git 协议直连不稳定，`api.github.com` 可达；HTTPS 推送目前可直连成功，失败时可用 `ghfast.top` 代理前缀。
+服务器上 GitHub 的 git 协议直连不稳定（偶发 `GnuTLS recv error`/`remote end hung up`），`api.github.com` 可达。**推送固定走 `ghfast.top` 代理前缀**（已验证可携带认证推送成功），API 查询直连。
 
 ## 工作流
 
