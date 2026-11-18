@@ -1,0 +1,30 @@
+@startuml
+title <size:24>Identity</size>
+
+set separator none
+top to bottom direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Component>
+
+System_Boundary("Modules_boundary", "Modules", $tags="") {
+  Container_Boundary("Modules.Modules_boundary", "Modules", $tags="") {
+    Component(Modules.Modules.Identity, "Identity", $techn="Module", $descr="", $tags="", $link="")
+    Component(Modules.Modules.Platform, "Platform", $techn="Module", $descr="", $tags="", $link="")
+  }
+
+}
+
+Rel(Modules.Modules.Identity, Modules.Modules.Platform, "uses", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

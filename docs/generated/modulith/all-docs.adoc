@@ -1,0 +1,27 @@
+== Modules
+plantuml::components.puml[,,format=svg]
+
+== Commerce
+plantuml::module-commerce.puml[,,format=svg]
+include::module-commerce.adoc[]
+
+== Course
+plantuml::module-course.puml[,,format=svg]
+include::module-course.adoc[]
+
+== Identity
+plantuml::module-identity.puml[,,format=svg]
+include::module-identity.adoc[]
+
+== Learning
+plantuml::module-learning.puml[,,format=svg]
+include::module-learning.adoc[]
+
+== Operations
+plantuml::module-operations.puml[,,format=svg]
+include::module-operations.adoc[]
+
+== Platform
+plantuml::module-platform.puml[,,format=svg]
+include::module-platform.adoc[]
+
