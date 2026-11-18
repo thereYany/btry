@@ -27,9 +27,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MIGRATION_DIR = ROOT / "server/src/main/resources/db/migration"
-JAVA_DIR = ROOT / "server/src/main/java"
-MAPPER_DIR = ROOT / "server/src/main/resources/mapper"
+MIGRATION_DIR = ROOT / "server/btry-app/src/main/resources/db/migration"
+JAVA_DIRS = sorted((ROOT / "server").glob("*/src/main/java"))
+MAPPER_DIR = ROOT / "server/btry-app/src/main/resources/mapper"
 
 TABLE_RE = re.compile(r"\bt_[a-z_]+[a-z]\b")
 CREATE_RE = re.compile(r"create\s+table\s+`?(t_[a-z_]+)`?", re.IGNORECASE)
@@ -193,17 +193,18 @@ def java_statements(text: str) -> list[tuple[str, str]]:
 def scan_java() -> dict[str, dict[str, Access]]:
     """表 → (clazz → Access)。"""
     index: dict[str, dict[str, Access]] = defaultdict(dict)
-    for path in JAVA_DIR.rglob("*.java"):
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        if "t_" not in text:
-            continue
-        module = module_of(path)
-        for table, acc in collect(path, java_statements(text), module).items():
-            key = acc.clazz
-            if key in index[table]:
-                index[table][key].merge(acc)
-            else:
-                index[table][key] = acc
+    for java_dir in JAVA_DIRS:
+        for path in java_dir.rglob("*.java"):
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            if "t_" not in text:
+                continue
+            module = module_of(path)
+            for table, acc in collect(path, java_statements(text), module).items():
+                key = acc.clazz
+                if key in index[table]:
+                    index[table][key].merge(acc)
+                else:
+                    index[table][key] = acc
     return index
 
 

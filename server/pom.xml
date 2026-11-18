@@ -12,10 +12,17 @@
     </parent>
 
     <groupId>com.wherelee</groupId>
-    <artifactId>btry</artifactId>
+    <artifactId>btry-parent</artifactId>
     <version>0.1.0</version>
+    <packaging>pom</packaging>
     <name>btry-learning-space</name>
-    <description>Internal recorded-course learning space</description>
+    <description>Internal recorded-course learning space（多模块父工程）</description>
+
+    <modules>
+        <module>btry-platform</module>
+        <module>btry-contracts</module>
+        <module>btry-app</module>
+    </modules>
 
     <properties>
         <java.version>21</java.version>
@@ -193,18 +200,6 @@
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
