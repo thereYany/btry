@@ -1,14 +1,12 @@
 {
   "summary": {
-    "table_count": 23,
+    "table_count": 16,
     "cross_module_tables": [],
-    "multi_table_class_count": 5,
+    "multi_table_class_count": 3,
     "multi_table_classes": [
-      "course:AdminSeriesMapper",
-      "course:CatalogQueryService",
-      "course:TeacherContentRepository",
+      "bootstrap:KernelDataInitializer",
       "identity:RbacRepository",
-      "identity:TeacherInvitationMapper"
+      "identity:UserInvitationMapper"
     ],
     "cross_db_multi_table_count": 0,
     "cross_db_multi_table": {},
@@ -43,46 +41,22 @@
     },
     "t_channel_bill": {
       "modules": [
-        "commerce"
+        "payment"
       ],
       "effective_modules": [
-        "commerce"
+        "payment"
       ],
       "module_count": 1,
       "class_count": 1,
       "statements": 1,
       "multi_table_classes": []
     },
-    "t_learning_progress": {
-      "modules": [
-        "learning"
-      ],
-      "effective_modules": [
-        "learning"
-      ],
-      "module_count": 1,
-      "class_count": 2,
-      "statements": 2,
-      "multi_table_classes": []
-    },
-    "t_order": {
-      "modules": [
-        "commerce"
-      ],
-      "effective_modules": [
-        "commerce"
-      ],
-      "module_count": 1,
-      "class_count": 2,
-      "statements": 3,
-      "multi_table_classes": []
-    },
     "t_payment_attempt": {
       "modules": [
-        "commerce"
+        "payment"
       ],
       "effective_modules": [
-        "commerce"
+        "payment"
       ],
       "module_count": 1,
       "class_count": 2,
@@ -91,10 +65,10 @@
     },
     "t_payment_event": {
       "modules": [
-        "commerce"
+        "payment"
       ],
       "effective_modules": [
-        "commerce"
+        "payment"
       ],
       "module_count": 1,
       "class_count": 1,
@@ -103,10 +77,10 @@
     },
     "t_payment_order": {
       "modules": [
-        "commerce"
+        "payment"
       ],
       "effective_modules": [
-        "commerce"
+        "payment"
       ],
       "module_count": 1,
       "class_count": 2,
@@ -115,10 +89,10 @@
     },
     "t_payment_outbox": {
       "modules": [
-        "commerce"
+        "payment"
       ],
       "effective_modules": [
-        "commerce"
+        "payment"
       ],
       "module_count": 1,
       "class_count": 1,
@@ -139,24 +113,12 @@
         "RbacRepository"
       ]
     },
-    "t_playback_log": {
-      "modules": [
-        "learning"
-      ],
-      "effective_modules": [
-        "learning"
-      ],
-      "module_count": 1,
-      "class_count": 3,
-      "statements": 4,
-      "multi_table_classes": []
-    },
     "t_recon_diff": {
       "modules": [
-        "commerce"
+        "payment"
       ],
       "effective_modules": [
-        "commerce"
+        "payment"
       ],
       "module_count": 1,
       "class_count": 1,
@@ -165,10 +127,10 @@
     },
     "t_recon_task": {
       "modules": [
-        "commerce"
+        "payment"
       ],
       "effective_modules": [
-        "commerce"
+        "payment"
       ],
       "module_count": 1,
       "class_count": 1,
@@ -177,10 +139,10 @@
     },
     "t_refund": {
       "modules": [
-        "commerce"
+        "payment"
       ],
       "effective_modules": [
-        "commerce"
+        "payment"
       ],
       "module_count": 1,
       "class_count": 1,
@@ -189,15 +151,17 @@
     },
     "t_role": {
       "modules": [
+        "bootstrap",
         "identity"
       ],
       "effective_modules": [
         "identity"
       ],
       "module_count": 1,
-      "class_count": 1,
-      "statements": 2,
+      "class_count": 2,
+      "statements": 3,
       "multi_table_classes": [
+        "KernelDataInitializer",
         "RbacRepository"
       ]
     },
@@ -215,84 +179,6 @@
         "RbacRepository"
       ]
     },
-    "t_series": {
-      "modules": [
-        "bootstrap",
-        "course"
-      ],
-      "effective_modules": [
-        "course"
-      ],
-      "module_count": 1,
-      "class_count": 4,
-      "statements": 7,
-      "multi_table_classes": [
-        "AdminSeriesMapper",
-        "CatalogQueryService",
-        "TeacherContentRepository"
-      ]
-    },
-    "t_series_chapter": {
-      "modules": [
-        "bootstrap",
-        "course"
-      ],
-      "effective_modules": [
-        "course"
-      ],
-      "module_count": 1,
-      "class_count": 4,
-      "statements": 6,
-      "multi_table_classes": [
-        "AdminSeriesMapper",
-        "CatalogQueryService",
-        "TeacherContentRepository"
-      ]
-    },
-    "t_series_video": {
-      "modules": [
-        "bootstrap",
-        "course"
-      ],
-      "effective_modules": [
-        "course"
-      ],
-      "module_count": 1,
-      "class_count": 4,
-      "statements": 5,
-      "multi_table_classes": [
-        "AdminSeriesMapper",
-        "CatalogQueryService",
-        "TeacherContentRepository"
-      ]
-    },
-    "t_student_series": {
-      "modules": [
-        "bootstrap",
-        "commerce"
-      ],
-      "effective_modules": [
-        "commerce"
-      ],
-      "module_count": 1,
-      "class_count": 2,
-      "statements": 3,
-      "multi_table_classes": []
-    },
-    "t_teacher_invitation": {
-      "modules": [
-        "identity"
-      ],
-      "effective_modules": [
-        "identity"
-      ],
-      "module_count": 1,
-      "class_count": 1,
-      "statements": 2,
-      "multi_table_classes": [
-        "TeacherInvitationMapper"
-      ]
-    },
     "t_user": {
       "modules": [
         "bootstrap",
@@ -305,10 +191,11 @@
       "class_count": 5,
       "statements": 7,
       "multi_table_classes": [
-        "TeacherInvitationMapper"
+        "KernelDataInitializer",
+        "UserInvitationMapper"
       ]
     },
-    "t_user_role": {
+    "t_user_invitation": {
       "modules": [
         "identity"
       ],
@@ -317,8 +204,24 @@
       ],
       "module_count": 1,
       "class_count": 1,
-      "statements": 3,
+      "statements": 2,
       "multi_table_classes": [
+        "UserInvitationMapper"
+      ]
+    },
+    "t_user_role": {
+      "modules": [
+        "bootstrap",
+        "identity"
+      ],
+      "effective_modules": [
+        "identity"
+      ],
+      "module_count": 1,
+      "class_count": 2,
+      "statements": 4,
+      "multi_table_classes": [
+        "KernelDataInitializer",
         "RbacRepository"
       ]
     }

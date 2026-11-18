@@ -29,28 +29,34 @@ app:
     default-tenant-id: 0
   security:
     login-protection-enabled: false
-  cos:
-    bucket: ci-test-bucket
-    region: ap-guangzhou
-    url-ttl-minutes: 30
+  storage:
+    enabled: false
+  invitation:
+    base-url: http://127.0.0.1:5175
+    expiry-hours: 72
+    max-attempts: 20
+    window-minutes: 10
   payment:
-    outbox:
-      initial-delay-ms: 3600000
-      interval-ms: 3600000
     provider: mock
     mock-enabled: true
     mock-secret: integration-mock-secret
-    reconcile-interval-ms: 3600000
-    reconcile-initial-delay-ms: 3600000
+    order-expire-minutes: 15
     query-after-seconds: 0
     reconcile-batch-size: 100
+    reconcile-interval-ms: 3600000
+    reconcile-initial-delay-ms: 3600000
+    refund-max-attempts: 5
+    refund-retry-base-seconds: 5
+    outbox:
+      interval-ms: 3600000
+      initial-delay-ms: 3600000
+  recon:
+    enabled: false
   alert:
     enabled: false
     initial-delay-ms: 3600000
   seed:
     admin-password: Integration1Pass
-    teacher-password: Integration1Pass
-    student-password: Integration1Pass
 
 logging:
   level:

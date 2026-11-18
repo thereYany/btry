@@ -1,13 +1,16 @@
 {
   "t_user": {
-    "DataInitializer": {
+    "KernelDataInitializer": {
       "module": "bootstrap",
       "ops": [
         "READ",
         "WRITE"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/bootstrap/DataInitializer.java",
-      "multi_tables": []
+      "file": "server/btry-app/src/main/java/com/wherelee/edu/bootstrap/KernelDataInitializer.java",
+      "multi_tables": [
+        "t_role",
+        "t_user_role"
+      ]
     },
     "UserRepository": {
       "module": "identity",
@@ -15,7 +18,7 @@
         "READ",
         "WRITE"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/identity/user/UserRepository.java",
+      "file": "server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/user/UserRepository.java",
       "multi_tables": []
     },
     "AccountDirectoryService": {
@@ -23,7 +26,7 @@
       "ops": [
         "READ"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/identity/user/AccountDirectoryService.java",
+      "file": "server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/user/AccountDirectoryService.java",
       "multi_tables": []
     },
     "AccountQueryService": {
@@ -31,362 +34,32 @@
       "ops": [
         "READ"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/identity/user/AccountQueryService.java",
+      "file": "server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/user/AccountQueryService.java",
       "multi_tables": []
     },
-    "TeacherInvitationMapper": {
+    "UserInvitationMapper": {
       "module": "identity",
       "ops": [
         "READ"
       ],
-      "file": "server/src/main/resources/mapper/TeacherInvitationMapper.xml",
+      "file": "server/btry-identity/src/main/resources/mapper/UserInvitationMapper.xml",
       "multi_tables": [
-        "t_teacher_invitation"
+        "t_user_invitation"
       ]
     }
   },
-  "t_series": {
-    "DataInitializer": {
-      "module": "bootstrap",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/bootstrap/DataInitializer.java",
-      "multi_tables": []
-    },
-    "CatalogQueryService": {
-      "module": "course",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/course/catalog/CatalogQueryService.java",
-      "multi_tables": [
-        "t_series_chapter",
-        "t_series_video"
-      ]
-    },
-    "TeacherContentRepository": {
-      "module": "course",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/course/teacher/TeacherContentRepository.java",
-      "multi_tables": [
-        "t_series_chapter",
-        "t_series_video"
-      ]
-    },
-    "AdminSeriesMapper": {
-      "module": "course",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/resources/mapper/AdminSeriesMapper.xml",
-      "multi_tables": [
-        "t_series_chapter",
-        "t_series_video"
-      ]
-    }
-  },
-  "t_series_chapter": {
-    "DataInitializer": {
-      "module": "bootstrap",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/bootstrap/DataInitializer.java",
-      "multi_tables": []
-    },
-    "CatalogQueryService": {
-      "module": "course",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/course/catalog/CatalogQueryService.java",
-      "multi_tables": [
-        "t_series",
-        "t_series_video"
-      ]
-    },
-    "TeacherContentRepository": {
-      "module": "course",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/course/teacher/TeacherContentRepository.java",
-      "multi_tables": [
-        "t_series",
-        "t_series_video"
-      ]
-    },
-    "AdminSeriesMapper": {
-      "module": "course",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/resources/mapper/AdminSeriesMapper.xml",
-      "multi_tables": [
-        "t_series",
-        "t_series_video"
-      ]
-    }
-  },
-  "t_series_video": {
-    "DataInitializer": {
-      "module": "bootstrap",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/bootstrap/DataInitializer.java",
-      "multi_tables": []
-    },
-    "CatalogQueryService": {
-      "module": "course",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/course/catalog/CatalogQueryService.java",
-      "multi_tables": [
-        "t_series",
-        "t_series_chapter"
-      ]
-    },
-    "TeacherContentRepository": {
-      "module": "course",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/course/teacher/TeacherContentRepository.java",
-      "multi_tables": [
-        "t_series",
-        "t_series_chapter"
-      ]
-    },
-    "AdminSeriesMapper": {
-      "module": "course",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/resources/mapper/AdminSeriesMapper.xml",
-      "multi_tables": [
-        "t_series",
-        "t_series_chapter"
-      ]
-    }
-  },
-  "t_student_series": {
-    "DataInitializer": {
+  "t_user_role": {
+    "KernelDataInitializer": {
       "module": "bootstrap",
       "ops": [
         "OTHER"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/bootstrap/DataInitializer.java",
-      "multi_tables": []
+      "file": "server/btry-app/src/main/java/com/wherelee/edu/bootstrap/KernelDataInitializer.java",
+      "multi_tables": [
+        "t_role",
+        "t_user"
+      ]
     },
-    "EntitlementRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/entitlement/EntitlementRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_payment_order": {
-    "PaymentOrderRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentOrderRepository.java",
-      "multi_tables": []
-    },
-    "ReconRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/recon/ReconRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_payment_attempt": {
-    "PaymentRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java",
-      "multi_tables": []
-    },
-    "MockChannelBillProvider": {
-      "module": "commerce",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/recon/MockChannelBillProvider.java",
-      "multi_tables": []
-    }
-  },
-  "t_payment_event": {
-    "PaymentRepository": {
-      "module": "commerce",
-      "ops": [
-        "OTHER",
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_refund": {
-    "PaymentRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_order": {
-    "PaymentRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/PaymentRepository.java",
-      "multi_tables": []
-    },
-    "OrderRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/order/OrderRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_payment_outbox": {
-    "PaymentOutboxRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/outbox/PaymentOutboxRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_channel_bill": {
-    "ReconRepository": {
-      "module": "commerce",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/recon/ReconRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_recon_task": {
-    "ReconRepository": {
-      "module": "commerce",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/recon/ReconRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_recon_diff": {
-    "ReconRepository": {
-      "module": "commerce",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/commerce/payment/recon/ReconRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_alert_log": {
-    "AlertLogRepository": {
-      "module": "platform",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/platform/alert/AlertLogRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_admin_audit_log": {
-    "AdminAuditRepository": {
-      "module": "platform",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/platform/audit/AdminAuditRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_playback_log": {
-    "PlaybackStatsQueryService": {
-      "module": "learning",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/learning/playback/PlaybackStatsQueryService.java",
-      "multi_tables": []
-    },
-    "PlaybackLogRepository": {
-      "module": "learning",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/learning/playback/PlaybackLogRepository.java",
-      "multi_tables": []
-    },
-    "PlaybackLogMapper": {
-      "module": "learning",
-      "ops": [
-        "READ",
-        "WRITE"
-      ],
-      "file": "server/src/main/resources/mapper/PlaybackLogMapper.xml",
-      "multi_tables": []
-    }
-  },
-  "t_learning_progress": {
-    "ProgressQueryService": {
-      "module": "learning",
-      "ops": [
-        "READ"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/learning/learning/ProgressQueryService.java",
-      "multi_tables": []
-    },
-    "LearningProgressRepository": {
-      "module": "learning",
-      "ops": [
-        "WRITE"
-      ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/learning/learning/LearningProgressRepository.java",
-      "multi_tables": []
-    }
-  },
-  "t_user_role": {
     "RbacRepository": {
       "module": "identity",
       "ops": [
@@ -394,7 +67,7 @@
         "READ",
         "WRITE"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
+      "file": "server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
       "multi_tables": [
         "t_permission",
         "t_role",
@@ -403,14 +76,38 @@
     }
   },
   "t_role": {
+    "KernelDataInitializer": {
+      "module": "bootstrap",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/btry-app/src/main/java/com/wherelee/edu/bootstrap/KernelDataInitializer.java",
+      "multi_tables": [
+        "t_user",
+        "t_user_role"
+      ]
+    },
     "RbacRepository": {
       "module": "identity",
       "ops": [
         "READ",
         "WRITE"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
+      "file": "server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
       "multi_tables": [
+        "t_user_role"
+      ]
+    }
+  },
+  "t_permission": {
+    "RbacRepository": {
+      "module": "identity",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
+      "multi_tables": [
+        "t_role_permission",
         "t_user_role"
       ]
     }
@@ -423,34 +120,154 @@
         "READ",
         "WRITE"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
+      "file": "server/btry-identity/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
       "multi_tables": [
         "t_permission",
         "t_user_role"
       ]
     }
   },
-  "t_permission": {
-    "RbacRepository": {
-      "module": "identity",
+  "t_payment_order": {
+    "PaymentOrderRepository": {
+      "module": "payment",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/PaymentOrderRepository.java",
+      "multi_tables": []
+    },
+    "ReconRepository": {
+      "module": "payment",
       "ops": [
         "READ"
       ],
-      "file": "server/src/main/java/com/wherelee/edu/modules/identity/rbac/RbacRepository.java",
-      "multi_tables": [
-        "t_role_permission",
-        "t_user_role"
-      ]
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/recon/ReconRepository.java",
+      "multi_tables": []
     }
   },
-  "t_teacher_invitation": {
-    "TeacherInvitationMapper": {
+  "t_payment_attempt": {
+    "PaymentRepository": {
+      "module": "payment",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/PaymentRepository.java",
+      "multi_tables": []
+    },
+    "MockChannelBillProvider": {
+      "module": "payment",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/recon/MockChannelBillProvider.java",
+      "multi_tables": []
+    }
+  },
+  "t_payment_event": {
+    "PaymentRepository": {
+      "module": "payment",
+      "ops": [
+        "OTHER",
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/PaymentRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_refund": {
+    "PaymentRepository": {
+      "module": "payment",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/PaymentRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_order": {
+    "PaymentRepository": {
+      "module": "payment",
+      "ops": [
+        "READ"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/PaymentRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_payment_outbox": {
+    "PaymentOutboxRepository": {
+      "module": "payment",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/outbox/PaymentOutboxRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_channel_bill": {
+    "ReconRepository": {
+      "module": "payment",
+      "ops": [
+        "WRITE"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/recon/ReconRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_recon_task": {
+    "ReconRepository": {
+      "module": "payment",
+      "ops": [
+        "WRITE"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/recon/ReconRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_recon_diff": {
+    "ReconRepository": {
+      "module": "payment",
+      "ops": [
+        "READ",
+        "WRITE"
+      ],
+      "file": "server/btry-payment/src/main/java/com/wherelee/edu/modules/payment/recon/ReconRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_alert_log": {
+    "AlertLogRepository": {
+      "module": "platform",
+      "ops": [
+        "WRITE"
+      ],
+      "file": "server/btry-platform/src/main/java/com/wherelee/edu/modules/platform/alert/AlertLogRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_admin_audit_log": {
+    "AdminAuditRepository": {
+      "module": "platform",
+      "ops": [
+        "WRITE"
+      ],
+      "file": "server/btry-platform/src/main/java/com/wherelee/edu/modules/platform/audit/AdminAuditRepository.java",
+      "multi_tables": []
+    }
+  },
+  "t_user_invitation": {
+    "UserInvitationMapper": {
       "module": "identity",
       "ops": [
         "READ",
         "WRITE"
       ],
-      "file": "server/src/main/resources/mapper/TeacherInvitationMapper.xml",
+      "file": "server/btry-identity/src/main/resources/mapper/UserInvitationMapper.xml",
       "multi_tables": [
         "t_user"
       ]

@@ -10,7 +10,7 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
 
     private static final Set<String> WEAK_PASSWORDS = Set.of(
             "12345678", "123456789", "password", "password1", "admin123",
-            "qwerty123", "abc12345", "11111111", "student123", "teacher123"
+            "qwerty123", "abc12345", "11111111", "user12345", "admin1234"
     );
 
     @Override

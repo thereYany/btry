@@ -10,7 +10,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>btry-app</artifactId>
-    <name>btry-app（业务应用与启动）</name>
+    <name>btry-app（内核演示宿主与启动）</name>
     <dependencies>
         <dependency>
             <groupId>com.wherelee</groupId>
@@ -20,6 +20,16 @@
         <dependency>
             <groupId>com.wherelee</groupId>
             <artifactId>btry-contracts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.wherelee</groupId>
+            <artifactId>btry-identity</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.wherelee</groupId>
+            <artifactId>btry-payment</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

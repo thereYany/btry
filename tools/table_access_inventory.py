@@ -27,9 +27,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MIGRATION_DIR = ROOT / "server/btry-app/src/main/resources/db/migration"
+# 内核模块各自携带自己的迁移与 Mapper；垂直应用在独立仓库里另有自己的扫描。
+MIGRATION_DIRS = sorted((ROOT / "server").glob("*/src/main/resources/db/migration"))
 JAVA_DIRS = sorted((ROOT / "server").glob("*/src/main/java"))
-MAPPER_DIR = ROOT / "server/btry-app/src/main/resources/mapper"
+MAPPER_DIRS = sorted((ROOT / "server").glob("*/src/main/resources/mapper"))
 
 TABLE_RE = re.compile(r"\bt_[a-z_]+[a-z]\b")
 CREATE_RE = re.compile(r"create\s+table\s+`?(t_[a-z_]+)`?", re.IGNORECASE)
@@ -38,13 +39,14 @@ MODULE_RE = re.compile(r"com\.wherelee\.edu\.modules\.([a-z]+)")
 # 表 → 目标分库（对应 docs/数据所有权与分库边界.md §3）。
 # A 期的"跨库 join=0"= 同一条 SQL 引用了两个以上库的表。
 TABLE_DB = {
+    # identity 内核
     "t_user": "identity",
-    "t_teacher_invitation": "identity",
+    "t_user_invitation": "identity",
     "t_role": "identity",
     "t_permission": "identity",
     "t_role_permission": "identity",
     "t_user_role": "identity",
-    "t_order": "order",
+    # payment 内核
     "t_payment_order": "payment",
     "t_payment_attempt": "payment",
     "t_payment_event": "payment",
@@ -53,14 +55,9 @@ TABLE_DB = {
     "t_recon_task": "payment",
     "t_recon_diff": "payment",
     "t_channel_bill": "payment",
-    "t_series": "catalog",
-    "t_series_chapter": "catalog",
-    "t_series_video": "catalog",
-    "t_student_series": "learning",
-    "t_learning_progress": "learning",
-    "t_playback_log": "learning",
-    "t_alert_log": "ops",
-    "t_admin_audit_log": "ops",
+    # platform 内核（运维事实）
+    "t_alert_log": "platform",
+    "t_admin_audit_log": "platform",
 }
 
 
@@ -104,7 +101,7 @@ class Access:
 def table_catalog() -> dict[str, dict]:
     """从迁移脚本提取表清单与首次出现的迁移文件。"""
     catalog: dict[str, dict] = {}
-    for path in sorted(MIGRATION_DIR.glob("*.sql")):
+    for path in sorted(p for d in MIGRATION_DIRS for p in d.rglob("*.sql")):
         text = path.read_text(encoding="utf-8", errors="ignore")
         for name in CREATE_RE.findall(text):
             catalog.setdefault(name.lower(), {"ddl": path.name, "alters": []})
@@ -210,9 +207,7 @@ def scan_java() -> dict[str, dict[str, Access]]:
 
 def scan_mappers() -> dict[str, dict[str, Access]]:
     index: dict[str, dict[str, Access]] = defaultdict(dict)
-    if not MAPPER_DIR.exists():
-        return index
-    for path in MAPPER_DIR.rglob("*.xml"):
+    for path in sorted(p for d in MAPPER_DIRS for p in d.rglob("*.xml")):
         text = path.read_text(encoding="utf-8", errors="ignore")
         ns = XML_NAMESPACE_RE.search(text)
         module = (
@@ -262,23 +257,21 @@ def propose_owner(table: str, modules: dict[str, Access]) -> str:
     """按表名前缀 + 访问模块数给出归属建议。"""
     fixed = {
         "t_user": "identity",
-        "t_teacher_invitation": "identity",
+        "t_user_invitation": "identity",
         "t_role": "identity",
         "t_permission": "identity",
         "t_role_permission": "identity",
         "t_user_role": "identity",
-        "t_admin_audit_log": "operations/audit",
-        "t_alert_log": "operations/alert",
-        "t_order": "commerce/order",
-        "t_payment_attempt": "commerce/payment",
-        "t_payment_event": "commerce/payment",
-        "t_refund": "commerce/payment",
-        "t_student_series": "commerce/entitlement",
-        "t_series": "course/catalog",
-        "t_series_chapter": "course/catalog",
-        "t_series_video": "course/catalog",
-        "t_learning_progress": "learning/progress",
-        "t_playback_log": "learning/playback",
+        "t_payment_order": "payment",
+        "t_payment_attempt": "payment",
+        "t_payment_event": "payment",
+        "t_refund": "payment",
+        "t_payment_outbox": "payment",
+        "t_recon_task": "payment",
+        "t_recon_diff": "payment",
+        "t_channel_bill": "payment",
+        "t_admin_audit_log": "platform/audit",
+        "t_alert_log": "platform/alert",
     }
     if table in fixed:
         return fixed[table]

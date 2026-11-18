@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.wherelee</groupId>
+        <artifactId>btry-parent</artifactId>
+        <version>0.1.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>btry-identity</artifactId>
+    <name>btry-identity（通用身份与访问）</name>
+    <description>登录、账号、JWT、RBAC 与用户邀请；不含任何业务角色语义</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.wherelee</groupId>
+            <artifactId>btry-platform</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.wherelee</groupId>
+            <artifactId>btry-contracts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

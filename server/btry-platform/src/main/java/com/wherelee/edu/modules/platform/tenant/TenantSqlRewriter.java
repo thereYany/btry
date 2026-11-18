@@ -1,5 +1,6 @@
 package com.wherelee.edu.modules.platform.tenant;
 
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -13,11 +14,15 @@ import java.util.regex.Pattern;
  */
 public final class TenantSqlRewriter {
 
-    private static final Set<String> TENANT_TABLES = Set.of(
-            "t_user", "t_teacher_invitation", "t_series", "t_series_chapter", "t_series_video",
-            "t_student_series", "t_learning_progress", "t_playback_log",
-            "t_order", "t_payment_attempt", "t_payment_event", "t_refund",
-            "t_alert_log", "t_admin_audit_log", "t_payment_outbox", "t_payment_order");
+    /** 内核表：身份、支付、告警、审计。垂直表由应用通过 app.tenant.extra-tables 追加。 */
+    private static final Set<String> KERNEL_TABLES = Set.of(
+            "t_user", "t_user_invitation",
+            "t_role", "t_permission", "t_role_permission", "t_user_role",
+            "t_payment_order", "t_payment_attempt", "t_payment_event", "t_refund",
+            "t_payment_outbox",
+            "t_alert_log", "t_admin_audit_log");
+
+    private final Set<String> tenantTables;
 
     private static final Pattern INSERT = Pattern.compile("\\binsert\\s+into\\s+(t_[a-z_]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern UPDATE = Pattern.compile("\\bupdate\\s+(t_[a-z_]+)", Pattern.CASE_INSENSITIVE);
@@ -26,7 +31,24 @@ public final class TenantSqlRewriter {
     private static final Pattern TAIL = Pattern.compile(
             "\\b(order\\s+by|group\\s+by|limit|for\\s+update)\\b", Pattern.CASE_INSENSITIVE);
 
-    private TenantSqlRewriter() {
+    /**
+     * @param extraTables 垂直应用追加的租户表；null 表示只用内核表
+     */
+    public TenantSqlRewriter(Iterable<String> extraTables) {
+        Set<String> tables = new LinkedHashSet<>(KERNEL_TABLES);
+        if (extraTables != null) {
+            for (String table : extraTables) {
+                if (table != null && !table.isBlank()) {
+                    tables.add(table.trim().toLowerCase(Locale.ROOT));
+                }
+            }
+        }
+        this.tenantTables = Set.copyOf(tables);
+    }
+
+    /** 仅供启动期诊断与测试：当前生效的租户表集合。 */
+    public Set<String> tenantTables() {
+        return tenantTables;
     }
 
     /** 重写结果：新 SQL + 租户占位符应插入到参数数组的哪个下标。 */
@@ -37,7 +59,7 @@ public final class TenantSqlRewriter {
     }
 
     /** 返回注入租户条件后的结果；changed()=false 表示不需要处理。无法安全处理时抛异常。 */
-    public static RewriteResult rewrite(String sql) {
+    public RewriteResult rewrite(String sql) {
         if (sql == null || sql.isBlank()) {
             return new RewriteResult(sql, -1);
         }
@@ -46,7 +68,7 @@ public final class TenantSqlRewriter {
             return new RewriteResult(sql, -1);
         }
         Matcher insert = INSERT.matcher(sql);
-        if (insert.find() && TENANT_TABLES.contains(insert.group(1).toLowerCase(Locale.ROOT))) {
+        if (insert.find() && tenantTables.contains(insert.group(1).toLowerCase(Locale.ROOT))) {
             return new RewriteResult(injectInsert(sql), countMarks(sql));
         }
         Matcher update = UPDATE.matcher(sql);
@@ -60,14 +82,14 @@ public final class TenantSqlRewriter {
         } else if (from.find()) {
             table = from.group(1);
         }
-        if (table == null || !TENANT_TABLES.contains(table.toLowerCase(Locale.ROOT))) {
+        if (table == null || !tenantTables.contains(table.toLowerCase(Locale.ROOT))) {
             return new RewriteResult(sql, -1);
         }
         rejectUnsafe(sql);
         return injectPredicate(sql);
     }
 
-    private static int countMarks(String sql) {
+    private int countMarks(String sql) {
         int count = 0;
         for (int i = 0; i < sql.length(); i++) {
             if (sql.charAt(i) == '?') {
@@ -77,7 +99,7 @@ public final class TenantSqlRewriter {
         return count;
     }
 
-    private static void rejectUnsafe(String sql) {
+    private void rejectUnsafe(String sql) {
         String lower = sql.toLowerCase(Locale.ROOT);
         if (Pattern.compile("\\bjoin\\b", Pattern.CASE_INSENSITIVE).matcher(sql).find()
                 || Pattern.compile("\\(\\s*select\\b", Pattern.CASE_INSENSITIVE).matcher(sql).find()
@@ -87,7 +109,7 @@ public final class TenantSqlRewriter {
         }
     }
 
-    private static String injectInsert(String sql) {
+    private String injectInsert(String sql) {
         Matcher valuesMatcher = Pattern.compile("\\bvalues\\s*\\(", Pattern.CASE_INSENSITIVE).matcher(sql);
         int valuesIdx = valuesMatcher.find() ? valuesMatcher.start() : -1;
         if (valuesIdx < 0) {
@@ -108,7 +130,7 @@ public final class TenantSqlRewriter {
                 + ", ?" + sql.substring(valueEnd);
     }
 
-    private static int matchingParen(String sql, int openIdx) {
+    private int matchingParen(String sql, int openIdx) {
         if (openIdx < 0) {
             return -1;
         }
@@ -127,7 +149,7 @@ public final class TenantSqlRewriter {
         return -1;
     }
 
-    private static RewriteResult injectPredicate(String sql) {
+    private RewriteResult injectPredicate(String sql) {
         Matcher tail = TAIL.matcher(sql);
         int insertAt = tail.find() ? tail.start() : sql.length();
         boolean hasWhere = Pattern.compile("\\bwhere\\b", Pattern.CASE_INSENSITIVE)

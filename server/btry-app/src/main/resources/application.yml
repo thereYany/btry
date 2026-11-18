@@ -4,9 +4,9 @@ server:
 
 spring:
   application:
-    name: btry-learning-space
+    name: btry-base
   datasource:
-    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/btry_edu?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/btry_core?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:root}
     hikari:
@@ -23,7 +23,8 @@ spring:
       timeout: 2s
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    # 内核表由各内核模块 jar 自带迁移；垂直应用在此基础上追加自己的 location
+    locations: classpath:db/migration/platform,classpath:db/migration/identity,classpath:db/migration/payment
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
@@ -35,6 +36,8 @@ app:
     # 生产必须 true：SQL 未带 tenant_id 条件时直接拒绝，避免"忘了加"的越权
     enforce: ${TENANT_ENFORCE:true}
     default-tenant-id: 0
+    # 垂直应用通过 extra-tables 追加自己的租户表；内核表已内置
+    extra-tables: []
   security:
     cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://127.0.0.1:5175,http://localhost:5175}
     trust-forwarded-headers: ${TRUST_FORWARDED_HEADERS:false}
@@ -43,52 +46,37 @@ app:
     login-ip-max-attempts: ${LOGIN_IP_MAX_ATTEMPTS:40}
     login-window-minutes: ${LOGIN_WINDOW_MINUTES:10}
   jwt:
-    secret: ${JWT_SECRET:etry-btry-demo-jwt-secret-change-before-production-2026}
-    ttl-minutes: ${JWT_TTL_MINUTES:10080}
+    secret: ${JWT_SECRET:btry-demo-jwt-secret-change-before-production-2026}
+    ttl-minutes: ${JWT_TTL_MINUTES:480}
     issuer: ${JWT_ISSUER:btry}
     audience: ${JWT_AUDIENCE:btry-web}
-  cos:
-    bucket: ${COS_BUCKET:rag-1325750042}
-    region: ${COS_REGION:ap-shanghai}
-    url-ttl-minutes: ${COS_URL_TTL_MINUTES:240}
-    connect-timeout-ms: ${COS_CONNECT_TIMEOUT_MS:3000}
-    read-timeout-ms: ${COS_READ_TIMEOUT_MS:15000}
-    max-retries: ${COS_MAX_RETRIES:2}
-  playback:
-    url-cache-margin-minutes: ${PLAYBACK_URL_CACHE_MARGIN_MINUTES:30}
-    log-retention-days: ${PLAYBACK_LOG_RETENTION_DAYS:30}
-  demo:
-    video-key: ${SAMPLE_VIDEO_KEY:edu/video/91/demo-real-181s-faststart-cache.mp4}
-    video-duration-seconds: ${SAMPLE_VIDEO_DURATION_SECONDS:181}
+  storage:
+    # 通用基座默认不假设接对象存储；需要媒体能力的垂直应用打开并配置 bucket/region/凭据
+    enabled: ${STORAGE_ENABLED:false}
+    bucket: ${COS_BUCKET:}
+    region: ${COS_REGION:}
+    url-ttl-minutes: ${STORAGE_URL_TTL_MINUTES:240}
+    connect-timeout-ms: ${STORAGE_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${STORAGE_READ_TIMEOUT_MS:15000}
+    max-retries: ${STORAGE_MAX_RETRIES:2}
+    url-cache-margin-minutes: ${STORAGE_URL_CACHE_MARGIN_MINUTES:30}
+  invitation:
+    base-url: ${APP_BASE_URL:http://127.0.0.1:5175}
+    expiry-hours: ${INVITE_EXPIRY_HOURS:72}
+    max-attempts: ${INVITE_MAX_ATTEMPTS:20}
+    window-minutes: ${INVITE_WINDOW_MINUTES:10}
   alert:
     enabled: ${ALERT_ENABLED:true}
     webhook-url: ${ALERT_WEBHOOK_URL:}
-    window-minutes: ${ALERT_WINDOW_MINUTES:10}
-    error-threshold: ${ALERT_ERROR_THRESHOLD:5}
-    stall-threshold: ${ALERT_STALL_THRESHOLD:10}
-    cache-miss-rate-threshold: ${ALERT_CACHE_MISS_RATE_THRESHOLD:0.8}
-    min-cache-requests: ${ALERT_MIN_CACHE_REQUESTS:20}
     dedup-minutes: ${ALERT_DEDUP_MINUTES:30}
     evaluate-interval-ms: ${ALERT_EVALUATE_INTERVAL_MS:300000}
     initial-delay-ms: ${ALERT_INITIAL_DELAY_MS:60000}
     payment-paid-unfulfilled-minutes: ${ALERT_PAYMENT_PAID_UNFULFILLED_MINUTES:1}
     payment-paying-stuck-minutes: ${ALERT_PAYMENT_PAYING_STUCK_MINUTES:15}
     payment-refund-retry-exhausted-threshold: ${ALERT_PAYMENT_REFUND_RETRY_EXHAUSTED_THRESHOLD:1}
-  teacher-invitation:
-    base-url: ${APP_BASE_URL:http://127.0.0.1:5175}
-    expiry-hours: ${TEACHER_INVITE_EXPIRY_HOURS:72}
-    max-attempts: ${TEACHER_INVITE_MAX_ATTEMPTS:20}
-    window-minutes: ${TEACHER_INVITE_WINDOW_MINUTES:10}
-  upload:
-    max-size-bytes: ${UPLOAD_MAX_SIZE_BYTES:4294967296}
-    url-ttl-minutes: ${UPLOAD_URL_TTL_MINUTES:60}
-    allowed-content-types: ${UPLOAD_ALLOWED_CONTENT_TYPES:video/mp4,video/webm}
   seed:
-    # 首次启动创建演示账号的初始密码。留空则随机生成并在启动日志打印一次，
-    # 三个账号都强制首次改密。不要把固定口令写进仓库。
+    # 留空则首次启动随机生成并打印一次；账号已存在时不会重置密码
     admin-password: ${SEED_ADMIN_PASSWORD:}
-    teacher-password: ${SEED_TEACHER_PASSWORD:}
-    student-password: ${SEED_STUDENT_PASSWORD:}
   payment:
     provider: ${PAYMENT_PROVIDER:mock}
     mock-enabled: ${PAYMENT_MOCK_ENABLED:true}
@@ -141,7 +129,7 @@ management:
           include: livenessState,ping
   metrics:
     tags:
-      application: btry-learning-space
+      application: btry-base
     distribution:
       percentiles-histogram:
         http.server.requests: true
@@ -157,17 +145,6 @@ resilience4j:
         waitDurationInOpenState: 10s
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
-      playbackLogDb:
-        slidingWindowSize: 20
-        failureRateThreshold: 50
-        waitDurationInOpenState: 10s
-        permittedNumberOfCallsInHalfOpenState: 3
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-  retry:
-    instances:
-      playbackLogDb:
-        maxAttempts: 2
-        waitDuration: 100ms
 
 logging:
   file:

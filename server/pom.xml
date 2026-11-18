@@ -15,12 +15,14 @@
     <artifactId>btry-parent</artifactId>
     <version>0.1.0</version>
     <packaging>pom</packaging>
-    <name>btry-learning-space</name>
-    <description>Internal recorded-course learning space（多模块父工程）</description>
+    <name>btry-base</name>
+    <description>通用业务基座（多模块父工程）：platform / contracts / identity / payment</description>
 
     <modules>
         <module>btry-platform</module>
         <module>btry-contracts</module>
+        <module>btry-identity</module>
+        <module>btry-payment</module>
         <module>btry-app</module>
     </modules>
 
@@ -131,16 +133,6 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>${jjwt.version}</version>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.qcloud</groupId>
-            <artifactId>cos_api</artifactId>
-            <version>${cos.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.alipay.sdk</groupId>
-            <artifactId>alipay-sdk-java</artifactId>
-            <version>${alipay.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

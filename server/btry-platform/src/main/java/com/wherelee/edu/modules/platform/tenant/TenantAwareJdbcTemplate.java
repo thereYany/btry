@@ -17,17 +17,19 @@ import java.util.List;
 public class TenantAwareJdbcTemplate extends JdbcTemplate {
 
     private final boolean enforce;
+    private final TenantSqlRewriter rewriter;
 
-    public TenantAwareJdbcTemplate(DataSource dataSource, boolean enforce) {
+    public TenantAwareJdbcTemplate(DataSource dataSource, boolean enforce, TenantSqlRewriter rewriter) {
         super(dataSource);
         this.enforce = enforce;
+        this.rewriter = rewriter;
     }
 
     private TenantSqlRewriter.RewriteResult prepare(String sql) {
         if (!enforce) {
             return new TenantSqlRewriter.RewriteResult(sql, -1);
         }
-        return TenantSqlRewriter.rewrite(sql);
+        return rewriter.rewrite(sql);
     }
 
     private Object[] argsWithTenant(TenantSqlRewriter.RewriteResult result, Object[] args) {

@@ -14,6 +14,8 @@ spring:
       password: ${REDIS_PASSWORD}
 
 app:
+  tenant:
+    enforce: true
   security:
     cors-allowed-origins: ${CORS_ALLOWED_ORIGINS}
     trust-forwarded-headers: ${TRUST_FORWARDED_HEADERS:false}
@@ -24,27 +26,24 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     ttl-minutes: ${JWT_TTL_MINUTES:480}
-  cos:
-    bucket: ${COS_BUCKET}
-    region: ${COS_REGION}
-  demo:
-    video-key: ${SAMPLE_VIDEO_KEY}
+  storage:
+    enabled: ${STORAGE_ENABLED:false}
+    bucket: ${COS_BUCKET:}
+    region: ${COS_REGION:}
+    url-ttl-minutes: ${STORAGE_URL_TTL_MINUTES:240}
+    connect-timeout-ms: ${STORAGE_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${STORAGE_READ_TIMEOUT_MS:15000}
+    max-retries: ${STORAGE_MAX_RETRIES:2}
+    url-cache-margin-minutes: ${STORAGE_URL_CACHE_MARGIN_MINUTES:30}
+  invitation:
+    base-url: ${APP_BASE_URL}
+    expiry-hours: ${INVITE_EXPIRY_HOURS:72}
+    max-attempts: ${INVITE_MAX_ATTEMPTS:20}
+    window-minutes: ${INVITE_WINDOW_MINUTES:10}
   alert:
     webhook-url: ${ALERT_WEBHOOK_URL:}
-  teacher-invitation:
-    base-url: ${APP_BASE_URL}
-    expiry-hours: ${TEACHER_INVITE_EXPIRY_HOURS:72}
-    max-attempts: ${TEACHER_INVITE_MAX_ATTEMPTS:20}
-    window-minutes: ${TEACHER_INVITE_WINDOW_MINUTES:10}
-  upload:
-    max-size-bytes: ${UPLOAD_MAX_SIZE_BYTES:4294967296}
-    url-ttl-minutes: ${UPLOAD_URL_TTL_MINUTES:60}
-    allowed-content-types: ${UPLOAD_ALLOWED_CONTENT_TYPES:video/mp4,video/webm}
   seed:
-    # 留空则首次启动随机生成并打印一次；账号已存在时不会重置密码
     admin-password: ${SEED_ADMIN_PASSWORD:}
-    teacher-password: ${SEED_TEACHER_PASSWORD:}
-    student-password: ${SEED_STUDENT_PASSWORD:}
   payment:
     provider: ${PAYMENT_PROVIDER:mock}
     mock-enabled: ${PAYMENT_MOCK_ENABLED:false}
@@ -57,13 +56,13 @@ app:
     refund-max-attempts: ${PAYMENT_REFUND_MAX_ATTEMPTS:5}
     refund-retry-base-seconds: ${PAYMENT_REFUND_RETRY_BASE_SECONDS:30}
     alipay:
-      app-id: ${ALIPAY_APP_ID}
-      private-key: ${ALIPAY_PRIVATE_KEY}
-      alipay-public-key: ${ALIPAY_PUBLIC_KEY}
+      app-id: ${ALIPAY_APP_ID:}
+      private-key: ${ALIPAY_PRIVATE_KEY:}
+      alipay-public-key: ${ALIPAY_PUBLIC_KEY:}
       seller-id: ${ALIPAY_SELLER_ID:}
-      gateway-url: ${ALIPAY_GATEWAY_URL}
-      notify-url: ${ALIPAY_NOTIFY_URL}
-      return-url: ${ALIPAY_RETURN_URL}
+      gateway-url: ${ALIPAY_GATEWAY_URL:https://openapi.alipay.com/gateway.do}
+      notify-url: ${ALIPAY_NOTIFY_URL:}
+      return-url: ${ALIPAY_RETURN_URL:}
       charset: ${ALIPAY_CHARSET:UTF-8}
       sign-type: ${ALIPAY_SIGN_TYPE:RSA2}
       format: ${ALIPAY_FORMAT:json}

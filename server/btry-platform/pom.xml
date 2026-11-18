@@ -10,5 +10,14 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>btry-platform</artifactId>
-    <name>btry-platform（共享内核）</name>
+    <name>btry-platform（共享内核 + starter）</name>
+    <description>通用异常/审计/告警/租户/限流/幂等/对象存储与签名 URL 缓存</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.qcloud</groupId>
+            <artifactId>cos_api</artifactId>
+            <version>${cos.version}</version>
+        </dependency>
+    </dependencies>
 </project>
