@@ -6,7 +6,7 @@ import java.util.Optional;
 /**
  * 与业务无关的支付能力契约。
  *
- * <p>任何垂直域（课程订单、资料包、会员……）都可以用 bizType + bizNo 发起支付，
+ * <p>任何垂直域（订单、资料包、会员……）都可以用 bizType + bizNo 发起支付，
  * 支付单/尝试/回调/查单/发件箱全部由支付域负责；业务侧只需要监听
  * {@code PaymentSettledListener} 完成自己的履约。</p>
  */
@@ -21,7 +21,7 @@ public interface PaymentOperations {
     Optional<PaymentView> findByBiz(String bizType, String bizNo);
 
     /**
-     * @param paymentNo 可空；业务方一般不需要指定，课程订单为了兼容历史单号会传入
+     * @param paymentNo 可空；业务方一般不需要指定，历史迁移单为兼容旧单号会传入
      */
     record InitiateCommand(
             String paymentNo,

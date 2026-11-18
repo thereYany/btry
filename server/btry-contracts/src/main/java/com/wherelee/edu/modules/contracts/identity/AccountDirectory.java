@@ -18,7 +18,7 @@ public interface AccountDirectory {
     String nickname(Long id);
 
     /**
-     * 按用户名/昵称模糊搜索账号 id（管理端按教师名搜索课程时用）。
+     * 按用户名/昵称模糊搜索账号 id（管理端按昵称搜索账号时用）。
      * 只返回 id，昵称等展示信息仍然由调用方批量取。
      */
     List<Long> searchIds(String keyword, int limit);

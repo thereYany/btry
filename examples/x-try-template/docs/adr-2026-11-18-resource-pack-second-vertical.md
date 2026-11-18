@@ -15,7 +15,7 @@ P4 完成后 btry 已具备 contracts 模块、Maven 多模块（platform/contra
 用最小真实垂直域「资料包」验证：
 
 1. 契约先行：在 `contracts.commerce` 增加与业务无关的 `PaymentOperations`（按 `bizType/bizNo` 幂等发起、查询）；
-2. 支付域实现 `PaymentFacade`，课程订单也改走该入口（传固定 paymentNo 兼容历史单号）；
+2. 支付域实现 `PaymentFacade`，历史业务单也改走该入口（传固定 paymentNo 兼容历史单号）；
 3. 模板仓新增资料包表/接口/事件监听器，支付成功事件由模板自己的 `PaymentSettledListener` 消费并发放权益；
 4. 用集成测试跑通全链路，并量化接入成本。
 

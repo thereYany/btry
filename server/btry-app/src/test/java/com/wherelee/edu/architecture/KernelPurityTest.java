@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 内核纯洁性门禁：btry 的代码/迁移/配置里不允许出现任何垂直业务词汇。
  *
- * <p>这是「网课业务彻底拆出通用基座」的可执行证据——不靠 code review 记忆，
+ * <p>这是「垂直业务彻底拆出通用基座」的可执行证据——不靠 code review 记忆，
  * 而是每次构建都扫一遍 server 下所有模块源码。历史文档（docs/）不受此限制。</p>
  */
 class KernelPurityTest {
