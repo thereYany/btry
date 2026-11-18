@@ -2,8 +2,8 @@
 """盯 GitHub Actions：只读公开仓库的 runs/jobs，不需要任何密钥。
 
 用法：
-  python3 tools/ci_watch.py --repo WhereLee/etry --sha $(git rev-parse HEAD)
-  python3 tools/ci_watch.py --repo WhereLee/etry --branch main --watch --interval 20
+  python3 tools/ci_watch.py --repo thereYany/btry --sha $(git rev-parse HEAD)
+  python3 tools/ci_watch.py --repo thereYany/btry --branch main --watch --interval 20
 
 说明：
 - 未认证可读 runs 与 jobs（60 次/小时限流）；仓库私有或要拉失败日志时才需要 token

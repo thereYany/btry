@@ -20,7 +20,7 @@ if (-not (Test-Path -LiteralPath $BackupFile)) {
     throw "Backup file not found: $BackupFile"
 }
 
-if (-not $Database) { $Database = if ($env:DB_NAME) { $env:DB_NAME } else { 'btry_edu' } }
+if (-not $Database) { $Database = if ($env:DB_NAME) { $env:DB_NAME } else { 'btry_core' } }
 if (-not $DbHost) { $DbHost = if ($env:DB_HOST) { $env:DB_HOST } else { '127.0.0.1' } }
 if (-not $User) { $User = if ($env:DB_USER) { $env:DB_USER } else { 'root' } }
 if (-not $Password) { $Password = if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { 'root' } }
