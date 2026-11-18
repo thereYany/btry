@@ -6,7 +6,7 @@
 
 - 本地运行：`tools\start-local.ps1`
 - 生产演示：`https://whereri.site/learn/`
-- CI：见 [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+- CI：[![ci](https://github.com/thereYany/btry/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thereYany/btry/actions/workflows/ci.yml)（工作流定义：[`.github/workflows/ci.yml`](.github/workflows/ci.yml)）
 - 验证、压测和运维记录：见 [验证与运维](docs/验证与运维.md)
 
 ## 功能
