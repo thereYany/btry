@@ -2,7 +2,7 @@ package com.wherelee.edu.modules.commerce.integration;
 
 import com.wherelee.edu.modules.commerce.order.CatalogItem;
 import com.wherelee.edu.modules.commerce.order.CatalogRepository;
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
+import com.wherelee.edu.modules.contracts.commerce.OrderDtos;
 import com.wherelee.edu.modules.commerce.order.OrderService;
 import com.wherelee.edu.modules.commerce.order.SaleSeries;
 import org.junit.jupiter.api.DisplayName;

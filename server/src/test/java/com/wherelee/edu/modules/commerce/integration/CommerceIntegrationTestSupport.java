@@ -2,7 +2,7 @@ package com.wherelee.edu.modules.commerce.integration;
 
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
 import com.wherelee.edu.modules.commerce.order.OrderRepository;
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
+import com.wherelee.edu.modules.contracts.commerce.OrderDtos;
 import com.wherelee.edu.modules.commerce.order.OrderFulfillmentService;
 import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
 import com.wherelee.edu.modules.commerce.payment.PaymentNotification;

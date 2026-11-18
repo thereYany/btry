@@ -3,7 +3,7 @@ package com.wherelee.edu.modules.commerce.payment.recon;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
-import com.wherelee.edu.modules.commerce.api.AdminReconciliationOperations;
+import com.wherelee.edu.modules.contracts.commerce.AdminReconciliationOperations;
 import com.wherelee.edu.modules.commerce.payment.recon.ReconRepository.LocalPayment;
 import com.wherelee.edu.modules.commerce.payment.recon.ReconRepository.ReconDiffView;
 import lombok.extern.slf4j.Slf4j;

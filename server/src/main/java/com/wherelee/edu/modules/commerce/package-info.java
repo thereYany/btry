@@ -3,6 +3,6 @@
  *
  * <p>依赖方向：commerce -> platform。资金状态以数据库约束和支付事件为准。</p>
  */
-@org.springframework.modulith.ApplicationModule(displayName = "Commerce", allowedDependencies = {"platform", "course"})
+@org.springframework.modulith.ApplicationModule(displayName = "Commerce", allowedDependencies = {"platform", "contracts"})
 
 package com.wherelee.edu.modules.commerce;

@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.learning.learning;
 
-import com.wherelee.edu.modules.learning.api.ProgressQuery;
+import com.wherelee.edu.modules.contracts.learning.ProgressQuery;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 

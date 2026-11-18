@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.learning.playback;
 
-import com.wherelee.edu.modules.learning.api.PlaybackUrlProvider;
+import com.wherelee.edu.modules.contracts.learning.PlaybackUrlProvider;
 import com.wherelee.edu.modules.platform.storage.PlaybackUrlCache;
 import com.wherelee.edu.modules.platform.tracing.TraceSpans;
 import org.springframework.stereotype.Service;

@@ -2,8 +2,8 @@ package com.wherelee.edu.modules.commerce.integration;
 
 import com.wherelee.edu.modules.commerce.order.OrderRecord;
 import com.wherelee.edu.modules.commerce.order.OrderStatus;
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
-import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
+import com.wherelee.edu.modules.contracts.commerce.OrderDtos;
+import com.wherelee.edu.modules.contracts.commerce.PaymentDtos;
 import com.wherelee.edu.modules.commerce.payment.RefundRecord;
 import org.junit.jupiter.api.Test;
 

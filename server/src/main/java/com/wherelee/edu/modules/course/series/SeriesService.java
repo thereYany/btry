@@ -3,9 +3,9 @@ package com.wherelee.edu.modules.course.series;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.PlaybackAudit;
 import com.wherelee.edu.modules.platform.common.BizException;
-import com.wherelee.edu.modules.learning.api.PlaybackEventPublisher;
+import com.wherelee.edu.modules.contracts.learning.PlaybackEventPublisher;
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
-import com.wherelee.edu.modules.learning.api.PlaybackUrlProvider;
+import com.wherelee.edu.modules.contracts.learning.PlaybackUrlProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

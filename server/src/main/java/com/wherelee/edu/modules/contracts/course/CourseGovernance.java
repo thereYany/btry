@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.course.api;
+package com.wherelee.edu.modules.contracts.course;
 
 import com.wherelee.edu.modules.platform.common.PageResult;
 

@@ -49,8 +49,8 @@ class ModuleBoundaryTest {
                                     "..modules.identity..", "..modules.operations..")
                                     .or(JavaClass.Predicates.resideInAnyPackage(
                                                     "..modules.course..", "..modules.commerce..")
-                                            .and(JavaClass.Predicates.resideOutsideOfPackage("..modules.course.api.."))
-                                            .and(JavaClass.Predicates.resideOutsideOfPackage("..modules.commerce.api.."))));
+                                            .and(JavaClass.Predicates.resideOutsideOfPackage("..modules.contracts.."))
+                                            .and(JavaClass.Predicates.resideOutsideOfPackage("..modules.contracts.."))));
 
     @ArchTest
     static final ArchRule commerce_should_not_depend_on_operations =

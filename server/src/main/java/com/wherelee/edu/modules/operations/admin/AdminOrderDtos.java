@@ -1,7 +1,7 @@
 package com.wherelee.edu.modules.operations.admin;
 
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
-import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
+import com.wherelee.edu.modules.contracts.commerce.OrderDtos;
+import com.wherelee.edu.modules.contracts.commerce.PaymentDtos;
 
 import java.util.List;
 

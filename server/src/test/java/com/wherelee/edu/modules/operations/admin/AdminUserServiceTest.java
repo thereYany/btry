@@ -1,13 +1,13 @@
 package com.wherelee.edu.modules.operations.admin;
 
-import com.wherelee.edu.modules.commerce.api.EntitlementAdmin;
-import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery.SeriesOption;
-import com.wherelee.edu.modules.identity.api.AccountQuery;
-import com.wherelee.edu.modules.identity.api.AccountQuery.AccountProfile;
-import com.wherelee.edu.modules.identity.api.UserAccount;
-import com.wherelee.edu.modules.identity.api.UserAccountOperations;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementAdmin;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery.SeriesOption;
+import com.wherelee.edu.modules.contracts.identity.AccountQuery;
+import com.wherelee.edu.modules.contracts.identity.AccountQuery.AccountProfile;
+import com.wherelee.edu.modules.contracts.identity.UserAccount;
+import com.wherelee.edu.modules.contracts.identity.UserAccountOperations;
 import com.wherelee.edu.modules.operations.admin.dto.AdminUserVO;
 import com.wherelee.edu.modules.operations.admin.dto.AssignSeriesRequest;
 import com.wherelee.edu.modules.operations.admin.dto.CreateUserRequest;

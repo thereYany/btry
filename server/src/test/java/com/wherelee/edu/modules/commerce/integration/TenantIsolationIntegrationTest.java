@@ -46,7 +46,7 @@ class TenantIsolationIntegrationTest extends CommerceIntegrationTestSupport {
         TenantContext.set(1L);
         Long tenant1Series = insertTenantSeries(1L, "租户1的课程");
         String tenant1Order = orderService.create(fx.studentId(),
-                new com.wherelee.edu.modules.commerce.order.dto.OrderDtos.CreateOrderRequest(
+                new com.wherelee.edu.modules.contracts.commerce.OrderDtos.CreateOrderRequest(
                         tenant1Series, nextRequestId())).orderNo();
 
         assertThat(orderRepository.findByOrderNo(tenant0Order)).isEmpty();

@@ -17,13 +17,16 @@ top to bottom direction
 
 System_Boundary("Modules_boundary", "Modules", $tags="") {
   Container_Boundary("Modules.Modules_boundary", "Modules", $tags="") {
-    Component(Modules.Modules.Identity, "Identity", $techn="Module", $descr="", $tags="", $link="")
     Component(Modules.Modules.Platform, "Platform", $techn="Module", $descr="", $tags="", $link="")
+    Component(Modules.Modules.Contracts, "Contracts", $techn="Module", $descr="", $tags="", $link="")
+    Component(Modules.Modules.Identity, "Identity", $techn="Module", $descr="", $tags="", $link="")
   }
 
 }
 
+Rel(Modules.Modules.Identity, Modules.Modules.Contracts, "depends on", $techn="", $tags="", $link="")
 Rel(Modules.Modules.Identity, Modules.Modules.Platform, "uses", $techn="", $tags="", $link="")
+Rel(Modules.Modules.Contracts, Modules.Modules.Platform, "depends on", $techn="", $tags="", $link="")
 
 SHOW_LEGEND(true)
 hide stereotypes

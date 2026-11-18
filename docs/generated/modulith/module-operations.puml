@@ -17,31 +17,16 @@ top to bottom direction
 
 System_Boundary("Modules_boundary", "Modules", $tags="") {
   Container_Boundary("Modules.Modules_boundary", "Modules", $tags="") {
-    Component(Modules.Modules.Commerce, "Commerce", $techn="Module", $descr="", $tags="", $link="")
-    Component(Modules.Modules.Course, "Course", $techn="Module", $descr="", $tags="", $link="")
-    Component(Modules.Modules.Identity, "Identity", $techn="Module", $descr="", $tags="", $link="")
-    Component(Modules.Modules.Learning, "Learning", $techn="Module", $descr="", $tags="", $link="")
-    Component(Modules.Modules.Operations, "Operations", $techn="Module", $descr="", $tags="", $link="")
     Component(Modules.Modules.Platform, "Platform", $techn="Module", $descr="", $tags="", $link="")
+    Component(Modules.Modules.Contracts, "Contracts", $techn="Module", $descr="", $tags="", $link="")
+    Component(Modules.Modules.Operations, "Operations", $techn="Module", $descr="", $tags="", $link="")
   }
 
 }
 
-Rel(Modules.Modules.Learning, Modules.Modules.Course, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Learning, Modules.Modules.Commerce, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Learning, Modules.Modules.Platform, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Course, Modules.Modules.Identity, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Course, Modules.Modules.Commerce, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Course, Modules.Modules.Learning, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Course, Modules.Modules.Platform, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Identity, Modules.Modules.Platform, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Operations, Modules.Modules.Commerce, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Operations, Modules.Modules.Identity, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Operations, Modules.Modules.Course, "uses", $techn="", $tags="", $link="")
+Rel(Modules.Modules.Contracts, Modules.Modules.Platform, "depends on", $techn="", $tags="", $link="")
+Rel(Modules.Modules.Operations, Modules.Modules.Contracts, "uses", $techn="", $tags="", $link="")
 Rel(Modules.Modules.Operations, Modules.Modules.Platform, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Operations, Modules.Modules.Learning, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Commerce, Modules.Modules.Course, "uses", $techn="", $tags="", $link="")
-Rel(Modules.Modules.Commerce, Modules.Modules.Platform, "uses", $techn="", $tags="", $link="")
 
 SHOW_LEGEND(true)
 hide stereotypes

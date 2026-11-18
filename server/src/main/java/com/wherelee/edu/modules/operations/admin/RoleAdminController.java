@@ -1,12 +1,12 @@
 package com.wherelee.edu.modules.operations.admin;
 
-import com.wherelee.edu.modules.platform.aop.PermissionCodes;
-import com.wherelee.edu.modules.identity.rbac.RbacRepository;
-import com.wherelee.edu.modules.identity.rbac.RoleAdminService;
-import com.wherelee.edu.modules.platform.aop.RequirePermission;
+import com.wherelee.edu.modules.contracts.identity.RoleAdminOperations;
 import com.wherelee.edu.modules.platform.aop.AdminAudit;
+import com.wherelee.edu.modules.platform.aop.PermissionCodes;
+import com.wherelee.edu.modules.platform.aop.RequirePermission;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,51 +28,38 @@ import java.util.List;
 @RequestMapping("/api/admin")
 public class RoleAdminController {
 
-    private final RoleAdminService roleAdminService;
+    private final RoleAdminOperations roleAdmin;
 
-    public RoleAdminController(RoleAdminService roleAdminService) {
-        this.roleAdminService = roleAdminService;
+    public RoleAdminController(RoleAdminOperations roleAdmin) {
+        this.roleAdmin = roleAdmin;
     }
 
     @GetMapping("/roles")
     @RequirePermission(PermissionCodes.ADMIN_ROLE_MANAGE)
-    public List<RoleView> roles() {
-        return roleAdminService.listRoles().stream()
-                .map(role -> new RoleView(role.code(), role.name(), role.description(), role.builtIn(),
-                        roleAdminService.permissionsOfRole(role.code())))
-                .toList();
+    public List<RoleAdminOperations.RoleView> roles() {
+        return roleAdmin.listRoles();
     }
 
     @GetMapping("/permissions")
     @RequirePermission(PermissionCodes.ADMIN_ROLE_MANAGE)
-    public List<PermissionView> permissions() {
-        return roleAdminService.listPermissions().stream()
-                .map(permission -> new PermissionView(permission.code(), permission.name(),
-                        permission.description()))
-                .toList();
+    public List<RoleAdminOperations.PermissionView> permissions() {
+        return roleAdmin.listPermissions();
     }
 
     @PostMapping("/roles")
     @RequirePermission(PermissionCodes.ADMIN_ROLE_MANAGE)
     @AdminAudit(action = "ROLE_CREATE", targetType = "ROLE")
-    public RoleView createRole(@Valid @RequestBody CreateRoleRequest request) {
-        RbacRepository.RoleRow role = roleAdminService.createRole(
-                request.code(), request.name(), request.description(), request.permissions());
-        return new RoleView(role.code(), role.name(), role.description(), role.builtIn(),
-                roleAdminService.permissionsOfRole(role.code()));
+    public RoleAdminOperations.RoleView createRole(@Valid @RequestBody CreateRoleRequest request) {
+        return roleAdmin.createRole(request.code(), request.name(), request.description(),
+                request.permissions());
     }
 
     @PutMapping("/roles/{code}/permissions")
     @RequirePermission(PermissionCodes.ADMIN_ROLE_MANAGE)
     @AdminAudit(action = "ROLE_PERMISSIONS_UPDATE", targetType = "ROLE")
-    public RoleView updatePermissions(@PathVariable String code,
-                                      @Valid @RequestBody UpdatePermissionsRequest request) {
-        roleAdminService.updateRolePermissions(code, request.permissions());
-        RbacRepository.RoleRow role = roleAdminService.listRoles().stream()
-                .filter(item -> item.code().equals(code)).findFirst()
-                .orElseThrow(() -> com.wherelee.edu.modules.platform.common.BizException.badRequest("角色不存在"));
-        return new RoleView(role.code(), role.name(), role.description(), role.builtIn(),
-                roleAdminService.permissionsOfRole(role.code()));
+    public RoleAdminOperations.RoleView updatePermissions(@PathVariable String code,
+                                                          @Valid @RequestBody UpdatePermissionsRequest request) {
+        return roleAdmin.updateRolePermissions(code, request.permissions());
     }
 
     @PutMapping("/users/{userId}/roles")
@@ -80,15 +67,8 @@ public class RoleAdminController {
     @AdminAudit(action = "USER_ROLES_UPDATE", targetType = "USER", targetIdArg = 0)
     public AssignResult assignRoles(@PathVariable Long userId,
                                     @Valid @RequestBody AssignRolesRequest request) {
-        roleAdminService.assignRoles(userId, request.roles());
+        roleAdmin.assignRoles(userId, request.roles());
         return new AssignResult(userId, request.roles());
-    }
-
-    public record RoleView(String code, String name, String description, boolean builtIn,
-                           List<String> permissions) {
-    }
-
-    public record PermissionView(String code, String name, String description) {
     }
 
     public record CreateRoleRequest(
@@ -106,9 +86,7 @@ public class RoleAdminController {
     public record UpdatePermissionsRequest(List<String> permissions) {
     }
 
-    public record AssignRolesRequest(
-            @jakarta.validation.constraints.NotEmpty(message = "至少保留一个角色")
-            List<String> roles) {
+    public record AssignRolesRequest(@NotEmpty(message = "至少保留一个角色") List<String> roles) {
     }
 
     public record AssignResult(Long userId, List<String> roles) {

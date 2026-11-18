@@ -1,10 +1,10 @@
 package com.wherelee.edu.modules.operations.admin;
 
-import com.wherelee.edu.modules.commerce.api.AdminOrderOperations;
-import com.wherelee.edu.modules.commerce.api.AdminOrderOperations.OrderRow;
-import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
-import com.wherelee.edu.modules.identity.api.AccountDirectory;
-import com.wherelee.edu.modules.identity.api.AccountQuery.AccountProfile;
+import com.wherelee.edu.modules.contracts.commerce.AdminOrderOperations;
+import com.wherelee.edu.modules.contracts.commerce.AdminOrderOperations.OrderRow;
+import com.wherelee.edu.modules.contracts.commerce.PaymentDtos;
+import com.wherelee.edu.modules.contracts.identity.AccountDirectory;
+import com.wherelee.edu.modules.contracts.identity.AccountQuery.AccountProfile;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import org.springframework.stereotype.Service;
 

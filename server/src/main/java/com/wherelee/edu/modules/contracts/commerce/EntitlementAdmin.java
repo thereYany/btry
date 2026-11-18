@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.commerce.api;
+package com.wherelee.edu.modules.contracts.commerce;
 
 import java.util.List;
 

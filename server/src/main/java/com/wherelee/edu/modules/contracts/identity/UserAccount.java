@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.identity.api;
+package com.wherelee.edu.modules.contracts.identity;
 
 /**
  * 运营端需要的账号只读快照。

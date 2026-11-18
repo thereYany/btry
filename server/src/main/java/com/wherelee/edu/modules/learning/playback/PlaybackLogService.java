@@ -1,10 +1,10 @@
 package com.wherelee.edu.modules.learning.playback;
 
-import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery.VideoContext;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery.VideoContext;
 import com.wherelee.edu.modules.platform.aop.Measured;
-import com.wherelee.edu.modules.learning.api.PlaybackEventPublisher;
+import com.wherelee.edu.modules.contracts.learning.PlaybackEventPublisher;
 import com.wherelee.edu.modules.platform.common.web.TraceIdFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

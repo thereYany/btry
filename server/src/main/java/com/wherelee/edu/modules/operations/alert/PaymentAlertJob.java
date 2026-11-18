@@ -1,7 +1,6 @@
 package com.wherelee.edu.modules.operations.alert;
 
-import com.wherelee.edu.modules.commerce.payment.PaymentProperties;
-import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
+import com.wherelee.edu.modules.contracts.commerce.PaymentAlertQueries;
 import com.wherelee.edu.modules.platform.alert.AlertPublisher;
 import com.wherelee.edu.modules.platform.resilience.LocalFallbackCache;
 import lombok.extern.slf4j.Slf4j;
@@ -19,21 +18,18 @@ import java.time.LocalDateTime;
 public class PaymentAlertJob {
 
     private final AlertProperties properties;
-    private final PaymentProperties paymentProperties;
-    private final PaymentRepository paymentRepository;
+    private final PaymentAlertQueries paymentAlertQueries;
     private final AlertNotifier notifier;
     private final AlertPublisher alertPublisher;
     private final LocalFallbackCache dedupCache;
 
     public PaymentAlertJob(AlertProperties properties,
-                           PaymentProperties paymentProperties,
-                           PaymentRepository paymentRepository,
+                           PaymentAlertQueries paymentAlertQueries,
                            AlertNotifier notifier,
                            AlertPublisher alertPublisher,
                            LocalFallbackCache dedupCache) {
         this.properties = properties;
-        this.paymentProperties = paymentProperties;
-        this.paymentRepository = paymentRepository;
+        this.paymentAlertQueries = paymentAlertQueries;
         this.notifier = notifier;
         this.alertPublisher = alertPublisher;
         this.dedupCache = dedupCache;
@@ -48,20 +44,19 @@ public class PaymentAlertJob {
             return;
         }
         LocalDateTime now = LocalDateTime.now();
-        long paidStuck = paymentRepository.countPaidUnfulfilledBefore(
+        long paidStuck = paymentAlertQueries.countPaidUnfulfilledBefore(
                 now.minusMinutes(properties.safePaymentPaidUnfulfilledMinutes()));
         if (paidStuck > 0) {
             emit("PAYMENT_PAID_UNFULFILLED", "HIGH",
                     "已支付但未履约订单 " + paidStuck + " 笔");
         }
-        long payingStuck = paymentRepository.countPayingBefore(
+        long payingStuck = paymentAlertQueries.countPayingBefore(
                 now.minusMinutes(properties.safePaymentPayingStuckMinutes()));
         if (payingStuck > 0) {
             emit("PAYMENT_PAYING_STUCK", "MEDIUM",
                     "支付中超过 " + properties.safePaymentPayingStuckMinutes() + " 分钟订单 " + payingStuck + " 笔");
         }
-        long refundExhausted = paymentRepository.countRefundRetryExhausted(
-                paymentProperties.safeRefundMaxAttempts());
+        long refundExhausted = paymentAlertQueries.countRefundRetryExhausted();
         if (refundExhausted > 0 && refundExhausted >= properties.safePaymentRefundRetryExhaustedThreshold()) {
             emit("PAYMENT_REFUND_RETRY_EXHAUSTED", "HIGH",
                     "退款重试耗尽订单 " + refundExhausted + " 笔");

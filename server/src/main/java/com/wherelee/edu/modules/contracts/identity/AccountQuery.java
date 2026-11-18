@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.identity.api;
+package com.wherelee.edu.modules.contracts.identity;
 
 import com.wherelee.edu.modules.platform.common.PageResult;
 

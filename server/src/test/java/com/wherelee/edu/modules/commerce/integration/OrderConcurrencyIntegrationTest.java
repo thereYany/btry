@@ -10,7 +10,7 @@ class OrderConcurrencyIntegrationTest extends CommerceIntegrationTestSupport {
 
     @Test
     void sameClientRequestCreatesExactlyOneOrder() throws Exception {
-        List<CallResult<com.wherelee.edu.modules.commerce.order.dto.OrderDtos.OrderView>> results =
+        List<CallResult<com.wherelee.edu.modules.contracts.commerce.OrderDtos.OrderView>> results =
                 runConcurrently(20, () -> createOrder("it-same-request"));
 
         assertThat(results).allSatisfy(result -> assertThat(result.error()).isNull());
@@ -21,7 +21,7 @@ class OrderConcurrencyIntegrationTest extends CommerceIntegrationTestSupport {
 
     @Test
     void differentClientRequestsStillCreateOneActiveOrder() throws Exception {
-        List<CallResult<com.wherelee.edu.modules.commerce.order.dto.OrderDtos.OrderView>> results =
+        List<CallResult<com.wherelee.edu.modules.contracts.commerce.OrderDtos.OrderView>> results =
                 runConcurrently(20, () -> createOrder(nextRequestId()));
 
         assertThat(results).allSatisfy(result -> assertThat(result.error()).isNull());

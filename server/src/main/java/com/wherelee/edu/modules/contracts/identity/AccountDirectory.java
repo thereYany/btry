@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.identity.api;
+package com.wherelee.edu.modules.contracts.identity;
 
 import java.util.Collection;
 import java.util.List;

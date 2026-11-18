@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.commerce.entitlement;
 
-import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementQuery;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

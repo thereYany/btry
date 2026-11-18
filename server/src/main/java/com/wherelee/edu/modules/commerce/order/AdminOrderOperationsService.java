@@ -1,8 +1,8 @@
 package com.wherelee.edu.modules.commerce.order;
 
-import com.wherelee.edu.modules.commerce.api.AdminOrderOperations;
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
-import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
+import com.wherelee.edu.modules.contracts.commerce.AdminOrderOperations;
+import com.wherelee.edu.modules.contracts.commerce.OrderDtos;
+import com.wherelee.edu.modules.contracts.commerce.PaymentDtos;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
 import com.wherelee.edu.modules.commerce.payment.RefundRecord;
 import com.wherelee.edu.modules.platform.common.BizException;

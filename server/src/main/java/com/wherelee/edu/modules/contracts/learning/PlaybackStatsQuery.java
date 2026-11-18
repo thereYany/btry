@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.learning.api;
+package com.wherelee.edu.modules.contracts.learning;
 
 import java.time.LocalDateTime;
 

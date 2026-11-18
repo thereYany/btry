@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.learning.playback;
 
-import com.wherelee.edu.modules.learning.api.PlaybackStatsQuery;
+import com.wherelee.edu.modules.contracts.learning.PlaybackStatsQuery;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 

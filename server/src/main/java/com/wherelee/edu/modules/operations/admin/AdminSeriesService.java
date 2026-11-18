@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.operations.admin;
 
-import com.wherelee.edu.modules.course.api.CourseGovernance;
+import com.wherelee.edu.modules.contracts.course.CourseGovernance;
 import com.wherelee.edu.modules.operations.admin.dto.AdminSeriesDtos;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import org.springframework.stereotype.Service;

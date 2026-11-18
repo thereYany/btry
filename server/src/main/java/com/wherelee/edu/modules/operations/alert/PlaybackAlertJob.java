@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.operations.alert;
 
-import com.wherelee.edu.modules.learning.api.PlaybackStatsQuery;
+import com.wherelee.edu.modules.contracts.learning.PlaybackStatsQuery;
 import com.wherelee.edu.modules.platform.alert.AlertLogRepository;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;

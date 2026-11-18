@@ -1,6 +1,14 @@
 == Modules
 plantuml::components.puml[,,format=svg]
 
+== Platform
+plantuml::module-platform.puml[,,format=svg]
+include::module-platform.adoc[]
+
+== Contracts
+plantuml::module-contracts.puml[,,format=svg]
+include::module-contracts.adoc[]
+
 == Commerce
 plantuml::module-commerce.puml[,,format=svg]
 include::module-commerce.adoc[]
@@ -20,8 +28,4 @@ include::module-learning.adoc[]
 == Operations
 plantuml::module-operations.puml[,,format=svg]
 include::module-operations.adoc[]
-
-== Platform
-plantuml::module-platform.puml[,,format=svg]
-include::module-platform.adoc[]
 

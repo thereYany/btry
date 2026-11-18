@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.learning.api;
+package com.wherelee.edu.modules.contracts.learning;
 
 /**
  * 播放事件发布端口。课程模块只发布事件，不关心日志队列或持久化实现。

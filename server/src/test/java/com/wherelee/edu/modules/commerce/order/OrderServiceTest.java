@@ -2,7 +2,7 @@ package com.wherelee.edu.modules.commerce.order;
 
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
+import com.wherelee.edu.modules.contracts.commerce.OrderDtos;
 import com.wherelee.edu.modules.commerce.payment.PaymentProperties;
 import com.wherelee.edu.modules.commerce.payment.PaymentRepository;
 import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;

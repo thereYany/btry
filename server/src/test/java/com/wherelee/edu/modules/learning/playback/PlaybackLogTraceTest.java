@@ -1,7 +1,7 @@
 package com.wherelee.edu.modules.learning.playback;
 
-import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.MDC;

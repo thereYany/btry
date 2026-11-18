@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.commerce.entitlement;
 
-import com.wherelee.edu.modules.commerce.api.EntitlementAdmin;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementAdmin;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.commerce.order;
 
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
+import com.wherelee.edu.modules.contracts.commerce.OrderDtos;
 import com.wherelee.edu.modules.platform.aop.Measured;
 import com.wherelee.edu.modules.platform.aop.RateLimit;
 import com.wherelee.edu.modules.platform.aop.PermissionCodes;

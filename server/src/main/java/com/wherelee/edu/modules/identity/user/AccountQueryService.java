@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.identity.user;
 
-import com.wherelee.edu.modules.identity.api.AccountQuery;
+import com.wherelee.edu.modules.contracts.identity.AccountQuery;
 import com.wherelee.edu.modules.platform.common.PageResult;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

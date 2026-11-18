@@ -1,14 +1,14 @@
 package com.wherelee.edu.modules.course.series;
 
-import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
-import com.wherelee.edu.modules.commerce.api.EntitlementQuery.ActiveEntitlement;
-import com.wherelee.edu.modules.course.api.CatalogQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery.CatalogSeries;
-import com.wherelee.edu.modules.course.api.CatalogQuery.VideoContext;
-import com.wherelee.edu.modules.course.api.CatalogQuery.VideoRef;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementQuery;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementQuery.ActiveEntitlement;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery.CatalogSeries;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery.VideoContext;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery.VideoRef;
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
-import com.wherelee.edu.modules.learning.api.ProgressQuery;
-import com.wherelee.edu.modules.learning.api.ProgressQuery.ProgressSnapshot;
+import com.wherelee.edu.modules.contracts.learning.ProgressQuery;
+import com.wherelee.edu.modules.contracts.learning.ProgressQuery.ProgressSnapshot;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;

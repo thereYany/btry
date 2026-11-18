@@ -1,4 +1,0 @@
-# Spring Modulith 模块循环依赖基线（只允许下降）
-# 一行一个强连通分量，模块名逗号分隔、按字母序。
-# 刷新：mvn -Dtest=ModulithModulesTest test，测试失败信息会给出实际循环。
-commerce,course,learning

@@ -3,6 +3,7 @@ package com.wherelee.edu.modules.identity.rbac;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.http.HttpStatus;
+import com.wherelee.edu.modules.contracts.identity.RoleAdminOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +15,7 @@ import java.util.List;
  * <p>这是"新项目只改配置就能定义角色"的落点：不改代码即可新增角色并生效。</p>
  */
 @Service
-public class RoleAdminService {
+public class RoleAdminService implements RoleAdminOperations {
 
     private final RbacRepository rbacRepository;
     private final PermissionService permissionService;
@@ -27,22 +28,29 @@ public class RoleAdminService {
         this.userRepository = userRepository;
     }
 
-    public List<RbacRepository.RoleRow> listRoles() {
-        return rbacRepository.listRoles();
+    @Override
+    public List<RoleAdminOperations.RoleView> listRoles() {
+        return rbacRepository.listRoles().stream().map(this::toView).toList();
     }
 
+    @Override
     public List<String> permissionsOfRole(String roleCode) {
         RbacRepository.RoleRow role = requireRole(roleCode);
         return rbacRepository.findPermissionCodesByRole(role.id());
     }
 
-    public List<RbacRepository.PermissionRow> listPermissions() {
-        return rbacRepository.listPermissions();
+    @Override
+    public List<RoleAdminOperations.PermissionView> listPermissions() {
+        return rbacRepository.listPermissions().stream()
+                .map(permission -> new RoleAdminOperations.PermissionView(
+                        permission.code(), permission.name(), permission.description()))
+                .toList();
     }
 
+    @Override
     @Transactional
-    public RbacRepository.RoleRow createRole(String code, String name, String description,
-                                             List<String> permissionCodes) {
+    public RoleAdminOperations.RoleView createRole(String code, String name, String description,
+                                                   List<String> permissionCodes) {
         if (code == null || !code.matches("[A-Z][A-Z0-9_]{1,39}")) {
             throw BizException.badRequest("角色码需为大写字母开头、由大写字母/数字/下划线组成，2-40 位");
         }
@@ -51,16 +59,19 @@ public class RoleAdminService {
         }
         Long roleId = rbacRepository.insertRole(code, name, description);
         rbacRepository.replaceRolePermissions(roleId, permissionCodes == null ? List.of() : permissionCodes);
-        return requireRole(code);
+        return toView(requireRole(code));
     }
 
+    @Override
     @Transactional
-    public void updateRolePermissions(String roleCode, List<String> permissionCodes) {
+    public RoleAdminOperations.RoleView updateRolePermissions(String roleCode, List<String> permissionCodes) {
         RbacRepository.RoleRow role = requireRole(roleCode);
         rbacRepository.replaceRolePermissions(role.id(), permissionCodes == null ? List.of() : permissionCodes);
         permissionService.invalidateAll();
+        return toView(requireRole(roleCode));
     }
 
+    @Override
     @Transactional
     public void assignRoles(Long userId, List<String> roleCodes) {
         if (roleCodes == null || roleCodes.isEmpty()) {
@@ -83,6 +94,11 @@ public class RoleAdminService {
     public void bindPrimaryRole(Long userId, String roleCode) {
         rbacRepository.bindRole(userId, roleCode);
         permissionService.invalidate(userId);
+    }
+
+    private RoleAdminOperations.RoleView toView(RbacRepository.RoleRow role) {
+        return new RoleAdminOperations.RoleView(role.code(), role.name(), role.description(),
+                role.builtIn(), rbacRepository.findPermissionCodesByRole(role.id()));
     }
 
     private RbacRepository.RoleRow requireRole(String roleCode) {

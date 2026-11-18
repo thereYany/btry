@@ -1,8 +1,8 @@
 package com.wherelee.edu.modules.commerce.order;
 
 import com.wherelee.edu.modules.commerce.entitlement.EntitlementRepository;
-import com.wherelee.edu.modules.course.api.CatalogQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery.CatalogSeries;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery.CatalogSeries;
 import org.springframework.stereotype.Repository;
 
 import java.util.LinkedHashMap;

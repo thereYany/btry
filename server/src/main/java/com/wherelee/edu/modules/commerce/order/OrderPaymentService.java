@@ -1,10 +1,10 @@
 package com.wherelee.edu.modules.commerce.order;
 
-import com.wherelee.edu.modules.commerce.order.dto.OrderDtos;
+import com.wherelee.edu.modules.contracts.commerce.OrderDtos;
 import com.wherelee.edu.modules.commerce.payment.MockSignatureService;
 import com.wherelee.edu.modules.commerce.payment.PaymentAttemptRecord;
 import com.wherelee.edu.modules.commerce.payment.PaymentConfirmationService;
-import com.wherelee.edu.modules.commerce.payment.PaymentDtos;
+import com.wherelee.edu.modules.contracts.commerce.PaymentDtos;
 import com.wherelee.edu.modules.commerce.payment.PaymentGateway;
 import com.wherelee.edu.modules.commerce.payment.PaymentMetrics;
 import com.wherelee.edu.modules.commerce.payment.PaymentNo;

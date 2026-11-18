@@ -1,8 +1,8 @@
 package com.wherelee.edu.modules.learning.learning;
 
-import com.wherelee.edu.modules.commerce.api.EntitlementQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery;
-import com.wherelee.edu.modules.course.api.CatalogQuery.VideoContext;
+import com.wherelee.edu.modules.contracts.commerce.EntitlementQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery;
+import com.wherelee.edu.modules.contracts.course.CatalogQuery.VideoContext;
 import com.wherelee.edu.modules.platform.common.BizException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

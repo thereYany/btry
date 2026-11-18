@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.commerce.integration;
 
-import com.wherelee.edu.modules.commerce.api.AdminOrderOperations;
+import com.wherelee.edu.modules.contracts.commerce.AdminOrderOperations;
 import com.wherelee.edu.modules.commerce.payment.PaymentNo;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.DisplayName;

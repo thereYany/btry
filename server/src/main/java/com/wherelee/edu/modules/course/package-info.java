@@ -3,6 +3,6 @@
  *
  * <p>依赖方向：course -> platform；学员播放读模型依赖 learning 的播放能力。</p>
  */
-@org.springframework.modulith.ApplicationModule(displayName = "Course", allowedDependencies = {"platform", "identity", "commerce", "learning"})
+@org.springframework.modulith.ApplicationModule(displayName = "Course", allowedDependencies = {"platform", "contracts"})
 
 package com.wherelee.edu.modules.course;

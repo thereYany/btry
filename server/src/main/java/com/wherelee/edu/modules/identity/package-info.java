@@ -3,6 +3,6 @@
  *
  * <p>依赖方向：identity -> platform。</p>
  */
-@org.springframework.modulith.ApplicationModule(displayName = "Identity", allowedDependencies = {"platform"})
+@org.springframework.modulith.ApplicationModule(displayName = "Identity", allowedDependencies = {"platform", "contracts"})
 
 package com.wherelee.edu.modules.identity;

@@ -1,7 +1,7 @@
 package com.wherelee.edu.modules.identity.user;
 
-import com.wherelee.edu.modules.identity.api.UserAccount;
-import com.wherelee.edu.modules.identity.api.UserAccountOperations;
+import com.wherelee.edu.modules.contracts.identity.UserAccount;
+import com.wherelee.edu.modules.contracts.identity.UserAccountOperations;
 import com.wherelee.edu.modules.platform.common.BizException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

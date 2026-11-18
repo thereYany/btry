@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.identity.api;
+package com.wherelee.edu.modules.contracts.identity;
 
 /**
  * 管理员账号写操作契约。

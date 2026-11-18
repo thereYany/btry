@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.course.teacher;
 
-import com.wherelee.edu.modules.identity.api.AccountDirectory;
+import com.wherelee.edu.modules.contracts.identity.AccountDirectory;
 import com.wherelee.edu.modules.platform.common.BizException;
 import com.wherelee.edu.modules.course.series.dto.SeriesDtos;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.wherelee.edu.modules.commerce.payment;
+package com.wherelee.edu.modules.contracts.commerce;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
