@@ -1,0 +1,11 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Base package
+|`com.wherelee.edu.modules.identity`
+|Spring components
+|* `c.w.e.m.i.IdentityConfig`
+|Bean references
+|* `c.w.e.m.p.config.SecurityProperties` (in Platform)
+* `c.w.e.m.p.resilience.LocalRateLimiter` (in Platform)
+* `c.w.e.m.p.resilience.RedisFallbackMetrics` (in Platform)
+|===

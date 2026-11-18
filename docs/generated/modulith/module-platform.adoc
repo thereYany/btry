@@ -1,0 +1,46 @@
+[%autowidth.stretch, cols="h,a"]
+|===
+|Base package
+|`com.wherelee.edu.modules.platform`
+|Spring components
+|_Controllers_
+
+* `c.w.e.m.p.web.HealthController`
+
+_Services_
+
+* `c.w.e.m.p.alert.AlertPublisher` (via `c.w.e.m.p.alert.AlertLogPublisher`)
+* `c.w.e.m.p.storage.CosObjectStorage`
+* `c.w.e.m.p.storage.SignedUrlCache`
+
+_Repositories_
+
+* `c.w.e.m.p.alert.AlertLogRepository`
+* `c.w.e.m.p.audit.AdminAuditRepository`
+
+_Configuration properties_
+
+* `c.w.e.m.p.config.SecurityProperties`
+* `c.w.e.m.p.storage.StorageProperties`
+* `c.w.e.m.p.tenant.TenantProperties`
+
+_Others_
+
+* `c.w.e.m.p.aop.AdminAuditAspect`
+* `c.w.e.m.p.aop.IdempotentAspect`
+* `c.w.e.m.p.aop.MeasuredAspect`
+* `c.w.e.m.p.aop.RateLimitAspect`
+* `c.w.e.m.p.common.GlobalExceptionHandler`
+* `c.w.e.m.p.common.validation.StrongPasswordValidator`
+* `c.w.e.m.p.common.web.SecurityHeadersFilter`
+* `c.w.e.m.p.common.web.TraceIdFilter`
+* `c.w.e.m.p.config.PlatformAutoConfiguration`
+* `c.w.e.m.p.config.WebConfig`
+* `c.w.e.m.p.resilience.LocalFallbackCache`
+* `c.w.e.m.p.resilience.LocalRateLimiter`
+* `c.w.e.m.p.resilience.RedisFallbackMetrics`
+* `c.w.e.m.p.resilience.ResilienceMetricsConfig`
+* `c.w.e.m.p.tenant.TenantJdbcConfig`
+* `c.w.e.m.p.tenant.TenantSqlRewriter`
+* `c.w.e.m.p.tracing.TraceSpans`
+|===

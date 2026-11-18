@@ -9,23 +9,11 @@ include::module-platform.adoc[]
 plantuml::module-contracts.puml[,,format=svg]
 include::module-contracts.adoc[]
 
-== Commerce
-plantuml::module-commerce.puml[,,format=svg]
-include::module-commerce.adoc[]
-
-== Course
-plantuml::module-course.puml[,,format=svg]
-include::module-course.adoc[]
-
 == Identity
 plantuml::module-identity.puml[,,format=svg]
 include::module-identity.adoc[]
 
-== Learning
-plantuml::module-learning.puml[,,format=svg]
-include::module-learning.adoc[]
-
-== Operations
-plantuml::module-operations.puml[,,format=svg]
-include::module-operations.adoc[]
+== Payment
+plantuml::module-payment.puml[,,format=svg]
+include::module-payment.adoc[]
 
