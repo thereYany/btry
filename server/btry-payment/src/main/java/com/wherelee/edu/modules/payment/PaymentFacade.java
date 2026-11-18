@@ -13,7 +13,7 @@ import java.util.Optional;
 /**
  * 通用支付门面：把"业务单 → 支付单 → 渠道"的流程收在一处，供任意垂直域复用。
  *
- * <p>课程订单走同一个入口（传入固定 paymentNo 兼容历史单号）；新垂直域只需给 bizType/bizNo。</p>
+ * <p>任何垂直域都走同一个入口：新业务只需给 bizType/bizNo；历史迁移单可传入固定 paymentNo。</p>
  */
 @Slf4j
 @Service

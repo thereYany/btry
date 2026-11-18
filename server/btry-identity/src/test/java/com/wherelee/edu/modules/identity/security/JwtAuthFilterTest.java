@@ -51,7 +51,7 @@ class JwtAuthFilterTest {
 
     @Test
     void rejectsDisabledAccount() throws Exception {
-        MockHttpServletRequest request = request("GET", "/api/learning/series");
+        MockHttpServletRequest request = request("GET", "/api/biz/demo");
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0, 0L));
         when(userRepository.findById(2L)).thenReturn(Optional.of(user("DISABLED", false, 0)));
@@ -65,7 +65,7 @@ class JwtAuthFilterTest {
 
     @Test
     void blocksBusinessApisUntilInitialPasswordChanged() throws Exception {
-        MockHttpServletRequest request = request("GET", "/api/learning/series");
+        MockHttpServletRequest request = request("GET", "/api/biz/demo");
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(jwtService.parse("token")).thenReturn(new JwtService.TokenPayload(2L, 0, 0L));
         when(userRepository.findById(2L)).thenReturn(Optional.of(user("ACTIVE", true, 0)));

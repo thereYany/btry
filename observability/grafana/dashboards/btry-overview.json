@@ -91,8 +91,8 @@
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
       "id": 9,
       "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-      "targets": [{"expr": "sum(rate(playback_url_cache_total{result=~\"local_hit|redis_hit\"}[5m]))", "legendFormat": "local+redis hits/sec", "refId": "A"}, {"expr": "sum(rate(playback_url_cache_total{result=\"miss\"}[5m]))", "legendFormat": "misses/sec", "refId": "B"}, {"expr": "playback_log_queue_size", "legendFormat": "playback queue", "refId": "C"}],
-      "title": "Playback Cache and Queue",
+      "targets": [{"expr": "sum(rate(storage_url_cache_total{result=~\"local_hit|redis_hit\"}[5m]))", "legendFormat": "local+redis hits/sec", "refId": "A"}, {"expr": "sum(rate(storage_url_cache_total{result=\"miss\"}[5m]))", "legendFormat": "misses/sec", "refId": "B"}, {"expr": "sum(rate(infra_redis_fallback_total[5m]))", "legendFormat": "redis fallback/sec", "refId": "C"}],
+      "title": "Storage URL Cache / Redis Fallback",
       "type": "timeseries"
     }
   ],

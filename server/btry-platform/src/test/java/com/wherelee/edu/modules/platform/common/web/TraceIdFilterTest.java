@@ -14,7 +14,7 @@ class TraceIdFilterTest {
     @Test
     void createsTraceIdAndCleansMdcAfterRequest() throws Exception {
         TraceIdFilter filter = new TraceIdFilter();
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/learning/series");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/biz/demo");
         MockHttpServletResponse response = new MockHttpServletResponse();
         AtomicReference<String> duringRequest = new AtomicReference<>();
 

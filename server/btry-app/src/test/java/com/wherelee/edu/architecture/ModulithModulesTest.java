@@ -12,8 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Spring Modulith 模块边界硬门禁。
  *
- * <p>模块 = {@code com.wherelee.edu.modules} 的直接子包（contracts / identity / course /
- * learning / commerce / operations / platform）。</p>
+ * <p>模块 = {@code com.wherelee.edu.modules} 的直接子包（contracts / identity / payment /
+ * platform）。</p>
  *
  * <p>`modules.verify()` 检查：模块图无循环、跨模块依赖已在
  * `@ApplicationModule(allowedDependencies)` 中声明、模块内部类型未被非法暴露。

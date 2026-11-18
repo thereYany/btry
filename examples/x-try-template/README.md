@@ -51,8 +51,8 @@
 |---|---|
 | 登录 / JWT / 租户隔离 | btry-identity：`/api/auth/*`，`JwtAuthFilter`，`TenantContext` |
 | RBAC 权限码 | `@RequirePermission`，`/api/admin/roles` |
-| COS 直传 | `/api/teacher/videos/upload-url` 等 |
-| 支付（Mock/支付宝） | `/api/orders/{orderNo}/pay`、`/api/payments/mock/*`、回调 `/api/payments/alipay/notify` |
+| 对象存储 | `app.storage.*` 配置 + `CosObjectStorage`（内核只提供预签名能力，不内置上传 HTTP 接口；媒体类业务自行暴露上传接口） |
+| 支付（Mock/支付宝） | `contracts.payment.PaymentOperations` 发起支付、`/api/payments/mock/*`（Mock 渠道）、回调 `/api/payments/alipay/notify` |
 | 事务性发件箱 / 对账 | `t_payment_outbox`、`/api/admin/recon/*` |
 | 可观测性 | `/actuator/prometheus`、traceId 日志、告警 |
 
@@ -66,4 +66,4 @@
 ## 注意
 
 - 模板与内核共享数据库迁移历史（Flyway）；新项目请用自己的库并评估迁移策略。
-- 生产使用前替换 JWT secret、COS 密钥，并关闭 Mock 支付。
+- 生产使用前替换 JWT secret、对象存储密钥，并关闭 Mock 支付。

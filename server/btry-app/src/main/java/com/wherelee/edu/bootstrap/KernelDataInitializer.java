@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 内核种子数据：只创建一个管理员账号并绑定内置 ADMIN 角色。
  *
- * <p>不带任何垂直业务数据——演示课程、教师/学生账号由垂直应用自己的 bootstrap 负责。</p>
+ * <p>不带任何垂直业务数据——演示账号与业务种子由垂直应用自己的 bootstrap 负责。</p>
  */
 @Slf4j
 @Component

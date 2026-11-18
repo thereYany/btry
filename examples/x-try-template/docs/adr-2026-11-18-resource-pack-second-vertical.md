@@ -2,7 +2,7 @@
 
 - 日期：2026-11-18
 - 状态：已完成
-- 关联：btry `PaymentOperations` 通用支付契约、`btry-template` 模板仓
+- 关联：btry `PaymentOperations` 通用支付契约、`examples/x-try-template` 模板
 
 ## 背景
 
@@ -28,7 +28,7 @@ P4 完成后 btry 已具备 contracts 模块、Maven 多模块（platform/contra
 | 实际耗时 | 约 1.5 小时（含踩坑：Boot 4 测试包路径、COS/JWT/Payment 配置缺失、可执行 jar 不能当依赖） |
 | 对 btry 内核的改动 | 1 个新契约（`PaymentOperations`）+ 1 个门面实现 + 订单入口重构 + 事件按 bizType 隔离 |
 | btry 侧回归范围 | 单元 137 + 集成 41 + Modulith/ArchUnit/数据边界门禁（全部通过） |
-| 模板侧验证 | 集成测试 1 个，覆盖 登录(JWT) → 资料包列表 → 下单 → 支付 → 权益发放 |
+| 模板侧验证 | 集成测试 1 个，覆盖 登录(JWT) → 资料包列表 → 下单 → 支付 → 权益发放（P4.5 当时在旧模板仓通过；并入 examples 后需补测试 profile 适配新的租户 SQL 门禁与角色种子，当前待修复） |
 
 ## 结论
 

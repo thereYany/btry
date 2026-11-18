@@ -3,7 +3,7 @@ package com.wherelee.edu.modules.payment;
 /**
  * 支付渠道 SPI（策略）。
  *
- * <p>菜渠道适配器只接受支付域自己的 PaymentOrderView，不认识订单/课程等业务概念。</p>
+ * <p>渠道适配器只接受支付域自己的 PaymentOrderView，不认识任何业务概念。</p>
  */
 public interface PaymentGateway {
 

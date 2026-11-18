@@ -12,7 +12,7 @@ btry 是一个**与业务无关的 Java 业务基座**（Java 21 / Spring Boot 4
 | `btry-payment` | 支付单/支付尝试/回调事件/事务性发件箱/退款重试/渠道对账；Mock 与支付宝渠道适配；`PaymentSettledEvent` 对外事件 |
 | `btry-app` | 内核演示宿主（仅 14 个类）：启动类、内核种子（admin）、运营端账号/角色/对账接口、支付告警巡检 |
 
-依赖方向：`app → identity/payment → platform/contracts`；`platform` 不依赖任何业务；支付不认识订单/课程，只认 `bizType + bizNo`，业务侧实现 `PaymentSettledListener` 自行履约。
+依赖方向：`app → identity/payment → platform/contracts`；`platform` 不依赖任何业务；支付不认识任何业务，只认 `bizType + bizNo`，业务侧实现 `PaymentSettledListener` 自行履约。
 
 ## 快速开始
 
@@ -71,12 +71,14 @@ python3 tools/table_access_inventory.py --baseline docs/generated/table-access-b
 
 ```text
 server/   多模块后端（platform / contracts / identity / payment / app）
-docs/     设计与运行文档（含内核与垂直拆分方案）
-tools/    数据边界门禁、冒烟与压测脚本
-deploy/   历史部署脚本（保留备查）
+docs/     设计与工程文档（总索引见 docs/README.md）
+tools/    数据边界门禁与 CI 辅助脚本
+examples/ 新垂直项目脚手架（x-try-template）
 ```
 
 ## 文档
+
+全部文档索引见 [docs/README.md](docs/README.md)。重点：
 
 - [内核与垂直拆分方案（解耦 V2）](docs/内核与垂直拆分方案.md)
 - [模块解耦设计计划（V1）](docs/模块解耦设计计划.md)
@@ -86,7 +88,7 @@ deploy/   历史部署脚本（保留备查）
 
 ## 非目标
 
-- 不内置任何垂直业务（课程/电商/会员……）；垂直业务在各自仓库实现并依赖本基座。
+- 不内置任何垂直业务（电商、会员、内容……）；垂直业务在各自仓库实现并依赖本基座。
 - 不做自助注册（账号由管理员创建或邀请激活，角色码由垂直应用定义）。
 - 不引入 2PC/XA，跨域一致性用「本地事务 + 发件箱 + 幂等消费 + 对账」。
 
