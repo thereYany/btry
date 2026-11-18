@@ -3,4 +3,9 @@
  *
  * <p>依赖方向：platform 不反向依赖业务模块。业务模块可以依赖本模块。</p>
  */
+@org.springframework.modulith.ApplicationModule(
+        displayName = "Platform",
+        type = org.springframework.modulith.ApplicationModule.Type.OPEN,
+        allowedDependencies = {})
+
 package com.wherelee.edu.modules.platform;

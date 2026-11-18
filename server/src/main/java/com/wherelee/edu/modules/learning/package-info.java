@@ -3,4 +3,6 @@
  *
  * <p>依赖方向：learning -> platform。不直接依赖 admin 或 commerce。</p>
  */
+@org.springframework.modulith.ApplicationModule(displayName = "Learning", allowedDependencies = {"platform", "course", "commerce"})
+
 package com.wherelee.edu.modules.learning;

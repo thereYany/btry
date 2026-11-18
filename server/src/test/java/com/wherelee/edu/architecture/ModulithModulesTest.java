@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.modulith.core.ApplicationModule;
 import org.springframework.modulith.core.ApplicationModules;
 import org.springframework.modulith.core.DependencyType;
+import org.springframework.modulith.core.Violations;
 import org.springframework.modulith.docs.Documenter;
 
 import java.io.IOException;
@@ -60,6 +61,21 @@ class ModulithModulesTest {
                 .as("模块循环依赖出现变化。新增循环 = 架构退化；循环已消除请同步改小基线 %s",
                         CYCLE_BASELINE.normalize())
                 .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    /**
+     * 模块级 allowedDependencies 约束：除已知循环外，任何未声明的跨模块依赖都会失败。
+     */
+    @Test
+    void modulesOnlyDependOnDeclaredModules() {
+        // 已知遗留：platform 为共享内核（OPEN）；其他模块暂未用 @NamedInterface 暴露 api 包，
+        // 因此"non-exposed type"类封装告警暂不纳入门禁，列入 P4 第二阶段。
+        Violations violations = modules.detectViolations()
+                .filter(violation -> !violation.hasMessageContaining("Cycle detected"))
+                .filter(violation -> !violation.hasMessageContaining("non-exposed type"));
+        assertThat(violations.getMessages())
+                .as("出现未在 @ApplicationModule(allowedDependencies) 中声明的模块依赖")
+                .isEmpty();
     }
 
     @Test
