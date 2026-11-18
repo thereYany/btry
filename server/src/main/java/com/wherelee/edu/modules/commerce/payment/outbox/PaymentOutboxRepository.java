@@ -1,7 +1,7 @@
 package com.wherelee.edu.modules.commerce.payment.outbox;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.wherelee.edu.modules.commerce.payment.api.PaymentSettledEvent;
 import com.wherelee.edu.modules.platform.tenant.TenantContext;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -48,7 +48,7 @@ public class PaymentOutboxRepository {
                     VALUES (?, ?, ?, 'PENDING', CURRENT_TIMESTAMP(3))
                     """, event.eventType(), event.paymentNo(),
                     objectMapper.writeValueAsString(event));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("支付事件序列化失败 paymentNo=" + event.paymentNo(), e);
         }
     }
@@ -72,7 +72,7 @@ public class PaymentOutboxRepository {
     public PaymentSettledEvent payload(OutboxRow row) {
         try {
             return objectMapper.readValue(row.payload(), PaymentSettledEvent.class);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("支付事件反序列化失败 id=" + row.id(), e);
         }
     }

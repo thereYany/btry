@@ -14,7 +14,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void unknownResourceReturns404InsteadOf500() {
         ResponseEntity<ErrorResponse> response = handler.handleNotFound(
-                new NoResourceFoundException(HttpMethod.GET, "api/missing"));
+                new NoResourceFoundException(HttpMethod.GET, "api/missing", "api/missing"));
 
         assertThat(response.getStatusCode().value()).isEqualTo(404);
         assertThat(response.getBody()).isNotNull();

@@ -1,6 +1,6 @@
 package com.wherelee.edu.modules.platform.storage;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.wherelee.edu.modules.platform.resilience.RedisFallbackMetrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -31,7 +31,7 @@ class PlaybackUrlCacheFailureTest {
                 new CosProperties("bucket", "region", 240, 3000, 15000, 2),
                 new PlaybackProperties(30, 30),
                 redis,
-                new ObjectMapper(),
+                tools.jackson.databind.json.JsonMapper.builder().build(),
                 new SimpleMeterRegistry(),
                 CircuitBreakerRegistry.ofDefaults(),
                 new RedisFallbackMetrics(new SimpleMeterRegistry()));
